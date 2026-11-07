@@ -1,3 +1,6 @@
 .env
-storage/*.sqlite
-storage/rapport_import_*.txt
+*.sqlite
+# storage/ : données du serveur (rapports, journaux, fichiers envoyés), jamais versionnées
+storage/*
+!storage/.gitkeep
+!storage/.htaccess
