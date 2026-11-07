@@ -1,0 +1,157 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/../src/autoload.php';
+require __DIR__ . '/../src/Web/helpers.php';
+
+use Ascs\Web\App;
+use Ascs\Web\Controllers\AdherentController;
+use Ascs\Web\Controllers\AuthController;
+use Ascs\Web\Controllers\InscriptionController;
+use Ascs\Web\Controllers\ReglementController;
+use Ascs\Web\Controllers\DemandeController;
+use Ascs\Web\Controllers\EnLigneController;
+use Ascs\Web\Controllers\HelloAssoController;
+use Ascs\Web\Controllers\PublicController;
+use Ascs\Web\Controllers\RemiseController;
+use Ascs\Web\Controllers\HomeController;
+use Ascs\Web\Controllers\ImportController;
+use Ascs\Web\Controllers\UtilisateurController;
+use Ascs\Web\Router;
+
+App::securityHeaders();
+
+// Serveur PHP intégré (tests) : laisser servir les fichiers statiques.
+if (PHP_SAPI === 'cli-server') {
+    $f = __DIR__ . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if (is_file($f) && basename($f) !== 'index.php') {
+        return false;
+    }
+}
+
+// Page d'installation : fonctionne même si la base est inaccessible (elle sert à le diagnostiquer).
+$chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if (preg_match('#/installation/?$#', $chemin)) {
+    (new Ascs\Web\Install())->handle($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    exit;
+}
+
+try {
+    $app = App::boot();
+} catch (Throwable $e) {
+    http_response_code(500);
+    error_log('ASCS démarrage : ' . $e->getMessage());
+    App::startSession();
+    echo '<!doctype html><meta charset="utf-8"><title>ASCS</title><p>Application indisponible : base de données inaccessible ou non initialisée.</p><p><a href="' . e(url('/installation')) . '">Ouvrir la page d\'installation</a> pour voir la cause.</p>';
+    exit;
+}
+
+// Base vide (tables pas encore créées) : direction la page d'installation.
+if ($app->user === null) {
+    try {
+        $app->pdo->query('SELECT 1 FROM utilisateur LIMIT 1');
+    } catch (Throwable) {
+        header('Location: ' . url('/installation'), true, 303);
+        exit;
+    }
+}
+
+// Nouvelle version déposée : création des tables qui manquent (sans passer par le Terminal ni la page d'installation).
+try {
+    if (Ascs\Parametres::get($app->pdo, 'schema_version') !== Ascs\Web\Ribbon::version()) {
+        Ascs\Migrator::run($app->pdo);
+        Ascs\Parametres::set($app->pdo, 'schema_version', Ascs\Web\Ribbon::version());
+    }
+} catch (Throwable $e) {
+    error_log('ASCS mise à jour du schéma : ' . $e->getMessage());
+}
+
+$router = new Router();
+$router->get('/connexion', [AuthController::class, 'form'], true);
+$router->post('/connexion', [AuthController::class, 'connexion'], true);
+$router->post('/deconnexion', [AuthController::class, 'deconnexion']);
+$router->post('/saison', [AuthController::class, 'saison']);
+$router->get('/', [HomeController::class, 'index']);
+
+$router->get('/adherents', [AdherentController::class, 'index']);
+$router->get('/adherents/nouveau', [AdherentController::class, 'nouveau']);
+$router->get('/adherents/doublons', [AdherentController::class, 'doublons']);
+$router->post('/adherents', [AdherentController::class, 'creer']);
+$router->get('/adherents/{id}', [AdherentController::class, 'fiche']);
+$router->post('/adherents/{id}', [AdherentController::class, 'modifier']);
+
+$router->get('/inscriptions', [InscriptionController::class, 'index']);
+$router->get('/inscriptions/nouveau', [InscriptionController::class, 'nouvelle']);
+$router->post('/inscriptions', [InscriptionController::class, 'creer']);
+$router->get('/inscriptions/{id}', [InscriptionController::class, 'fiche']);
+$router->post('/inscriptions/{id}', [InscriptionController::class, 'modifier']);
+$router->post('/inscriptions/{id}/supprimer', [InscriptionController::class, 'supprimer']);
+
+$router->get('/reglements', [ReglementController::class, 'index']);
+$router->get('/reglements/nouveau', [ReglementController::class, 'nouveau']);
+$router->post('/reglements', [ReglementController::class, 'creer']);
+$router->get('/reglements/{id}', [ReglementController::class, 'fiche']);
+$router->post('/reglements/{id}', [ReglementController::class, 'modifier']);
+$router->post('/reglements/{id}/supprimer', [ReglementController::class, 'supprimer']);
+
+// Pages publiques (QR codes) : sans connexion
+$router->get('/inscription', [PublicController::class, 'inscription'], true);
+$router->post('/inscription', [PublicController::class, 'envoyerInscription'], true);
+$router->get('/essai', [PublicController::class, 'essai'], true);
+$router->post('/essai', [PublicController::class, 'envoyerEssai'], true);
+$router->get('/merci', [PublicController::class, 'merci'], true);
+
+$router->get('/demandes', [DemandeController::class, 'index']);
+$router->get('/demandes/{id}', [DemandeController::class, 'fiche']);
+$router->post('/demandes/{id}', [DemandeController::class, 'valider']);
+$router->post('/demandes/{id}/refuser', [DemandeController::class, 'refuser']);
+$router->post('/demandes/{id}/retablir', [DemandeController::class, 'retablir']);
+$router->get('/en-ligne', [EnLigneController::class, 'index']);
+$router->post('/en-ligne', [EnLigneController::class, 'enregistrer']);
+$router->get('/en-ligne/affiches', [EnLigneController::class, 'affiches']);
+
+$router->get('/helloasso', [HelloAssoController::class, 'index']);
+$router->post('/helloasso/synchroniser', [HelloAssoController::class, 'synchroniser']);
+$router->post('/helloasso/notification/{jeton}', [HelloAssoController::class, 'notification'], true, false);
+$router->get('/helloasso/{id}', [HelloAssoController::class, 'fiche']);
+$router->post('/helloasso/{id}', [HelloAssoController::class, 'valider']);
+$router->post('/helloasso/{id}/ignorer', [HelloAssoController::class, 'ignorer']);
+$router->post('/helloasso/{id}/retablir', [HelloAssoController::class, 'retablir']);
+
+$router->get('/remises', [RemiseController::class, 'index']);
+$router->post('/remises', [RemiseController::class, 'creer']);
+$router->post('/remises/depuis', [RemiseController::class, 'depuis']);
+$router->get('/remises/nouvelle', [RemiseController::class, 'nouvelle']);
+$router->get('/remises/{id}', [RemiseController::class, 'fiche']);
+$router->post('/remises/{id}', [RemiseController::class, 'enregistrer']);
+$router->get('/remises/{id}/imprimer', [RemiseController::class, 'imprimer']);
+$router->post('/remises/{id}/retirer', [RemiseController::class, 'retirer']);
+$router->post('/remises/{id}/supprimer', [RemiseController::class, 'supprimer']);
+
+$router->get('/import', [ImportController::class, 'index']);
+$router->post('/import', [ImportController::class, 'envoyer']);
+$router->post('/import/lancer', [ImportController::class, 'lancer']);
+$router->post('/import/annuler', [ImportController::class, 'annuler']);
+$router->post('/import/bascule', [ImportController::class, 'basculer']);
+
+$router->get('/utilisateurs', [UtilisateurController::class, 'index']);
+$router->post('/utilisateurs', [UtilisateurController::class, 'creer']);
+$router->post('/utilisateurs/{id}/mot-de-passe', [UtilisateurController::class, 'motDePasse']);
+$router->post('/utilisateurs/{id}/activer', [UtilisateurController::class, 'activer']);
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if (App::$base !== '' && str_starts_with($path, App::$base)) {
+    $path = substr($path, strlen(App::$base)) ?: '/';
+}
+if ($path === '/index.php') {
+    $path = '/';
+}
+$path = rtrim($path, '/') ?: '/';
+
+try {
+    $router->dispatch($app, $_SERVER['REQUEST_METHOD'] ?? 'GET', $path);
+} catch (Throwable $e) {
+    error_log('ASCS erreur : ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    echo $app->render('erreur', ['titre' => 'Erreur', 'message' => 'Une erreur est survenue. Rien n\'a été perdu : revenez en arrière et recommencez. Si cela persiste, contactez l\'administrateur.'], 'Erreur', 'accueil', 500);
+}

@@ -1,0 +1,2 @@
+# Ce dossier ne doit jamais être servi par le web (seul public/ est public).
+Require all denied

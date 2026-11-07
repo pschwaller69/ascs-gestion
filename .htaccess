@@ -1,0 +1,4 @@
+# Si la racine du site pointe ici par erreur au lieu de public/ : fichiers cachés (.env) interdits.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
