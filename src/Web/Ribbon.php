@@ -9,6 +9,13 @@ namespace Ascs\Web;
  */
 final class Ribbon
 {
+    /** Date de la dernière mise à jour déposée sur le serveur (fichier VERSION réécrit à chaque déploiement). */
+    public static function miseAJour(): ?string
+    {
+        $f = dirname(__DIR__, 2) . '/VERSION';
+        return is_file($f) ? date('d/m H:i', (int) filemtime($f)) : null;
+    }
+
     public static function version(): string
     {
         $f = dirname(__DIR__, 2) . '/VERSION';
@@ -34,7 +41,7 @@ final class Ribbon
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
                     ['Remise de chèques', 'cheque', '/remises', null],
-                    ['Par type', 'chart', null, '0.3.5'],
+                    ['Par type', 'chart', null, '0.3.6'],
                 ],
                 'En ligne' => [
                     ['HelloAsso', 'upload', '/helloasso', null],

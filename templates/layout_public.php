@@ -15,6 +15,6 @@
 <main id="contenu">
     <?= $content ?>
 </main>
-<footer class="pied">ASCS – Rillieux-la-Pape</footer>
+<footer class="pied">ASCS – Rillieux-la-Pape · v<?= e($version) ?></footer>
 </body>
 </html>

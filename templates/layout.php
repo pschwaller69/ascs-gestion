@@ -15,7 +15,14 @@ if ($base !== '' && str_starts_with($retour, $base)) {
 <meta name="robots" content="noindex, nofollow">
 <title><?= e($title !== '' ? $title . ' – ASCS' : 'ASCS') ?></title>
 <link rel="stylesheet" href="<?= e(url('/assets/app.css')) ?>?v=<?= e($version) ?>">
-<script src="<?= e(url('/assets/app.js')) ?>?v=<?= e($version) ?>" defer></script>
+<link rel="manifest" href="<?= e(url('/manifest.webmanifest')) ?>">
+<meta name="theme-color" content="#064c48">
+<link rel="icon" type="image/png" sizes="32x32" href="<?= e(url('/assets/icones/favicon-32.png')) ?>">
+<link rel="apple-touch-icon" href="<?= e(url('/assets/icones/apple-touch-icon.png')) ?>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ASCS">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="<?= e(url('/assets/app.js')) ?>?v=<?= e($version) ?>" defer data-sw="<?= e(url('/sw.js')) ?>?v=<?= e($version) ?>"></script>
 </head>
 <body>
 <a class="saut" href="#contenu">Aller au contenu</a>
@@ -23,6 +30,7 @@ if ($base !== '' && str_starts_with($retour, $base)) {
 <header class="entete">
     <div class="entete-haut">
         <a class="marque" href="<?= e(url('/')) ?>">ASCS <span>Les Semailles</span></a>
+        <span class="version-dev" title="Version de l'application et heure de sa dernière mise à jour sur le serveur">v<?= e($version) ?><?php $maj = Ascs\Web\Ribbon::miseAJour(); ?><?= $maj ? ' · ' . e($maj) : '' ?></span>
         <form class="saison" method="post" action="<?= e(url('/saison')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="retour" value="<?= e($retour) ?>">

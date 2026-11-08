@@ -254,3 +254,6 @@ tr.a-venir td { color: var(--muted); }
 /* Aides au paiement */
 .aides { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-bottom: .75rem; }
 .aides .conseille { border-color: var(--teal); background: var(--teal-l); }
+
+/* Version affichée en permanence pendant le développement */
+.version-dev { font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }

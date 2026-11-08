@@ -12,3 +12,11 @@ DirectoryIndex index.php
 <FilesMatch "^\.|\.(env|sqlite|bak|log|sql)$">
     Require all denied
 </FilesMatch>
+
+# Application installable (manifeste et service worker)
+AddType application/manifest+json .webmanifest
+<IfModule mod_headers.c>
+    <Files "sw.js">
+        Header set Cache-Control "no-cache"
+    </Files>
+</IfModule>

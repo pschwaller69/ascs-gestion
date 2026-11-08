@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.5 — 08/11/2026
+- **Application installable** sur téléphone et ordinateur : icône ASCS, ouverture en plein écran (Android : « Installer l'application » ; iPhone : Partager > « Sur l'écran d'accueil »).
+  - Aucune page ni donnée n'est gardée sur l'appareil : seuls les fichiers d'interface sont en cache. Sans réseau, une page « Pas de connexion » s'affiche.
+- **Version et heure de la dernière mise à jour affichées en haut de chaque page** (et en pied des formulaires publics), pour vérifier d'un coup d'œil qu'on est sur la dernière version.
+- Déploiement automatique : o2switch récupère chaque version publiée sur GitHub toutes les 5 minutes (`bin/deployer.sh`).
+
 ## 0.3.4 — 07/11/2026
 - **Aides au paiement** sur la fiche Règlement : boutons Coupon sport mairie (48 €), Coupon culture mairie (90 €), Pass Sport (50 €), Pass Région (30 €), Pass Senior (15 €). Ils remplissent le moyen de paiement, le montant (toujours modifiable) et la référence.
   - Le coupon qui correspond à l'activité est proposé en premier (culture pour les familles Culture et Musique, sport sinon) ; choisir « Coupon Mairie » dans la liste prend le bon montant.
@@ -73,7 +79,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.5 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
+- 0.3.6 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

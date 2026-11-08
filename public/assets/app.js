@@ -235,3 +235,15 @@
         appliquer(o.getAttribute('data-montant'), o.getAttribute('data-reference') || '');
     });
 }());
+
+// Application installable : enregistrement du service worker (HTTPS uniquement ; il ne garde aucune page ni donnée)
+(function () {
+    'use strict';
+    if (!('serviceWorker' in navigator)) { return; }
+    var script = document.querySelector('script[data-sw]');
+    if (!script) { return; }
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register(script.getAttribute('data-sw'), { scope: script.getAttribute('data-sw').replace(/sw\.js.*$/, '') })
+            .catch(function () { /* l'application fonctionne aussi sans */ });
+    });
+}());
