@@ -188,6 +188,9 @@ final class Fusion
                 }
             }
 
+            $this->pdo->prepare('UPDATE marque_adherent SET adherent_id = ? WHERE adherent_id = ?')->execute([$gardeId, $autreId]);
+            $this->pdo->prepare('UPDATE campagne_destinataire SET adherent_id = ? WHERE adherent_id = ?')->execute([$gardeId, $autreId]);
+
             // 6. Suppression de l'autre fiche et trace de la fusion
             $this->pdo->prepare('DELETE FROM adherent WHERE id = ?')->execute([$autreId]);
             if (!$rejeu) {

@@ -275,3 +275,41 @@
     };
     Array.prototype.forEach.call(cases, function (c) { c.addEventListener('change', maj); });
 }());
+
+// Mailing : choix des sections affiché seulement pour la cible « sections choisies »
+(function () {
+    'use strict';
+    var bloc = document.getElementById('choix-sections');
+    if (!bloc) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('input[name="cible"]'), function (r) {
+        r.addEventListener('change', function () { bloc.hidden = !(r.checked && r.value === 'section'); });
+    });
+}());
+
+// SMS : nombre de caractères et de SMS (160 par SMS, 153 au-delà ; 70/67 avec des caractères hors alphabet SMS)
+(function () {
+    'use strict';
+    var sortie = document.getElementById('compteur-sms');
+    var texte = document.getElementById('f_texte');
+    if (!sortie || !texte) { return; }
+    var gsm = /^[\n\r\x20-\x7E£¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉÄÖÑÜ§¿äöñüà€]*$/;
+    var maj = function () {
+        var t = texte.value, n = Array.from(t).length, ok = gsm.test(t);
+        var un = ok ? 160 : 70, plus = ok ? 153 : 67;
+        var parts = n <= un ? 1 : Math.ceil(n / plus);
+        sortie.textContent = n + ' caractère' + (n > 1 ? 's' : '') + ' (avant remplacement de {prenom}) : ' + parts + ' SMS par destinataire'
+            + (ok ? '.' : ' (un caractère spécial limite le SMS à 70 caractères).');
+    };
+    texte.addEventListener('input', maj);
+    maj();
+}());
+
+// SMS depuis le téléphone : sur iPhone, plusieurs destinataires s'écrivent sms:/open?addresses=…&body=…
+(function () {
+    'use strict';
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-sms-numeros]'), function (a) {
+        var corps = a.getAttribute('data-sms-texte').replace(/\{prenom\}|\{nom\}/g, '').replace(/ +,/g, ',');
+        a.href = 'sms:/open?addresses=' + a.getAttribute('data-sms-numeros') + '&body=' + encodeURIComponent(corps);
+    });
+}());

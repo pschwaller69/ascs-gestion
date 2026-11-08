@@ -229,6 +229,30 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            'campagne' => [
+                'cols' => [
+                    'id' => 'auto', 'canal' => 'str:10', 'cible' => 'str:30', 'saison_id' => 'int', 'sections' => 'text?',
+                    'objet' => 'str:255?', 'texte' => 'text', 'cree_le' => 'datetime', 'par' => 'str:150?', 'statut' => 'str:20',
+                    'valide_le' => 'datetime?', 'valide_par' => 'str:150?', 'termine_le' => 'datetime?',
+                ],
+                'pk' => ['id'],
+            ],
+            'campagne_destinataire' => [
+                'cols' => [
+                    'id' => 'auto', 'campagne_id' => 'int', 'adherent_id' => 'int?', 'adresse' => 'str:150', 'prenom' => 'str:100?', 'nom' => 'str:100?',
+                    'statut' => 'str:20', 'erreur' => 'text?', 'envoye_le' => 'datetime?',
+                ],
+                'pk' => ['id'],
+                'index' => [['campagne_id', 'statut']],
+            ],
+            'marque_adherent' => [
+                'cols' => [
+                    'id' => 'auto', 'adherent_id' => 'int', 'champ' => 'str:40', 'valeur' => 'int', 'mail' => 'str:150?',
+                    'date_marque' => 'datetime', 'par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+                'index' => [['adherent_id']],
+            ],
             'presence' => [
                 'cols' => [
                     'id' => 'auto', 'section_id' => 'int', 'saison_id' => 'int', 'date_seance' => 'date', 'adherent_id' => 'int',

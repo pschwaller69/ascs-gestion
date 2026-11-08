@@ -1,0 +1,249 @@
+<?php
+declare(strict_types=1);
+
+namespace Ascs\Web\Controllers;
+
+use Ascs\Documents\Reglages;
+use Ascs\Domain\Mailing;
+use Ascs\Domain\Marques;
+use Ascs\Domain\VerifMails;
+use Ascs\Mail\Sms;
+use Ascs\Web\App;
+
+/** Mailings et SMS (préparation, validation par le bureau, envoi par lots), validation des mails, export des contacts. */
+final class MailingController
+{
+    private Mailing $m;
+
+    public function __construct(private readonly App $app)
+    {
+        $this->m = new Mailing($app->pdo);
+    }
+
+    private function par(): string
+    {
+        return (string) ($this->app->user['email'] ?? '');
+    }
+
+    public function index(array $p): string
+    {
+        return $this->app->render('mailing/index', ['campagnes' => $this->m->campagnes()], 'Mailings et SMS', 'mail');
+    }
+
+    private function sections(): array
+    {
+        $st = $this->app->pdo->prepare('SELECT s.id, s.titre, COUNT(i.id) AS n FROM section s JOIN inscription i ON i.section_id = s.id AND i.saison_id = ? GROUP BY s.id, s.titre ORDER BY s.titre');
+        $st->execute([$this->app->saisonId()]);
+        return $st->fetchAll();
+    }
+
+    public function nouveau(array $p): string
+    {
+        $canal = ($_GET['canal'] ?? '') === 'sms' ? 'sms' : 'mail';
+        $cible = isset(Mailing::CIBLES[$_GET['cible'] ?? '']) ? $_GET['cible'] : 'saison';
+        $d = ['canal' => $canal, 'cible' => $cible, 'sections' => array_map('intval', (array) ($_GET['sections'] ?? [])), 'objet' => '', 'texte' => $canal === 'sms' ? '' : "Bonjour {prenom},\n\n"];
+        return $this->form($d, []);
+    }
+
+    private function form(array $d, array $err, int $status = 200): string
+    {
+        $apercu = $this->m->destinataires($d['canal'], $d['cible'], $this->app->saisonId(), $d['sections']);
+        return $this->app->render('mailing/nouveau', [
+            'd' => $d, 'err' => $err, 'sections' => $this->sections(), 'apercu' => $apercu,
+            'reglages' => (new Reglages($this->app->pdo))->tous(), 'smsPret' => Sms::depuisConfig() !== null,
+        ], $d['canal'] === 'sms' ? 'Nouveau SMS' : 'Nouveau mail', 'mail', $status);
+    }
+
+    public function creer(array $p): ?string
+    {
+        $d = [
+            'canal' => ($_POST['canal'] ?? '') === 'sms' ? 'sms' : 'mail',
+            'cible' => isset(Mailing::CIBLES[$_POST['cible'] ?? '']) ? $_POST['cible'] : 'saison',
+            'sections' => array_map('intval', (array) ($_POST['sections'] ?? [])),
+            'objet' => trim((string) ($_POST['objet'] ?? '')),
+            'texte' => trim(str_replace("\r\n", "\n", (string) ($_POST['texte'] ?? ''))),
+        ];
+        if (isset($_POST['actualiser'])) {
+            return $this->form($d, []);
+        }
+        $err = [];
+        if ($d['canal'] === 'mail' && $d['objet'] === '') {
+            $err['objet'] = 'Obligatoire.';
+        }
+        if ($d['texte'] === '' || $d['texte'] === 'Bonjour {prenom},') {
+            $err['texte'] = 'Écrivez le message.';
+        }
+        if ($d['cible'] === 'section' && !$d['sections']) {
+            $err['sections'] = 'Cochez au moins une section.';
+        }
+        if ($err) {
+            return $this->form($d, $err, 422);
+        }
+        $id = $this->m->creer($d['canal'], $d['cible'], $this->app->saisonId(), $d['sections'], $d['objet'], $d['texte'], $this->par());
+        $this->app->flash('ok', 'Brouillon créé : vérifiez les destinataires puis validez l\'envoi.');
+        $this->app->redirect('/mailing/' . $id);
+        return null;
+    }
+
+    private function campagne(array $p): array
+    {
+        $c = $this->m->campagne((int) $p['id']);
+        if (!$c) {
+            $this->app->flash('erreur', 'Envoi introuvable.');
+            $this->app->redirect('/mailing');
+        }
+        return $c;
+    }
+
+    public function fiche(array $p): string
+    {
+        $c = $this->campagne($p);
+        $dest = $this->m->destinatairesCampagne((int) $c['id']);
+        $premier = null;
+        foreach ($dest as $d) {
+            if ($d['statut'] !== 'retire') {
+                $premier = $d;
+                break;
+            }
+        }
+        $sec = json_decode((string) $c['sections'], true) ?: [];
+        $noms = [];
+        if ($sec) {
+            $st = $this->app->pdo->query('SELECT titre FROM section WHERE id IN (' . implode(',', array_map('intval', $sec)) . ') ORDER BY titre');
+            $noms = $st->fetchAll(\PDO::FETCH_COLUMN);
+        }
+        return $this->app->render('mailing/fiche', [
+            'c' => $c, 'dest' => $dest, 'sectionsNoms' => $noms,
+            'apercu' => $premier ? Mailing::personnaliser((string) $c['texte'], $premier, (string) $c['canal']) : (string) $c['texte'],
+            'reglages' => (new Reglages($this->app->pdo))->tous(), 'smsPret' => Sms::depuisConfig() !== null,
+        ], ($c['canal'] === 'sms' ? 'SMS' : 'Mail') . ' ' . ($c['objet'] ?: '#' . $c['id']), 'mail');
+    }
+
+    public function modifier(array $p): void
+    {
+        $c = $this->campagne($p);
+        $this->m->modifier((int) $c['id'], trim((string) ($_POST['objet'] ?? '')), trim(str_replace("\r\n", "\n", (string) ($_POST['texte'] ?? ''))));
+        $this->app->flash('ok', 'Message modifié.');
+        $this->app->redirect('/mailing/' . $c['id']);
+    }
+
+    public function destinataire(array $p): void
+    {
+        $this->m->basculer((int) $p['id'], (int) $p['dest']);
+        $this->app->redirect('/mailing/' . (int) $p['id'] . '#d' . (int) $p['dest']);
+    }
+
+    public function valider(array $p): void
+    {
+        $c = $this->campagne($p);
+        if ($c['canal'] === 'mail' && (new Reglages($this->app->pdo))->tous()['expediteur'] === '') {
+            $this->app->flash('erreur', 'Renseignez d\'abord l\'adresse d\'envoi des mails (Paramétrage > Facture).');
+            $this->app->redirect('/mailing/' . $c['id']);
+        }
+        $this->m->valider((int) $c['id'], $this->par());
+        if ($c['canal'] === 'sms' && Sms::depuisConfig() === null) {
+            $this->app->flash('ok', 'SMS validé. Ouvrez cette page sur le téléphone de l\'association pour les envoyer avec l\'application Messages.');
+            $this->app->redirect('/mailing/' . $c['id']);
+        }
+        $r = $this->m->envoyerLot((int) $c['id']);
+        $this->app->flash($r['echecs'] ? 'erreur' : 'ok', $this->bilan($r, (string) $c['canal']));
+        $this->app->redirect('/mailing/' . $c['id']);
+    }
+
+    public function lot(array $p): void
+    {
+        $c = $this->campagne($p);
+        $r = $this->m->envoyerLot((int) $c['id']);
+        $this->app->flash($r['echecs'] ? 'erreur' : 'ok', $this->bilan($r, (string) $c['canal']));
+        $this->app->redirect('/mailing/' . $c['id']);
+    }
+
+    private function bilan(array $r, string $canal): string
+    {
+        $mot = $canal === 'sms' ? 'SMS' : 'mail(s)';
+        return sprintf('%d %s envoyé(s)', $r['envoyes'], $mot) . ($r['echecs'] ? sprintf(', %d en échec', $r['echecs']) : '')
+            . ($r['restants'] ? sprintf('. %d restent à envoyer : ils partiront par lots (bouton « Envoyer le lot suivant » ou tâche automatique).', $r['restants']) : '. Envoi terminé.');
+    }
+
+    public function marquer(array $p): void
+    {
+        $c = $this->campagne($p);
+        $n = $this->m->marquerEnvoyes((int) $c['id'], array_map('intval', (array) ($_POST['ids'] ?? [])));
+        $this->app->flash('ok', $n . ' SMS marqué(s) envoyé(s).');
+        $this->app->redirect('/mailing/' . $c['id'] . '#a-envoyer');
+    }
+
+    public function supprimer(array $p): void
+    {
+        $ok = $this->m->supprimer((int) $p['id']);
+        $this->app->flash($ok ? 'ok' : 'erreur', $ok ? 'Brouillon supprimé.' : 'Seul un brouillon peut être supprimé.');
+        $this->app->redirect('/mailing');
+    }
+
+    /* Validation des mails */
+
+    public function verification(array $p): string
+    {
+        $tout = isset($_GET['toutes']);
+        $v = new VerifMails($this->app->pdo);
+        return $this->app->render('mailing/verification', [
+            'lignes' => $v->problemes($tout ? null : $this->app->saisonId()), 'tout' => $tout, 'dns' => $v->dnsDisponible(),
+        ], 'Validation des mails', 'mail');
+    }
+
+    public function verificationAction(array $p): void
+    {
+        $id = (int) $p['id'];
+        $action = (string) ($_POST['action'] ?? '');
+        $ok = match ($action) {
+            'corriger' => (new VerifMails($this->app->pdo))->corriger($id, trim((string) ($_POST['mail'] ?? ''))),
+            'invalide' => (new Marques($this->app->pdo))->poser($id, 'adresse_mail_invalide', 1, $this->par()),
+            'valide' => (new Marques($this->app->pdo))->poser($id, 'adresse_mail_invalide', 0, $this->par()),
+            default => false,
+        };
+        $this->app->flash($ok ? 'ok' : 'erreur', $ok ? 'Fiche mise à jour.' : 'Action impossible.');
+        $this->app->redirect('/mails/verification' . (isset($_POST['toutes']) ? '?toutes=1' : ''));
+    }
+
+    /* Contacts pour Outlook : CSV au format d'import d'Outlook (inscrits de la saison) */
+
+    public function outlook(array $p): string
+    {
+        $st = $this->app->pdo->prepare('SELECT a.id, a.prenom, a.nom, a.mail, a.telephone1, a.telephone2, a.adresse, a.code_postal, a.ville, s.titre AS section
+            FROM adherent a JOIN inscription i ON i.adherent_id = a.id JOIN section s ON s.id = i.section_id
+            WHERE i.saison_id = ? ORDER BY a.nom, a.prenom');
+        $st->execute([$this->app->saisonId()]);
+        $par = [];
+        foreach ($st->fetchAll() as $r) {
+            $par[(int) $r['id']] ??= $r + ['sections' => []];
+            $par[(int) $r['id']]['sections'][] = $r['section'];
+        }
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['First Name', 'Last Name', 'E-mail Address', 'Mobile Phone', 'Home Phone', 'Home Street', 'Home Postal Code', 'Home City', 'Categories'], ',', '"', '');
+        foreach ($par as $r) {
+            fputcsv($out, [$r['prenom'], $r['nom'], $r['mail'], $r['telephone1'], $r['telephone2'], $r['adresse'], $r['code_postal'], $r['ville'],
+                'ASCS;' . implode(';', array_unique($r['sections']))], ',', '"', '');
+        }
+        rewind($out);
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="contacts-ascs-' . date('Y-m-d') . '.csv"');
+        return (string) stream_get_contents($out);
+    }
+
+    /* Désinscription (page publique, lien en bas de chaque mailing) */
+
+    public function desinscription(array $p): string
+    {
+        header('X-Robots-Tag: noindex, nofollow');
+        $id = Mailing::verifierJeton((string) $p['jeton']);
+        return $this->app->renderPublic('mailing/desinscription', ['ok' => $id !== null, 'fait' => false, 'jeton' => $p['jeton']], 'Désinscription', $id ? 200 : 404);
+    }
+
+    public function desinscrire(array $p): string
+    {
+        $id = Mailing::verifierJeton((string) $p['jeton']);
+        $fait = $id !== null && $this->m->desinscrire($id);
+        return $this->app->renderPublic('mailing/desinscription', ['ok' => $id !== null, 'fait' => $fait, 'jeton' => $p['jeton']], 'Désinscription', $id ? 200 : 404);
+    }
+}

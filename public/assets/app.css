@@ -337,3 +337,21 @@ a.tuile:hover { border-color: var(--teal); }
 .presence-liste .p-info { color: var(--muted); font-size: .85rem; text-align: right; }
 .presence-liste .p-info a { color: inherit; }
 .presence-compte { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0; display: flex; gap: .75rem; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }
+
+/* Mailings et SMS */
+.choix-radio, .choix-case { display: flex; gap: .5rem; align-items: baseline; padding: .2rem 0; }
+.sections-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1rem; margin: .5rem 0 .5rem 1.6rem; }
+.apercu-dest { margin: .75rem 0 0; }
+.apercu-message { white-space: pre-wrap; font-family: inherit; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: .75rem 1rem; margin: 0; }
+tr.retire td { color: var(--muted); text-decoration: line-through; }
+tr.retire td:last-child { text-decoration: none; }
+.paquet-sms { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .5rem 0; border-top: 1px solid var(--line); }
+.envoi-un, .actions-ligne { display: flex; gap: .35rem; flex-wrap: wrap; }
+.actions-ligne form { margin: 0; }
+@media (max-width: 40rem) {
+    .table-dest thead { display: none; }
+    .table-dest tr { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; padding: .6rem .75rem; border-bottom: 1px solid var(--line); }
+    .table-dest td { border: 0; padding: 0; }
+    .table-dest td:nth-child(3) { grid-column: 2; grid-row: 1; }
+    .table-dest td:last-child { grid-column: 1 / -1; }
+}

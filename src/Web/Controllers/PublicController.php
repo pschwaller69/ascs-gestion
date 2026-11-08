@@ -85,9 +85,38 @@ final class PublicController
             return $this->formulaire($type, $saisie, $err, 422);
         }
         $ref = $this->el->enregistrer($d, $ip);
+        $this->confirmer($type, $d, (string) $ref);
         unset($_SESSION['form_affiche'][$type]);
         $_SESSION['demande_envoyee'] = ['ref' => $ref, 'type' => $type, 'sections' => json_decode($d['sections'], true), 'prenom' => $d['prenom']];
         $this->app->redirect('/merci');
+    }
+
+    /** Mail de confirmation à la personne (sans bloquer la demande si l'envoi échoue). */
+    private function confirmer(string $type, array $d, string $ref): void
+    {
+        try {
+            $r = (new \Ascs\Documents\Reglages($this->app->pdo))->tous();
+            if ($r['expediteur'] === '' || !filter_var((string) $d['mail'], FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+            $ids = array_map('intval', json_decode((string) $d['sections'], true) ?: []);
+            $noms = [];
+            foreach ($this->el->sectionsOuvertes($type === 'essai') as $s) {
+                if (in_array((int) $s['id'], $ids, true)) {
+                    $noms[] = (string) preg_replace('/^Z\s*ESSAI\s*/iu', '', (string) $s['titre']);
+                }
+            }
+            $asso = $r['association'] ?: 'ASCS';
+            $texte = 'Bonjour ' . trim((string) $d['prenom']) . ",\n\n"
+                . ($type === 'essai' ? 'Nous avons bien reçu votre demande de cours d\'essai' : 'Nous avons bien reçu votre demande d\'inscription')
+                . ($noms ? ' pour : ' . implode(', ', $noms) : '') . ".\nRéférence : " . $ref . "\n\n"
+                . ($type === 'essai' ? 'Le bureau vous recontacte pour vous confirmer le jour du cours.' : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
+                . "\n\nÀ bientôt,\n" . $asso . ($r['telephone'] ? "\n" . $r['telephone'] : '') . ($r['site'] ? "\n" . $r['site'] : '');
+            (new \Ascs\Mail\Envoi($this->app->pdo))->envoyer($r['expediteur'], $asso, (string) $d['mail'],
+                ($type === 'essai' ? 'Demande de cours d\'essai' : 'Demande d\'inscription') . ' – ' . $asso, $texte, [], null, 'demande en ligne ' . $ref);
+        } catch (\Throwable) {
+            // la demande est enregistrée : un mail qui ne part pas ne doit pas l'empêcher
+        }
     }
 
     public function merci(array $p): string

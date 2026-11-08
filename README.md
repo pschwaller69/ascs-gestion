@@ -32,6 +32,11 @@ Les commandes `bin/*.php` restent disponibles pour le Terminal.
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 
+## Mailings et SMS (depuis 0.5.0)
+- Tâche cron toutes les 5 minutes pour envoyer les lots suivants : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/envois.php`
+- SMS depuis le téléphone de l'association : rien à configurer (désactiver les messages de groupe MMS/RCS dans l'application Messages).
+- SMS automatiques (facultatif) : application « SMS Gateway for Android » sur le téléphone, identifiants dans `.env` (SMS_USER, SMS_PASS).
+
 ## Facture (depuis 0.3.8)
 1. Paramétrage > Facture : coordonnées de l'association, signataire, logo et signature (PNG ou JPEG), adresse d'envoi des mails (une adresse existante du domaine chez o2switch, par exemple contact@ascs.fr).
 2. Sur une inscription : « Facture PDF » pour l'ouvrir ou l'imprimer, « Envoyer la facture par mail » pour l'envoyer en pièce jointe. Les images sont gardées dans `storage/documents` (jamais servies directement).

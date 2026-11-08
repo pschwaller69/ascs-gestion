@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -45,6 +45,11 @@ final class Config
             'ha_api_url'       => $get('HELLOASSO_API_URL', 'https://api.helloasso.com'),
             // Envoi des mails : « mail » (serveur d'o2switch) ou « fichier » (tests : écrits dans storage/mails)
             'mail_transport'   => $get('MAIL_TRANSPORT', 'mail'),
+            // SMS : passerelle « SMS Gateway for Android » (identifiants affichés dans l'application du téléphone)
+            'sms_url'          => $get('SMS_URL', 'https://api.sms-gate.app/3rdparty/v1/messages'),
+            'sms_user'         => $get('SMS_USER'),
+            'sms_pass'         => $get('SMS_PASS'),
+            'sms_transport'    => $get('SMS_TRANSPORT', 'passerelle'),
         ];
     }
 }

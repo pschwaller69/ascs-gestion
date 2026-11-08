@@ -3,6 +3,20 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.5.0 — 08/11/2026
+- **Mailings** (onglet Mail) : destinataires = inscrits de la saison, de sections choisies, inscrits N-1 pas encore réinscrits, ou anciens adhérents. Nombre de destinataires et exclus affichés avant de préparer ; {prenom} et {nom} personnalisés.
+  - Toujours un brouillon d'abord : aperçu, liste des destinataires (on peut en retirer), puis validation par le bureau.
+  - Exclus d'office : refus de mail, adresse marquée invalide ou mal formée ; une adresse partagée par une famille ne reçoit qu'un mail.
+  - Envoi par lots de 40 (limite horaire du serveur mail) : premier lot à la validation, les suivants par bouton ou par la tâche planifiée `bin/envois.php`.
+  - Lien de désinscription en bas de chaque mail (page de confirmation, puis « refus de mail » coché sur la fiche).
+- **SMS** : mêmes destinataires (portables seulement, refus de SMS exclus, un SMS par numéro), compteur de caractères et de SMS.
+  - Depuis le téléphone de l'association : la page de l'envoi ouvre l'application Messages avec numéros et texte, par paquets de 10 ou un par un, puis « envoyé ».
+  - En option, envoi automatique par la passerelle « SMS Gateway for Android » (SMS_USER / SMS_PASS dans .env).
+- **Validation des mails** : adresses mal formées, fautes de frappe connues (gmial.com, hotmail.fe…) avec correction en un clic, domaines qui ne reçoivent pas de mail ; marquer / retirer « invalide ».
+- **Ajout Outlook** : export CSV des inscrits de la saison au format d'import des contacts Outlook (catégories = sections).
+- **Demandes en ligne** : mail de confirmation à la personne (référence et activités demandées).
+- Mode transition : désinscriptions et adresses marquées invalides sont réappliquées après un import WinDev (sauf si le mail a changé).
+
 ## 0.4.1 — 08/11/2026
 - **Inscriptions par section** (Accueil > Par section) : effectifs de la saison, séances notées, mail de l'animateur ; fiche de section avec les inscrits (âge, téléphone, mail, parent, état du paiement, nombre de présences).
 - **Feuille d'émargement** à imprimer (A4 paysage) : inscrits, téléphone, une colonne par séance datée d'après les créneaux de la section (première séance et nombre de colonnes réglables), trois lignes libres pour les essais.
@@ -132,6 +146,5 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions.
 - Abandonnés : scan de chèques, Copilot, imports MonClub et Sportyneo.

@@ -51,15 +51,21 @@ final class Ribbon
             ]],
             'mail' => ['titre' => 'Mail', 'groupes' => [
                 'Mailing' => [
-                    ['Validation des mails', 'mail', null, '0.5.0'],
-                    ['Anciens adhérents', 'mail', null, '0.5.0'],
-                    ['Saison', 'mail', null, '0.5.0'],
-                    ['N-1 non réinscrits', 'mail', null, '0.5.0'],
-                    ['Section', 'mail', null, '0.5.0'],
+                    ['Envois', 'mail', '/mailing', null],
+                    ['Saison', 'mail', '/mailing/nouveau?cible=saison', null],
+                    ['Section', 'mail', '/mailing/nouveau?cible=section', null],
+                    ['N-1 non réinscrits', 'mail', '/mailing/nouveau?cible=non_reinscrits', null],
+                    ['Anciens adhérents', 'mail', '/mailing/nouveau?cible=anciens', null],
+                ],
+                'SMS' => [
+                    ['Nouveau SMS', 'mail', '/mailing/nouveau?canal=sms', null],
+                ],
+                'Contrôle' => [
+                    ['Validation des mails', 'mail', '/mails/verification', null],
                     ['Liste de présence', 'list', '/sections', null],
                 ],
                 'Contact' => [
-                    ['Ajout Outlook', 'users', null, '0.5.0'],
+                    ['Ajout Outlook', 'download', '/contacts/outlook', null],
                 ],
             ]],
             'parametrage' => ['titre' => 'Paramétrage', 'groupes' => [

@@ -42,6 +42,14 @@ final class Transition
             $lignes[] = 'Demandes en ligne : revalidation impossible (' . $e->getMessage() . ').';
         }
         try {
+            $n = (new \Ascs\Domain\Marques($pdo))->rejouerApresImport();
+            if ($n) {
+                $lignes[] = sprintf('Fiches : %d désinscription(s) ou mail(s) invalide(s) réappliqué(s).', $n);
+            }
+        } catch (\Throwable $e) {
+            $lignes[] = 'Désinscriptions : impossible de les réappliquer (' . $e->getMessage() . ').';
+        }
+        try {
             $r = (new \Ascs\Domain\Fusion($pdo))->rejouerApresImport();
             if ($r['refaites'] || $r['deja']) {
                 $lignes[] = sprintf('Fiches fusionnées : %d fusion(s) refaite(s), %d déjà faite(s) aussi dans WinDev.', $r['refaites'], $r['deja']);
