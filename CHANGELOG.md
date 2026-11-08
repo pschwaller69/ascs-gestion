@@ -3,6 +3,14 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.8 — 08/11/2026
+- **Règlements par type** (Accueil > Par type) : pour la saison, nombre et montant par moyen de paiement, avec la part encaissable et la part à venir ; coupons culture / sport et Pass Senior distingués. Chaque ligne ouvre la liste des règlements correspondants. Rappel du total des inscriptions et du reste à régler.
+- **Facture PDF** (bouton « Facture PDF » sur l'inscription), modèle WinDev : logo, n° d'inscription, adresse, inscription, règlements (à venir signalés), mention « Réglée le … » (ou ce qui reste à encaisser), attestation signée, pied de page de l'association.
+- **Envoi de la facture par mail** depuis l'inscription, PDF joint, message modifiable ; chaque envoi est tracé sur la fiche.
+- **Paramétrage > Facture** : coordonnées de l'association, signataire, logo, signature et tampon (PNG ou JPEG), adresse d'envoi des mails.
+- **Aides au paiement : date d'encaissement proposée** — coupons mairie au 1er janvier suivant, Pass Sport un mois plus tard, Pass Région et Pass Senior 15 jours plus tard (toujours modifiable).
+- Bibliothèque FPDF 1.9 (licence libre) incluse pour les PDF.
+
 ## 0.3.7 — 08/11/2026
 - **Règlements à venir** : tout ce qui est sûr est enregistré, même pas encore encaissé.
   - HelloAsso en plusieurs fois : chaque échéance prévue devient un règlement daté du prélèvement, avec la mention « (prélèvement prévu) ». Une fois prélevée, la date réelle remplace la date prévue et la mention disparaît ; refusée ou annulée, le règlement est retiré (signalé dans le résumé de synchronisation).
@@ -93,7 +101,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.8 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
+- 0.3.9 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

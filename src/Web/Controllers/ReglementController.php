@@ -24,6 +24,13 @@ final class ReglementController
         return $this->app->render('erreur', ['titre' => 'Introuvable', 'message' => 'Ce règlement ou cette inscription n\'existe pas ou a été supprimé.'], 'Introuvable', 'accueil', 404);
     }
 
+    public function parType(array $p): string
+    {
+        $du = Input::date($_GET, 'du');
+        $au = Input::date($_GET, 'au');
+        return $this->app->render('reglements/par_type', ['du' => $du, 'au' => $au] + $this->reg->parType($this->app->saisonId(), $du, $au), 'Règlements par type');
+    }
+
     public function index(array $p): string
     {
         $mode = (int) ($_GET['mode'] ?? 0) ?: null;

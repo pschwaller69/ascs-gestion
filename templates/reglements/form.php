@@ -12,15 +12,16 @@
     <div class="aides" role="group" aria-labelledby="aides-titre">
         <span id="aides-titre" class="aide">Aide :</span>
         <?php foreach ($aides as $a): ?>
-            <button type="button" class="btn btn-petit<?= $a['conseille'] ? ' conseille' : '' ?>" data-aide data-mode="<?= (int) $a['mode'] ?>" data-montant="<?= e(number_format($a['montant'], 2, ',', '')) ?>" data-reference="<?= e($a['reference']) ?>"<?= $a['conseille'] ? ' title="Correspond à la famille de l\'activité"' : '' ?>><?= e($a['libelle']) ?> <?= e(money($a['montant'])) ?></button>
+            <button type="button" class="btn btn-petit<?= $a['conseille'] ? ' conseille' : '' ?>" data-aide data-mode="<?= (int) $a['mode'] ?>" data-montant="<?= e(number_format($a['montant'], 2, ',', '')) ?>" data-reference="<?= e($a['reference']) ?>" data-date="<?= e($a['date']) ?>"<?= $a['conseille'] ? ' title="Correspond à la famille de l\'activité"' : '' ?>><?= e($a['libelle']) ?> <?= e(money($a['montant'])) ?></button>
         <?php endforeach; ?>
+        <span class="aide">Date d'encaissement proposée : coupons mairie au 1er janvier, Pass Sport un mois plus tard, Pass Région et Pass Senior 15 jours plus tard.</span>
     </div>
     <div class="grille">
         <div class="champ<?= isset($err['mode_reglement_id']) ? ' en-erreur' : '' ?>">
             <label for="f_mode_reglement_id">Moyen de paiement <span class="oblig" title="obligatoire">*</span></label>
             <select id="f_mode_reglement_id" name="mode_reglement_id" required data-mode-cheque="<?= (int) $modeCheque ?>"<?= isset($err['mode_reglement_id']) ? ' aria-invalid="true" aria-describedby="f_mode-err"' : '' ?>>
                 <option value="">Choisir…</option>
-                <?php foreach ($modes as $m): $def = $edition ? null : ($parMode[(int) $m['id']] ?? null); ?><option value="<?= (int) $m['id'] ?>"<?= $def ? ' data-montant="' . e(number_format($def['montant'], 2, ',', '')) . '" data-reference="' . e($def['reference']) . '"' : '' ?><?= attr((string) $d['mode_reglement_id'] === (string) $m['id'], 'selected') ?>><?= e($m['libelle']) ?></option><?php endforeach; ?>
+                <?php foreach ($modes as $m): $def = $edition ? null : ($parMode[(int) $m['id']] ?? null); ?><option value="<?= (int) $m['id'] ?>"<?= $def ? ' data-montant="' . e(number_format($def['montant'], 2, ',', '')) . '" data-reference="' . e($def['reference']) . '" data-date="' . e($def['date']) . '"' : '' ?><?= attr((string) $d['mode_reglement_id'] === (string) $m['id'], 'selected') ?>><?= e($m['libelle']) ?></option><?php endforeach; ?>
             </select>
             <?php if (isset($err['mode_reglement_id'])): ?><p class="msg-erreur" id="f_mode-err"><?= e($err['mode_reglement_id']) ?></p><?php endif; ?>
         </div>

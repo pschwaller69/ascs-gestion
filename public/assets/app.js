@@ -208,7 +208,15 @@
     var mode = document.getElementById('f_mode_reglement_id');
     var montant = document.getElementById('f_montant');
     var ref = document.getElementById('f_identifiant');
+    var date = document.getElementById('f_date_reglement');
     if (!mode || !montant || !ref) { return; }
+    // Date d'encaissement prévue de l'aide : remplace la date tant qu'elle n'a pas été changée à la main
+    var dateAuto = date ? date.value : '';
+    var poserDate = function (d) {
+        if (!date || !d) { return; }
+        if (date.value === '' || date.value === dateAuto) { date.value = d; }
+        dateAuto = d;
+    };
     // On ne remplace que ce que l'application a elle-même proposé (jamais une saisie de l'utilisateur)
     var auto = { montant: null, reference: '' };
     var appliquer = function (m, r) {
@@ -223,6 +231,7 @@
             montant.value = b.getAttribute('data-montant');
             ref.value = b.getAttribute('data-reference');
             auto = { montant: montant.value, reference: ref.value };
+            poserDate(b.getAttribute('data-date'));
             montant.focus();
             montant.select();
         });
@@ -233,6 +242,7 @@
         if (!o || !o.hasAttribute('data-montant')) { return; }
         if (auto.montant === null) { auto.montant = initial; }
         appliquer(o.getAttribute('data-montant'), o.getAttribute('data-reference') || '');
+        poserDate(o.getAttribute('data-date'));
     });
 }());
 

@@ -261,3 +261,9 @@ tr.a-venir td { color: var(--muted); }
 /* HelloAsso : réglage de la validation automatique */
 .reglage-auto { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 0 0 1rem; padding: .6rem .9rem; background: var(--teal-l); border-left: 4px solid var(--teal); border-radius: 4px; }
 .reglage-auto p { margin: 0; flex: 1 1 28rem; }
+
+/* Actions en haut de page, réglages de la facture */
+.actions-titre { display: flex; flex-wrap: wrap; gap: .5rem; }
+.grille-champs, .grille-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0 1.25rem; }
+.apercu-image { display: block; max-width: 14rem; max-height: 7rem; margin: .25rem 0 .5rem; padding: .4rem; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+.liste-envois { margin: 1rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: .9rem; }

@@ -142,6 +142,10 @@ final class InscriptionController
         return $this->app->render('inscriptions/fiche', [
             'i' => $i, 'd' => $d, 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(),
             'reglements' => $r->deInscription((int) $i['id']),
+            'envois' => (new \Ascs\Mail\Envoi($this->app->pdo))->historique((int) $i['id']),
+            'mailFacture' => (string) ($this->adh->trouver((int) $i['adherent_id'])['mail'] ?? ''),
+            'messageFacture' => \Ascs\Web\Controllers\FactureController::message($i, $reg = (new \Ascs\Documents\Reglages($this->app->pdo))->tous()),
+            'expediteur' => $reg['expediteur'],
         ], 'Inscription ' . trim($i['nom'] . ' ' . $i['prenom']), 'accueil', $status);
     }
 }

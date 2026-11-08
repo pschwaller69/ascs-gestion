@@ -41,7 +41,7 @@ final class Ribbon
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
                     ['Remise de chèques', 'cheque', '/remises', null],
-                    ['Par type', 'chart', null, '0.3.8'],
+                    ['Par type', 'chart', '/reglements/par-type', null],
                 ],
                 'En ligne' => [
                     ['HelloAsso', 'upload', '/helloasso', null],
@@ -67,6 +67,9 @@ final class Ribbon
                 'Section' => [['Section', 'layers', null, '0.4.0'], ['Résultat section', 'chart', null, '0.4.0']],
                 'Section principale' => [['Section principale', 'layers', null, '0.4.0'], ['Résultat', 'chart', null, '0.4.0']],
                 'Famille' => [['Famille', 'layers', null, '0.4.0']],
+                'Documents' => [
+                    ['Facture', 'file', '/parametres/facture', null],
+                ],
                 'Données' => [
                     ['Import WinDev', 'upload', '/import', null],
                     ['Comptes du bureau', 'users', '/utilisateurs', null],

@@ -143,4 +143,63 @@ final class Reglements
         $st->execute($args);
         return ['lignes' => $st->fetchAll(), 'total' => (int) $total, 'somme' => (float) $somme];
     }
+
+    /**
+     * Règlements de la saison regroupés par moyen (et, pour les coupons et pass, par aide d'après la référence),
+     * avec la part déjà encaissable (date passée) et la part à venir.
+     *
+     * @return array{lignes:list<array<string,mixed>>,total:array<string,float|int>,reste:float,inscrit:float}
+     */
+    public function parType(int $saisonId, ?string $du, ?string $au): array
+    {
+        $where = ['i.saison_id = ?'];
+        $args = [$saisonId];
+        if ($du) {
+            $where[] = 'r.date_reglement >= ?';
+            $args[] = $du;
+        }
+        if ($au) {
+            $where[] = 'r.date_reglement <= ?';
+            $args[] = $au;
+        }
+        $st = $this->pdo->prepare('SELECT r.mode_reglement_id, m.libelle, r.identifiant, r.montant, r.date_reglement
+            FROM reglement r JOIN inscription i ON i.id = r.inscription_id JOIN mode_reglement m ON m.id = r.mode_reglement_id
+            WHERE ' . implode(' AND ', $where));
+        $st->execute($args);
+        $auj = date('Y-m-d');
+        $lignes = [];
+        $total = ['nombre' => 0, 'montant' => 0.0, 'encaisse' => 0.0, 'a_venir' => 0.0];
+        foreach ($st->fetchAll() as $r) {
+            $mode = (int) $r['mode_reglement_id'];
+            $cle = $mode . '|' . self::detailAide($mode, (string) $r['identifiant']);
+            $lignes[$cle] ??= ['mode_id' => $mode, 'mode' => $r['libelle'], 'detail' => self::detailAide($mode, (string) $r['identifiant']),
+                'nombre' => 0, 'montant' => 0.0, 'encaisse' => 0.0, 'a_venir' => 0.0];
+            $venir = $r['date_reglement'] !== null && substr((string) $r['date_reglement'], 0, 10) > $auj;
+            foreach ([&$lignes[$cle], &$total] as &$l) {
+                $l['nombre']++;
+                $l['montant'] += (float) $r['montant'];
+                $l[$venir ? 'a_venir' : 'encaisse'] += (float) $r['montant'];
+            }
+            unset($l);
+        }
+        uasort($lignes, static fn ($a, $b) => [$a['mode_id'], $a['detail']] <=> [$b['mode_id'], $b['detail']]);
+        $st = $this->pdo->prepare('SELECT COALESCE(SUM(montant),0) FROM inscription WHERE saison_id = ?');
+        $st->execute([$saisonId]);
+        $inscrit = (float) $st->fetchColumn();
+        $st = $this->pdo->prepare('SELECT COALESCE(SUM(r.montant),0) FROM reglement r JOIN inscription i ON i.id = r.inscription_id WHERE i.saison_id = ?');
+        $st->execute([$saisonId]);
+        return ['lignes' => array_values($lignes), 'total' => $total, 'inscrit' => $inscrit, 'reste' => $inscrit - (float) $st->fetchColumn()];
+    }
+
+    /** Coupons mairie et pass Région : l'aide se lit dans la référence (COUPON SPORT, COUPON CULTURE, PASS REGION SENIOR). */
+    public static function detailAide(int $mode, string $identifiant): string
+    {
+        $r = mb_strtoupper(trim($identifiant));
+        return match (true) {
+            $mode === 6 && str_contains($r, 'CULTURE') => 'Coupon culture',
+            $mode === 6 && str_contains($r, 'SPORT') => 'Coupon sport',
+            $mode === 8 && str_contains($r, 'SENIOR') => 'Pass Senior',
+            default => '',
+        };
+    }
 }

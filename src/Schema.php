@@ -229,6 +229,14 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            'envoi_mail' => [
+                'cols' => [
+                    'id' => 'auto', 'date_envoi' => 'datetime', 'destinataire' => 'str:150', 'objet' => 'str:255',
+                    'inscription_id' => 'int?', 'ok' => 'bool', 'erreur' => 'text?', 'par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+                'index' => [['inscription_id']],
+            ],
             'helloasso_sync' => [
                 'cols' => [
                     'id' => 'auto', 'debut' => 'datetime', 'fin' => 'datetime?', 'origine' => 'str:20',

@@ -11,6 +11,7 @@ use Ascs\Web\Controllers\InscriptionController;
 use Ascs\Web\Controllers\ReglementController;
 use Ascs\Web\Controllers\DemandeController;
 use Ascs\Web\Controllers\EnLigneController;
+use Ascs\Web\Controllers\FactureController;
 use Ascs\Web\Controllers\HelloAssoController;
 use Ascs\Web\Controllers\PublicController;
 use Ascs\Web\Controllers\RemiseController;
@@ -85,9 +86,15 @@ $router->get('/inscriptions/nouveau', [InscriptionController::class, 'nouvelle']
 $router->post('/inscriptions', [InscriptionController::class, 'creer']);
 $router->get('/inscriptions/{id}', [InscriptionController::class, 'fiche']);
 $router->post('/inscriptions/{id}', [InscriptionController::class, 'modifier']);
+$router->get('/inscriptions/{id}/facture', [FactureController::class, 'pdf']);
+$router->post('/inscriptions/{id}/facture/envoyer', [FactureController::class, 'envoyer']);
+$router->get('/parametres/facture', [FactureController::class, 'reglages']);
+$router->post('/parametres/facture', [FactureController::class, 'enregistrer']);
+$router->get('/parametres/facture/image/{nom}', [FactureController::class, 'image']);
 $router->post('/inscriptions/{id}/supprimer', [InscriptionController::class, 'supprimer']);
 
 $router->get('/reglements', [ReglementController::class, 'index']);
+$router->get('/reglements/par-type', [ReglementController::class, 'parType']);
 $router->get('/reglements/nouveau', [ReglementController::class, 'nouveau']);
 $router->post('/reglements', [ReglementController::class, 'creer']);
 $router->get('/reglements/{id}', [ReglementController::class, 'fiche']);

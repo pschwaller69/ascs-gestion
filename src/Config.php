@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -43,6 +43,8 @@ final class Config
             'ha_webhook_token' => $get('HELLOASSO_WEBHOOK_TOKEN'),
             // Adresses de l'API (à ne changer que pour la sandbox HelloAsso ou les tests)
             'ha_api_url'       => $get('HELLOASSO_API_URL', 'https://api.helloasso.com'),
+            // Envoi des mails : « mail » (serveur d'o2switch) ou « fichier » (tests : écrits dans storage/mails)
+            'mail_transport'   => $get('MAIL_TRANSPORT', 'mail'),
         ];
     }
 }

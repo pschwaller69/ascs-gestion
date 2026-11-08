@@ -32,6 +32,10 @@ Les commandes `bin/*.php` restent disponibles pour le Terminal.
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 
+## Facture (depuis 0.3.8)
+1. Paramétrage > Facture : coordonnées de l'association, signataire, logo et signature (PNG ou JPEG), adresse d'envoi des mails (une adresse existante du domaine chez o2switch, par exemple contact@ascs.fr).
+2. Sur une inscription : « Facture PDF » pour l'ouvrir ou l'imprimer, « Envoyer la facture par mail » pour l'envoyer en pièce jointe. Les images sont gardées dans `storage/documents` (jamais servies directement).
+
 ## Remise de chèques (depuis 0.3.3)
 1. Accueil > Remise de chèques : choisir la date de pose, décocher les chèques absents du paquet, « Créer la remise ». Au-delà de 30 chèques, plusieurs remises sont créées.
 2. Imprimer le contrôle de chaque remise, remplir un bordereau de la banque par remise et noter son numéro dans la remise (facultatif mais conseillé).

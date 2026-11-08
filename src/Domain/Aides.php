@@ -17,16 +17,31 @@ final class Aides
     public const PASS_SPORT = 7;
     public const PASS_REGION = 8;
 
-    /** @return list<array{cle:string,libelle:string,mode:int,montant:float,reference:string}> */
+    /**
+     * Date d'encaissement prévue, proposée à la saisie : coupons de la mairie au 1er janvier suivant,
+     * Pass Sport un mois plus tard, Pass Région et Pass Senior 15 jours plus tard.
+     */
+    public static function datePrevue(string $cle, ?string $aujourdhui = null): string
+    {
+        $t = strtotime($aujourdhui ?? date('Y-m-d'));
+        return match ($cle) {
+            'coupon_sport', 'coupon_culture' => ((int) date('Y', $t) + 1) . '-01-01',
+            // un mois plus tard, ramené au dernier jour du mois si besoin (31 janvier -> 28 ou 29 février)
+            'pass_sport' => date('Y-m-', strtotime('first day of next month', $t)) . sprintf('%02d', min((int) date('j', $t), (int) date('t', strtotime('first day of next month', $t)))),
+            default => date('Y-m-d', strtotime('+15 days', $t)),
+        };
+    }
+
+    /** @return list<array{cle:string,libelle:string,mode:int,montant:float,reference:string,date:string}> */
     public static function liste(): array
     {
-        return [
+        return array_map(static fn ($a) => $a + ['date' => self::datePrevue($a['cle'])], [
             ['cle' => 'coupon_sport', 'libelle' => 'Coupon sport mairie', 'mode' => self::COUPON_MAIRIE, 'montant' => 48.0, 'reference' => 'COUPON SPORT'],
             ['cle' => 'coupon_culture', 'libelle' => 'Coupon culture mairie', 'mode' => self::COUPON_MAIRIE, 'montant' => 90.0, 'reference' => 'COUPON CULTURE'],
             ['cle' => 'pass_sport', 'libelle' => 'Pass Sport', 'mode' => self::PASS_SPORT, 'montant' => 50.0, 'reference' => ''],
             ['cle' => 'pass_region', 'libelle' => 'Pass Région', 'mode' => self::PASS_REGION, 'montant' => 30.0, 'reference' => ''],
             ['cle' => 'pass_senior', 'libelle' => 'Pass Senior', 'mode' => self::PASS_REGION, 'montant' => 15.0, 'reference' => 'PASS REGION SENIOR'],
-        ];
+        ]);
     }
 
     /** Famille de la section de l'inscription (Sport, Culture, Musique, Bien-être…). */
@@ -59,7 +74,7 @@ final class Aides
         return $aides;
     }
 
-    /** Montant et référence proposés quand on choisit le type dans la liste. @return array<int,array{montant:float,reference:string}> */
+    /** Montant et référence proposés quand on choisit le type dans la liste. @return array<int,array{montant:float,reference:string,date:string}> */
     public static function parMode(PDO $pdo, int $inscriptionId): array
     {
         $coupon = self::couponPour(self::famille($pdo, $inscriptionId));
@@ -68,7 +83,7 @@ final class Aides
             if ($a['cle'] === 'pass_senior' || ($a['mode'] === self::COUPON_MAIRIE && $a['cle'] !== $coupon)) {
                 continue;
             }
-            $out[$a['mode']] = ['montant' => $a['montant'], 'reference' => $a['reference']];
+            $out[$a['mode']] = ['montant' => $a['montant'], 'reference' => $a['reference'], 'date' => $a['date']];
         }
         return $out;
     }
