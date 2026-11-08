@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.5.1 — 08/11/2026
+- **Envoi des mails par SMTP authentifié** (compte mail o2switch, par exemple contact@m.ascs.fr) : réglé dans `.env` (SMTP_HOST, SMTP_PORT, SMTP_SECURITE, SMTP_USER, SMTP_PASS). L'expéditeur est alors ce compte ; une connexion par lot d'envois.
+- **Adresse de réponse** (Paramétrage > Facture) : les réponses des adhérents arrivent à cette adresse (par exemple contact@ascs.fr).
+- Bouton **« M'envoyer un mail d'essai »** dans Paramétrage > Facture.
+- Un lot de mailing s'arrête dès la première erreur d'identifiant ou de connexion SMTP (au lieu d'échouer 40 fois).
+
 ## 0.5.0 — 08/11/2026
 - **Mailings** (onglet Mail) : destinataires = inscrits de la saison, de sections choisies, inscrits N-1 pas encore réinscrits, ou anciens adhérents. Nombre de destinataires et exclus affichés avant de préparer ; {prenom} et {nom} personnalisés.
   - Toujours un brouillon d'abord : aperçu, liste des destinataires (on peut en retirer), puis validation par le bureau.

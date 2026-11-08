@@ -229,7 +229,7 @@ final class Mailing
                 $this->pdo->prepare('UPDATE campagne_destinataire SET statut = ?, erreur = ?, envoye_le = ? WHERE id = ?')
                     ->execute([$erreur ? 'echec' : 'envoye', $erreur, date('Y-m-d H:i:s'), $d['id']]);
                 $erreur ? $r['echecs']++ : $r['envoyes']++;
-                if ($erreur && $c['canal'] === 'mail' && str_contains($erreur, 'Adresse d\'envoi')) {
+                if ($erreur && $c['canal'] === 'mail' && (str_contains($erreur, 'Adresse d\'envoi') || str_contains($erreur, 'identifiant ou mot de passe') || str_contains($erreur, 'connexion impossible'))) {
                     break 2; // réglage manquant : inutile d'insister
                 }
             }

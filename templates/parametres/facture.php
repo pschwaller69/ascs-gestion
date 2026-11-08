@@ -25,11 +25,22 @@
     <h2>Association</h2>
     <div class="grille-champs">
     <?php foreach (Reglages::CHAMPS as $k => [$lib]): ?>
-        <?php if ($k === 'expediteur') { continue; } ?>
+        <?php if ($k === 'expediteur' || $k === 'reponse') { continue; } ?>
         <?= champ($lib, $k, $v[$k], ['maxlength' => 255]) ?>
     <?php endforeach; ?>
     </div>
     <h2>Envoi par mail</h2>
-    <?= champ(Reglages::CHAMPS['expediteur'][0], 'expediteur', $v['expediteur'], ['type' => 'email', 'hint' => 'Une adresse existante de votre domaine chez o2switch (par exemple contact@ascs.fr), sinon les mails risquent de finir en spam. Les réponses des adhérents y arrivent.']) ?>
+    <?php if ($smtp = Reglages::compteSmtp()): ?>
+        <p>Les mails partent du compte <strong><?= e($smtp) ?></strong> (SMTP o2switch, réglé dans le fichier .env du serveur).</p>
+        <input type="hidden" name="expediteur" value="<?= e($smtp) ?>">
+    <?php else: ?>
+        <?= champ(Reglages::CHAMPS['expediteur'][0], 'expediteur', $v['expediteur'], ['type' => 'email', 'hint' => 'Une adresse existante de votre domaine chez o2switch, sinon les mails risquent de finir en spam.']) ?>
+    <?php endif; ?>
+    <?= champ(Reglages::CHAMPS['reponse'][0], 'reponse', $v['reponse'], ['type' => 'email', 'hint' => 'Quand un adhérent répond à un mail, sa réponse arrive ici (par exemple contact@ascs.fr). Vide : à l\'adresse d\'envoi.']) ?>
     <button type="submit" class="btn btn-principal"><?= icon('check') ?> Enregistrer</button>
+</form>
+<form method="post" action="<?= e(url('/parametres/facture/essai')) ?>" class="actions">
+    <?= csrf_field() ?>
+    <button type="submit" class="btn"><?= icon('mail') ?> M'envoyer un mail d'essai</button>
+    <span class="aide">Envoyé à l'adresse de votre compte, avec les réglages enregistrés.</span>
 </form>

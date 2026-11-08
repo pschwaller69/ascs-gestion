@@ -105,6 +105,7 @@ $router->get('/parametrage/{cle}/{id}', [ParametrageController::class, 'fiche'])
 $router->post('/parametrage/{cle}/{id}', [ParametrageController::class, 'enregistrer']);
 $router->post('/parametrage/{cle}/{id}/supprimer', [ParametrageController::class, 'supprimer']);
 $router->post('/parametres/facture', [FactureController::class, 'enregistrer']);
+$router->post('/parametres/facture/essai', [FactureController::class, 'essai']);
 $router->get('/parametres/facture/image/{nom}', [FactureController::class, 'image']);
 $router->post('/inscriptions/{id}/supprimer', [InscriptionController::class, 'supprimer']);
 

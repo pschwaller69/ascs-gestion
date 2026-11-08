@@ -24,6 +24,12 @@ final class Envoi
     public function envoyer(string $expediteur, string $nomExpediteur, string $a, string $objet, string $texte, array $pieces, ?int $inscriptionId, string $par): ?string
     {
         $erreur = null;
+        $c = Config::load();
+        // Avec un compte SMTP, l'expéditeur est ce compte (sinon le serveur refuse) ; les réponses vont à l'adresse de réponse.
+        $reponse = $this->reponse() ?: $expediteur;
+        if ($c['smtp_host'] !== '' && filter_var($c['smtp_user'], FILTER_VALIDATE_EMAIL)) {
+            $expediteur = $c['smtp_user'];
+        }
         if (!filter_var($a, FILTER_VALIDATE_EMAIL)) {
             $erreur = 'Adresse du destinataire invalide.';
         } elseif (!filter_var($expediteur, FILTER_VALIDATE_EMAIL)) {
@@ -33,7 +39,9 @@ final class Envoi
             $limite = 'ascs-' . bin2hex(random_bytes(12));
             $entetes = [
                 'From: ' . self::entete($nomExpediteur) . ' <' . $expediteur . '>',
-                'Reply-To: ' . $expediteur,
+                'Reply-To: ' . (filter_var($reponse, FILTER_VALIDATE_EMAIL) ? $reponse : $expediteur),
+                'Date: ' . date('r'),
+                'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . substr(strrchr($expediteur, '@'), 1) . '>',
                 'MIME-Version: 1.0',
                 'Content-Type: multipart/mixed; boundary="' . $limite . '"',
             ];
@@ -64,8 +72,21 @@ final class Envoi
                 "To: $a\r\nSubject: $objet\r\n" . implode("\r\n", $entetes) . "\r\n\r\n" . $corps);
             return null;
         }
+        $c = Config::load();
+        if ($c['smtp_host'] !== '') {
+            self::$smtp ??= new Smtp($c['smtp_host'], (int) $c['smtp_port'], $c['smtp_user'], $c['smtp_pass'], strtolower($c['smtp_securite']));
+            return self::$smtp->envoyer($expediteur, $a, "To: $a\r\nSubject: $objet\r\n" . implode("\r\n", $entetes) . "\r\n\r\n" . $corps);
+        }
         $ok = @mail($a, $objet, $corps, implode("\r\n", $entetes), '-f' . $expediteur);
         return $ok ? null : 'Le serveur a refusé l\'envoi du mail.';
+    }
+
+    private static ?Smtp $smtp = null;
+
+    /** Adresse où arrivent les réponses (Paramétrage > Facture), si elle est renseignée. */
+    private function reponse(): string
+    {
+        return (string) (\Ascs\Parametres::get($this->pdo, 'doc_reponse') ?? '');
     }
 
     /** En-tête encodé (accents) selon la RFC 2047. */

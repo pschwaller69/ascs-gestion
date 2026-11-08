@@ -79,11 +79,25 @@ final class FactureController
                 }
             }
         }
-        $expediteur = trim((string) ($_POST['expediteur'] ?? ''));
-        if ($expediteur !== '' && !filter_var($expediteur, FILTER_VALIDATE_EMAIL)) {
-            $erreurs[] = 'Adresse d\'envoi des mails invalide.';
+        foreach (['expediteur' => 'Adresse d\'envoi des mails invalide.', 'reponse' => 'Adresse de réponse invalide.'] as $k => $msg) {
+            $val = trim((string) ($_POST[$k] ?? ''));
+            if ($val !== '' && !filter_var($val, FILTER_VALIDATE_EMAIL)) {
+                $erreurs[] = $msg;
+            }
         }
         $this->app->flash($erreurs ? 'erreur' : 'ok', $erreurs ? implode(' ', $erreurs) : 'Réglages de la facture enregistrés.');
+        $this->app->redirect('/parametres/facture');
+    }
+
+    /** Mail d'essai envoyé au compte connecté, pour vérifier les réglages d'envoi. */
+    public function essai(array $p): void
+    {
+        $r = (new Reglages($this->app->pdo))->tous();
+        $a = (string) ($this->app->user['email'] ?? '');
+        $e = (new Envoi($this->app->pdo))->envoyer($r['expediteur'], $r['association'] ?: 'ASCS', $a, 'Mail d\'essai – ' . ($r['association'] ?: 'ASCS'),
+            "Bonjour,\n\nCe mail d'essai confirme que l'application de gestion peut envoyer des mails.\nExpéditeur : " . $r['expediteur']
+            . "\nRéponses vers : " . ($r['reponse'] ?: $r['expediteur']) . "\n\nRépondez à ce mail pour vérifier que la réponse arrive au bon endroit.", [], null, $a);
+        $this->app->flash($e ? 'erreur' : 'ok', $e ? 'Mail d\'essai non envoyé : ' . $e : 'Mail d\'essai envoyé à ' . $a . '. Vérifiez qu\'il arrive (et pas dans les indésirables).');
         $this->app->redirect('/parametres/facture');
     }
 

@@ -27,6 +27,7 @@ final class Reglages
         'forme' => ['Forme juridique', 'Association loi 1901'],
         'naf' => ['Code NAF', ''],
         'expediteur' => ['Adresse d\'envoi des mails', ''],
+        'reponse' => ['Adresse de réponse', ''],
     ];
 
     public const IMAGES = ['logo' => 'Logo', 'signature' => 'Signature et tampon'];
@@ -42,7 +43,19 @@ final class Reglages
         foreach (self::CHAMPS as $k => [, $defaut]) {
             $v[$k] = Parametres::get($this->pdo, 'doc_' . $k) ?? $defaut;
         }
+        // Compte SMTP configuré dans .env : c'est lui l'expéditeur
+        $smtp = self::compteSmtp();
+        if ($smtp !== null) {
+            $v['expediteur'] = $smtp;
+        }
         return $v;
+    }
+
+    /** Adresse du compte SMTP (.env) quand l'envoi passe par SMTP, sinon null. */
+    public static function compteSmtp(): ?string
+    {
+        $c = \Ascs\Config::load();
+        return $c['smtp_host'] !== '' && filter_var($c['smtp_user'], FILTER_VALIDATE_EMAIL) ? $c['smtp_user'] : null;
     }
 
     /** @param array<string,mixed> $in */

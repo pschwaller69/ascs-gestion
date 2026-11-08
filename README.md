@@ -32,6 +32,17 @@ Les commandes `bin/*.php` restent disponibles pour le Terminal.
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 
+## Envoi des mails (SMTP, depuis 0.5.1)
+Dans `.env` du serveur :
+```
+SMTP_HOST=<serveur mail o2switch>   # cPanel > Comptes de messagerie > Connect Devices : « Serveur sortant »
+SMTP_PORT=465
+SMTP_SECURITE=ssl
+SMTP_USER=contact@m.ascs.fr
+SMTP_PASS=<mot de passe du compte>
+```
+Puis Paramétrage > Facture : adresse de réponse, et « M'envoyer un mail d'essai ».
+
 ## Mailings et SMS (depuis 0.5.0)
 - Tâche cron toutes les 5 minutes pour envoyer les lots suivants : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/envois.php`
 - SMS depuis le téléphone de l'association : rien à configurer (désactiver les messages de groupe MMS/RCS dans l'application Messages).
