@@ -52,10 +52,9 @@ final class Reglages
     }
 
     /** Adresse du compte SMTP (.env) quand l'envoi passe par SMTP, sinon null. */
-    public static function compteSmtp(): ?string
+    public static function compteSmtp(string $flux = 'transactionnel'): ?string
     {
-        $c = \Ascs\Config::load();
-        return $c['smtp_host'] !== '' && filter_var($c['smtp_user'], FILTER_VALIDATE_EMAIL) ? $c['smtp_user'] : null;
+        return \Ascs\Mail\Envoi::compte($flux)[0] ?? null;
     }
 
     /** @param array<string,mixed> $in */

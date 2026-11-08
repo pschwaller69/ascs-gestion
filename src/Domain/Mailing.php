@@ -211,7 +211,7 @@ final class Mailing
         $r = ['envoyes' => 0, 'echecs' => 0, 'restants' => 0];
         $where = "c.statut IN ('validee','en_cours')" . ($campagneId ? ' AND c.id = ' . (int) $campagneId : '');
         $reg = (new Reglages($this->pdo))->tous();
-        $envoi = new Envoi($this->pdo);
+        $envoi = new Envoi($this->pdo, 'mailing');
         $sms = Sms::depuisConfig();
         foreach ($this->pdo->query("SELECT c.* FROM campagne c WHERE $where ORDER BY c.id")->fetchAll() as $c) {
             if ($c['canal'] === 'sms' && !$sms) {

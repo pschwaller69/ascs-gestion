@@ -26,7 +26,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
 
 <section class="fiche">
     <h2>Aperçu<?= $actifs ? ' pour ' . e(trim($actifs[0]['prenom'] . ' ' . $actifs[0]['nom'])) : '' ?></h2>
-    <?php if (!$sms): ?><p><strong>Objet :</strong> <?= e($c['objet']) ?><br><strong>De :</strong> <?= e(($reglages['association'] ?: 'ASCS') . ' <' . ($reglages['expediteur'] ?: 'adresse d\'envoi à renseigner') . '>') ?></p><?php endif; ?>
+    <?php if (!$sms): ?><p><strong>Objet :</strong> <?= e($c['objet']) ?><br><strong>De :</strong> <?= e(($reglages['association'] ?: 'ASCS') . ' <' . (Ascs\Documents\Reglages::compteSmtp('mailing') ?? ($reglages['expediteur'] ?: 'adresse d\'envoi à renseigner')) . '>') ?></p><?php endif; ?>
     <pre class="apercu-message"><?= e($apercu) ?></pre>
     <?php if ($sms): ?><p class="aide"><?= mb_strlen($apercu) ?> caractères, <?= Sms::parties($apercu) ?> SMS par destinataire.</p><?php endif; ?>
 </section>

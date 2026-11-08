@@ -13,8 +13,25 @@ use PDO;
  */
 final class Envoi
 {
-    public function __construct(private readonly PDO $pdo)
+    /**
+     * @param string $flux « transactionnel » (factures, confirmations, liens) ou « mailing » (envois en nombre) :
+     *                     un mailing passe par le compte SMTP_MAILING_* s'il existe, pour ne pas abîmer la réputation de l'autre.
+     */
+    public function __construct(private readonly PDO $pdo, private readonly string $flux = 'transactionnel')
     {
+    }
+
+    /** Compte SMTP à utiliser pour un flux : [utilisateur, mot de passe], ou null sans SMTP. @return ?array{0:string,1:string} */
+    public static function compte(string $flux): ?array
+    {
+        $c = Config::load();
+        if ($c['smtp_host'] === '') {
+            return null;
+        }
+        if ($flux === 'mailing' && filter_var($c['smtp_mailing_user'], FILTER_VALIDATE_EMAIL)) {
+            return [$c['smtp_mailing_user'], $c['smtp_mailing_pass']];
+        }
+        return filter_var($c['smtp_user'], FILTER_VALIDATE_EMAIL) ? [$c['smtp_user'], $c['smtp_pass']] : null;
     }
 
     /**
@@ -27,8 +44,9 @@ final class Envoi
         $c = Config::load();
         // Avec un compte SMTP, l'expéditeur est ce compte (sinon le serveur refuse) ; les réponses vont à l'adresse de réponse.
         $reponse = $this->reponse() ?: $expediteur;
-        if ($c['smtp_host'] !== '' && filter_var($c['smtp_user'], FILTER_VALIDATE_EMAIL)) {
-            $expediteur = $c['smtp_user'];
+        $compte = self::compte($this->flux);
+        if ($compte !== null) {
+            $expediteur = $compte[0];
         }
         if (!filter_var($a, FILTER_VALIDATE_EMAIL)) {
             $erreur = 'Adresse du destinataire invalide.';
@@ -74,14 +92,16 @@ final class Envoi
         }
         $c = Config::load();
         if ($c['smtp_host'] !== '') {
-            self::$smtp ??= new Smtp($c['smtp_host'], (int) $c['smtp_port'], $c['smtp_user'], $c['smtp_pass'], strtolower($c['smtp_securite']));
-            return self::$smtp->envoyer($expediteur, $a, "To: $a\r\nSubject: $objet\r\n" . implode("\r\n", $entetes) . "\r\n\r\n" . $corps);
+            [$u, $pw] = self::compte($this->flux) ?? [$c['smtp_user'], $c['smtp_pass']];
+            $smtp = self::$smtp[$u] ??= new Smtp($c['smtp_host'], (int) $c['smtp_port'], $u, $pw, strtolower($c['smtp_securite']));
+            return $smtp->envoyer($expediteur, $a, "To: $a\r\nSubject: $objet\r\n" . implode("\r\n", $entetes) . "\r\n\r\n" . $corps);
         }
         $ok = @mail($a, $objet, $corps, implode("\r\n", $entetes), '-f' . $expediteur);
         return $ok ? null : 'Le serveur a refusé l\'envoi du mail.';
     }
 
-    private static ?Smtp $smtp = null;
+    /** @var array<string,Smtp> une connexion par compte */
+    private static array $smtp = [];
 
     /** Adresse où arrivent les réponses (Paramétrage > Facture), si elle est renseignée. */
     private function reponse(): string

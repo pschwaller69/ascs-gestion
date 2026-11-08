@@ -31,7 +31,8 @@
     </div>
     <h2>Envoi par mail</h2>
     <?php if ($smtp = Reglages::compteSmtp()): ?>
-        <p>Les mails partent du compte <strong><?= e($smtp) ?></strong> (SMTP o2switch, réglé dans le fichier .env du serveur).</p>
+        <?php $smtpM = Reglages::compteSmtp('mailing'); ?>
+        <p>Les mails partent du compte <strong><?= e($smtp) ?></strong><?= $smtpM !== $smtp ? ' ; les mailings en nombre, du compte <strong>' . e($smtpM) . '</strong>' : '' ?> (SMTP o2switch, réglé dans le fichier .env du serveur).</p>
         <input type="hidden" name="expediteur" value="<?= e($smtp) ?>">
     <?php else: ?>
         <?= champ(Reglages::CHAMPS['expediteur'][0], 'expediteur', $v['expediteur'], ['type' => 'email', 'hint' => 'Une adresse existante de votre domaine chez o2switch, sinon les mails risquent de finir en spam.']) ?>

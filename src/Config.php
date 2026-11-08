@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -51,6 +51,9 @@ final class Config
             'smtp_user'        => $get('SMTP_USER'),
             'smtp_pass'        => $get('SMTP_PASS'),
             'smtp_securite'    => $get('SMTP_SECURITE', 'ssl'),
+            // Second compte, réservé aux mailings en nombre (facultatif : sinon le compte ci-dessus sert à tout)
+            'smtp_mailing_user' => $get('SMTP_MAILING_USER'),
+            'smtp_mailing_pass' => $get('SMTP_MAILING_PASS'),
             // SMS : passerelle « SMS Gateway for Android » (identifiants affichés dans l'application du téléphone)
             'sms_url'          => $get('SMS_URL', 'https://api.sms-gate.app/3rdparty/v1/messages'),
             'sms_user'         => $get('SMS_USER'),

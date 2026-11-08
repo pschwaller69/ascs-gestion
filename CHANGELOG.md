@@ -3,6 +3,9 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.5.2 — 08/11/2026
+- **Deux comptes d'envoi** : les mailings en nombre partent d'un compte SMTP à part (SMTP_MAILING_USER / SMTP_MAILING_PASS, par exemple contact@m.ascs.fr), les factures, confirmations et liens des animateurs du compte principal (SMTP_USER, par exemple contact@a.ascs.fr). Un mailing mal reçu n'abîme pas la réputation des envois individuels. Sans second compte, le principal sert à tout.
+
 ## 0.5.1 — 08/11/2026
 - **Envoi des mails par SMTP authentifié** (compte mail o2switch, par exemple contact@m.ascs.fr) : réglé dans `.env` (SMTP_HOST, SMTP_PORT, SMTP_SECURITE, SMTP_USER, SMTP_PASS). L'expéditeur est alors ce compte ; une connexion par lot d'envois.
 - **Adresse de réponse** (Paramétrage > Facture) : les réponses des adhérents arrivent à cette adresse (par exemple contact@ascs.fr).

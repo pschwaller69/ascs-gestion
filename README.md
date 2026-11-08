@@ -38,8 +38,11 @@ Dans `.env` du serveur :
 SMTP_HOST=<serveur mail o2switch>   # cPanel > Comptes de messagerie > Connect Devices : « Serveur sortant »
 SMTP_PORT=465
 SMTP_SECURITE=ssl
-SMTP_USER=contact@m.ascs.fr
+SMTP_USER=contact@a.ascs.fr
 SMTP_PASS=<mot de passe du compte>
+# facultatif, compte réservé aux mailings en nombre :
+SMTP_MAILING_USER=contact@m.ascs.fr
+SMTP_MAILING_PASS=<mot de passe>
 ```
 Puis Paramétrage > Facture : adresse de réponse, et « M'envoyer un mail d'essai ».
 
