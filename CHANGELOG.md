@@ -3,6 +3,14 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.11 — 08/11/2026
+- **Fusion de deux fiches en double** (toujours à la main) : sur une fiche, dans « fiches ressemblantes », bouton « Comparer et fusionner ».
+  - Écran de comparaison côte à côte : pour chaque champ différent, on coche la valeur à garder ; bouton pour inverser la fiche gardée.
+  - La fiche gardée reçoit toutes les inscriptions et règlements de l'autre, ses canaux, ses remarques (mises bout à bout) et les cases cochées (membre du CA, attestation CE, refus de mail / SMS / WhatsApp), puis l'autre fiche est supprimée.
+  - Inscription en double (même activité, même saison) : signalée avant la fusion ; l'inscription de la fiche gardée reste et reçoit les règlements de l'autre.
+  - Les adhésions HelloAsso et demandes en ligne liées à l'ancienne fiche suivent.
+  - Mode transition : chaque fusion est enregistrée et refaite automatiquement après un import WinDev (rapport d'import), tant qu'elle n'a pas été faite aussi dans WinDev.
+
 ## 0.3.10 — 08/11/2026
 - **Tarif Rillieux** : le tarif enregistré sur la section est celui des extérieurs ; les habitants de Rillieux-la-Pape (code postal 69140 ou ville Rillieux / Crépieux) ont 10 € de réduction, sauf pour le jogging et la marche.
   - Nouvelle inscription et fiche inscription : le montant proposé tient compte de l'adresse de l'adhérent (rappel sous le champ Montant).
@@ -111,7 +119,6 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.11 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

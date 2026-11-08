@@ -79,6 +79,8 @@ $router->get('/adherents/nouveau', [AdherentController::class, 'nouveau']);
 $router->get('/adherents/doublons', [AdherentController::class, 'doublons']);
 $router->post('/adherents', [AdherentController::class, 'creer']);
 $router->get('/adherents/{id}', [AdherentController::class, 'fiche']);
+$router->get('/adherents/{id}/fusion/{autre}', [AdherentController::class, 'fusion']);
+$router->post('/adherents/{id}/fusion/{autre}', [AdherentController::class, 'fusionner']);
 $router->post('/adherents/{id}', [AdherentController::class, 'modifier']);
 
 $router->get('/inscriptions', [InscriptionController::class, 'index']);

@@ -11,7 +11,8 @@ $tabs = ['adherent' => 'Adhérent', 'inscriptions' => 'Inscriptions (' . count($
 <details class="proches"><summary><?= count($proches) ?> fiche<?= count($proches) > 1 ? 's' : '' ?> ressemblante<?= count($proches) > 1 ? 's' : '' ?></summary>
     <ul>
     <?php foreach ($proches as $t): $f = $t['fiche']; ?>
-        <li><a href="<?= e(url('/adherents/' . $t['id'])) ?>"><?= e(trim(($f['nom'] ?? '') . ' ' . ($f['prenom'] ?? ''))) ?></a> <?= e(dfr($f['date_naissance'])) ?> — <?= e(DuplicateFinder::NIVEAUX[$t['niveau']]) ?> (<?= e(implode(', ', $t['raisons'])) ?>)</li>
+        <li><a href="<?= e(url('/adherents/' . $t['id'])) ?>"><?= e(trim(($f['nom'] ?? '') . ' ' . ($f['prenom'] ?? ''))) ?></a> <?= e(dfr($f['date_naissance'])) ?> — <?= e(DuplicateFinder::NIVEAUX[$t['niveau']]) ?> (<?= e(implode(', ', $t['raisons'])) ?>)
+            <a class="btn btn-petit" href="<?= e(url('/adherents/' . $a['id'] . '/fusion/' . $t['id'])) ?>">Comparer et fusionner</a></li>
     <?php endforeach; ?>
     </ul>
 </details>

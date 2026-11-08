@@ -42,6 +42,14 @@ final class Transition
             $lignes[] = 'Demandes en ligne : revalidation impossible (' . $e->getMessage() . ').';
         }
         try {
+            $r = (new \Ascs\Domain\Fusion($pdo))->rejouerApresImport();
+            if ($r['refaites'] || $r['deja']) {
+                $lignes[] = sprintf('Fiches fusionnées : %d fusion(s) refaite(s), %d déjà faite(s) aussi dans WinDev.', $r['refaites'], $r['deja']);
+            }
+        } catch (\Throwable $e) {
+            $lignes[] = 'Fiches fusionnées : fusion impossible à refaire (' . $e->getMessage() . ').';
+        }
+        try {
             $r = (new \Ascs\Domain\Remises($pdo))->rapprocher();
             if ($r['ventilees'] || $r['ecarts']) {
                 $lignes[] = sprintf('Remises de chèques : %d ventilation(s) écrite(s) dans les comptes, %d remise(s) avec un montant différent de la banque.', $r['ventilees'], $r['ecarts']);

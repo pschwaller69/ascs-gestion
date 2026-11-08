@@ -131,4 +131,25 @@ final class AdherentController
             'reglements' => (new Reglements($this->app->pdo))->deAdherent($id),
         ], trim(($a['nom'] ?? '') . ' ' . ($a['prenom'] ?? '')) ?: 'Fiche sans nom', 'accueil', $status);
     }
+
+    /** Écran de fusion : la fiche {id} est gardée, la fiche {autre} disparaît après avoir tout transmis. */
+    public function fusion(array $p): string
+    {
+        $c = (new \Ascs\Domain\Fusion($this->app->pdo))->comparer((int) $p['id'], (int) $p['autre']);
+        if (!$c) {
+            return $this->app->render('erreur', ['titre' => 'Fusion impossible', 'message' => 'Une des deux fiches n\'existe plus, ou c\'est la même fiche.'], 'Fusion', 'accueil', 404);
+        }
+        return $this->app->render('adherents/fusion', $c + ['enTransition' => $this->app->transition()],
+            'Fusionner deux fiches');
+    }
+
+    public function fusionner(array $p): void
+    {
+        $garde = (int) $p['id'];
+        $autre = (int) $p['autre'];
+        $choix = array_filter((array) ($_POST['choix'] ?? []), static fn ($v) => in_array($v, ['garde', 'autre'], true));
+        $r = (new \Ascs\Domain\Fusion($this->app->pdo))->fusionner($garde, $autre, $choix, (string) ($this->app->user['email'] ?? ''));
+        $this->app->flash($r['ok'] ? 'ok' : 'erreur', $r['message']);
+        $this->app->redirect($r['ok'] ? '/adherents/' . $garde : '/adherents');
+    }
 }

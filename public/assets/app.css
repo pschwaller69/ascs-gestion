@@ -267,3 +267,11 @@ tr.a-venir td { color: var(--muted); }
 .grille-champs, .grille-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0 1.25rem; }
 .apercu-image { display: block; max-width: 14rem; max-height: 7rem; margin: .25rem 0 .5rem; padding: .4rem; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
 .liste-envois { margin: 1rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: .9rem; }
+
+/* Fusion de fiches */
+.comparaison th[scope="row"] { width: 12rem; font-weight: 600; }
+.comparaison tr.differe { background: var(--amber-l); }
+.choix-valeur { display: flex; gap: .4rem; align-items: baseline; cursor: pointer; }
+.deux-colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+.deux-colonnes h3 { font-size: 1rem; margin: .5rem 0; }
+.liste-simple { margin: 0; padding-left: 1.2rem; }

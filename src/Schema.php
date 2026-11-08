@@ -229,6 +229,13 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            'fusion' => [
+                'cols' => [
+                    'id' => 'auto', 'date_fusion' => 'datetime', 'garde_id' => 'int', 'fusionne_id' => 'int',
+                    'nom' => 'str:200?', 'choix' => 'text?', 'par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+            ],
             'envoi_mail' => [
                 'cols' => [
                     'id' => 'auto', 'date_envoi' => 'datetime', 'destinataire' => 'str:150', 'objet' => 'str:255',
