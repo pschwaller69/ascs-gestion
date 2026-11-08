@@ -12,7 +12,7 @@
     <tbody>
     <?php foreach ($reglements as $r): ?>
         <tr>
-            <td><a href="<?= e(url('/reglements/' . $r['id'])) ?>"><?= e(dfr($r['date_reglement']) ?: '—') ?></a></td>
+            <td><a href="<?= e(url('/reglements/' . $r['id'])) ?>"><?= date_reglement($r['date_reglement']) ?></a></td>
             <td><?= e($r['mode']) ?></td><td><?= e($r['identifiant']) ?></td><td class="num"><?= e(money($r['montant'])) ?></td>
         </tr>
     <?php endforeach; ?>

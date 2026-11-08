@@ -33,6 +33,7 @@
                 <button type="button" class="btn btn-petit" data-pose="1">Prochain 1er</button>
                 <button type="button" class="btn btn-petit" data-pose="15">Prochain 15</button>
             </div>
+            <p class="aide">Saisissez aussi les règlements à venir dès qu'ils sont sûrs (chèque à poser, coupon ou pass à recevoir) : datés plus tard, ils apparaissent « à venir ».</p>
             <?php if (isset($err['date_reglement'])): ?><p class="msg-erreur" id="f_date-err"><?= e($err['date_reglement']) ?></p><?php endif; ?>
         </div>
         <?= champ('Référence (n° de chèque, de commande…)', 'identifiant', $d['identifiant'], ['maxlength' => 60]) ?>
@@ -56,7 +57,7 @@
     <tbody>
     <?php foreach ($autres as $x): ?>
         <tr<?= $edition && (int) $x['id'] === (int) $r['id'] ? ' class="courant"' : '' ?>>
-            <td><a href="<?= e(url('/reglements/' . $x['id'])) ?>"><?= e(dfr($x['date_reglement']) ?: '—') ?></a></td>
+            <td><a href="<?= e(url('/reglements/' . $x['id'])) ?>"><?= date_reglement($x['date_reglement']) ?></a></td>
             <td><?= e($x['mode']) ?></td><td><?= e($x['identifiant']) ?></td><td class="num"><?= e(money($x['montant'])) ?></td>
         </tr>
     <?php endforeach; ?>

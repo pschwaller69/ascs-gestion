@@ -23,11 +23,14 @@ final class Sync
     public const MODE_HELLOASSO = 5;
     /** États d'un paiement considéré comme encaissé. */
     public const PAYE = ['Authorized', 'Registered'];
+    /** Échéances futures d'un paiement en plusieurs fois : prélèvement prévu, compté comme règlement à venir. */
+    public const A_VENIR = ['Pending'];
+    private const PREVU = ' (prélèvement prévu)';
     /** États d'une adhésion à ne pas importer. */
     public const PAR_AUTO = 'automatique (HelloAsso)';
     public const ANNULE = ['Canceled', 'Refunded', 'Refused', 'Abandoned', 'Deleted', 'Contested'];
 
-    private array $compte = ['recues' => 0, 'nouvelles' => 0, 'deja_present' => 0, 'reglements' => 0, 'liens_perdus' => 0, 'rejouees' => 0, 'auto' => 0];
+    private array $compte = ['recues' => 0, 'nouvelles' => 0, 'deja_present' => 0, 'reglements' => 0, 'liens_perdus' => 0, 'rejouees' => 0, 'auto' => 0, 'retires' => 0];
 
     public function __construct(private readonly PDO $pdo)
     {
@@ -243,6 +246,9 @@ final class Sync
             $items = $client->adhesions((new DateTimeImmutable($depuis))->format('Y-m-d\T00:00:00P'));
             $c = $this->enregistrer($items);
             $resume = sprintf('%d adhésion(s) lue(s), %d nouvelle(s), %d déjà saisie(s) dans la base, %d règlement(s) créé(s)', $c['recues'], $c['nouvelles'], $c['deja_present'], $c['reglements']);
+            if ($c['retires']) {
+                $resume .= sprintf(', %d échéance(s) refusée(s) ou annulée(s) : règlement retiré', $c['retires']);
+            }
             if ($c['auto']) {
                 $resume .= sprintf(', %d validée(s) automatiquement', $c['auto']);
             }
@@ -395,7 +401,16 @@ final class Sync
         $lien = $this->pdo->prepare('UPDATE helloasso_paiement SET reglement_id = ? WHERE id = ? AND item_id = ?');
         foreach ($pays as $p) {
             $valide = $p['reglement_id'] !== null && $this->reglementValide((int) $p['reglement_id'], $insc, (string) $it['commande_id']);
-            if ($valide || !in_array($p['etat'], self::PAYE, true)) {
+            $paye = in_array($p['etat'], self::PAYE, true);
+            $prevu = in_array($p['etat'], self::A_VENIR, true);
+            if ($valide) {
+                $this->suivreEcheance((int) $p['reglement_id'], $p, $paye, $prevu);
+                if (!$paye && !$prevu) {
+                    $lien->execute([null, $p['id'], $p['item_id']]);
+                }
+                continue;
+            }
+            if (!$paye && !$prevu) {
                 continue;
             }
             $rid = null;
@@ -409,13 +424,35 @@ final class Sync
             if ($rid === null && $creer) {
                 $this->pdo->prepare('INSERT INTO reglement (inscription_id, mode_reglement_id, montant, date_reglement, identifiant, remarques, date_saisie) VALUES (?,?,?,?,?,?,?)')
                     ->execute([$insc, self::MODE_HELLOASSO, $p['montant'], substr((string) ($p['date_paiement'] ?? $it['date_commande']), 0, 10), (string) $it['commande_id'],
-                        'HelloAsso' . ($p['echeance'] ? ' – échéance ' . $p['echeance'] : ''), date('Y-m-d H:i:s')]);
+                        'HelloAsso' . ($p['echeance'] ? ' – échéance ' . $p['echeance'] : '') . ($prevu ? self::PREVU : ''), date('Y-m-d H:i:s')]);
                 $rid = (int) $this->pdo->lastInsertId();
                 $this->compte['reglements']++;
             }
             $lien->execute([$rid, $p['id'], $p['item_id']]);
         }
         return $this->compte['reglements'] - $avant;
+    }
+
+    /**
+     * Règlement créé par l'application pour une échéance HelloAsso : prélevée -> date réelle, mention « prévu » retirée ;
+     * refusée ou annulée -> règlement retiré (on ne garde que ce qui est sûr). Les règlements saisis dans WinDev ne sont pas touchés.
+     */
+    private function suivreEcheance(int $rid, array $p, bool $paye, bool $prevu): void
+    {
+        $st = $this->pdo->prepare('SELECT remarques FROM reglement WHERE id = ?');
+        $st->execute([$rid]);
+        $rem = (string) $st->fetchColumn();
+        if (!str_starts_with($rem, 'HelloAsso') || !str_ends_with($rem, self::PREVU) || $prevu) {
+            return;
+        }
+        if ($paye) {
+            $this->pdo->prepare('UPDATE reglement SET remarques = ?, date_reglement = COALESCE(?, date_reglement), date_modification = ? WHERE id = ?')
+                ->execute([substr($rem, 0, -strlen(self::PREVU)), $p['date_paiement'] ? substr((string) $p['date_paiement'], 0, 10) : null, date('Y-m-d H:i:s'), $rid]);
+            return;
+        }
+        $this->pdo->prepare('UPDATE helloasso_paiement SET reglement_id = NULL WHERE reglement_id = ?')->execute([$rid]);
+        $this->pdo->prepare('DELETE FROM reglement WHERE id = ?')->execute([$rid]);
+        $this->compte['retires']++;
     }
 
     private function reglementValide(int $rid, int $insc, string $commande): bool

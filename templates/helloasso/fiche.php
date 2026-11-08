@@ -32,7 +32,7 @@ $paye = array_sum(array_map(static fn ($p) => in_array($p['etat'], Ascs\HelloAss
     <table class="infos">
         <?php foreach ($it['paiements'] as $p): ?>
             <tr><th><?= e(dfr($p['date_paiement'])) ?><?= $p['echeance'] ? ' — échéance ' . (int) $p['echeance'] : '' ?></th>
-                <td><?= e(money($p['montant'])) ?> <span class="pastille <?= in_array($p['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'pastille-ok' : 'pastille-reste' ?>"><?= e($p['etat'] === 'Authorized' ? 'payé' : $p['etat']) ?></span>
+                <td><?= e(money($p['montant'])) ?> <span class="pastille <?= in_array($p['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'pastille-ok' : 'pastille-reste' ?>"><?= e(in_array($p['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'payé' : (in_array($p['etat'], Ascs\HelloAsso\Sync::A_VENIR, true) ? 'prélèvement prévu' : $p['etat'])) ?></span>
                 <?= $p['reglement_id'] ? ' <a href="' . e(url('/reglements/' . $p['reglement_id'])) . '">règlement n° ' . (int) $p['reglement_id'] . '</a>' : '' ?></td></tr>
         <?php endforeach; ?>
     </table>

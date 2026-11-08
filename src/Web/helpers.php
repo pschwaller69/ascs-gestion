@@ -19,6 +19,13 @@ function money(mixed $v): string
 }
 
 /** 2026-10-07 (ou datetime) -> 07/10/2026 */
+/** Date d'un règlement suivie de « à venir » s'il n'est pas encore encaissable (chèque à poser, échéance HelloAsso, aide à recevoir). */
+function date_reglement(?string $iso): string
+{
+    $d = dfr($iso) ?: '—';
+    return $iso !== null && substr($iso, 0, 10) > date('Y-m-d') ? $d . ' <span class="pastille pastille-reste">à venir</span>' : $d;
+}
+
 function dfr(?string $iso): string
 {
     if (!$iso || !preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $iso, $m)) {

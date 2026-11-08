@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.7 — 08/11/2026
+- **Règlements à venir** : tout ce qui est sûr est enregistré, même pas encore encaissé.
+  - HelloAsso en plusieurs fois : chaque échéance prévue devient un règlement daté du prélèvement, avec la mention « (prélèvement prévu) ». Une fois prélevée, la date réelle remplace la date prévue et la mention disparaît ; refusée ou annulée, le règlement est retiré (signalé dans le résumé de synchronisation).
+  - Chèques à poser, coupons et pass à recevoir : à saisir avec leur date prévue (rappel sous le champ Date).
+  - Dans les listes de règlements, une pastille « à venir » marque ceux dont la date n'est pas encore passée.
+
 ## 0.3.6 — 08/11/2026
 - **Validation automatique des adhésions HelloAsso sans doute possible** (activée par défaut, réglage sur la page HelloAsso) :
   - réinscription : une seule fiche « très probable », même nom, prénom et date de naissance ;
@@ -87,7 +93,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.7 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
+- 0.3.8 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

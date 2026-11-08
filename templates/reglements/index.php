@@ -15,7 +15,7 @@
     <tbody>
     <?php foreach ($lignes as $l): ?>
         <tr>
-            <td><a href="<?= e(url('/reglements/' . $l['id'])) ?>"><?= e(dfr($l['date_reglement']) ?: '—') ?></a></td>
+            <td><a href="<?= e(url('/reglements/' . $l['id'])) ?>"><?= date_reglement($l['date_reglement']) ?></a></td>
             <td><a href="<?= e(url('/adherents/' . $l['adherent_id'])) ?>"><?= e(trim(($l['nom'] ?? '') . ' ' . ($l['prenom'] ?? ''))) ?></a></td>
             <td><?= e($l['section']) ?></td><td><?= e($l['mode']) ?></td><td><?= e($l['identifiant']) ?></td>
             <td class="num"><?= e(money($l['montant'])) ?></td>
