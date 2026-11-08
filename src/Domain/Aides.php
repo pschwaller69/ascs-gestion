@@ -27,7 +27,7 @@ final class Aides
         return match ($cle) {
             'coupon_sport', 'coupon_culture' => ((int) date('Y', $t) + 1) . '-01-01',
             // un mois plus tard, ramené au dernier jour du mois si besoin (31 janvier -> 28 ou 29 février)
-            'pass_sport' => date('Y-m-', strtotime('first day of next month', $t)) . sprintf('%02d', min((int) date('j', $t), (int) date('t', strtotime('first day of next month', $t)))),
+            'pass_sport' => Reglements::moisSuivant(date('Y-m-d', $t)),
             default => date('Y-m-d', strtotime('+15 days', $t)),
         };
     }

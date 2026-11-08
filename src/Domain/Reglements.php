@@ -202,4 +202,35 @@ final class Reglements
             default => '',
         };
     }
+
+    /** Même jour le mois suivant, ramené au dernier jour du mois si besoin (31/01 -> 28/02). */
+    public static function moisSuivant(string $iso): string
+    {
+        $t = strtotime(substr($iso, 0, 10));
+        $suivant = strtotime('first day of next month', $t);
+        return date('Y-m-', $suivant) . sprintf('%02d', min((int) date('j', $t), (int) date('t', $suivant)));
+    }
+
+    /**
+     * Chèques en plusieurs fois : le chèque suivant de la série est proposé un mois après le dernier (même jour de pose),
+     * pour le montant du dernier chèque, sans dépasser le reste à régler.
+     *
+     * @return ?array{date:string,montant:float,rang:int,precedent:string}
+     */
+    public function chequeSuivant(int $inscriptionId, float $reste): ?array
+    {
+        $st = $this->pdo->prepare('SELECT date_reglement, montant FROM reglement WHERE inscription_id = ? AND mode_reglement_id = ? AND date_reglement IS NOT NULL ORDER BY date_reglement DESC, id DESC');
+        $st->execute([$inscriptionId, self::MODE_CHEQUE]);
+        $cheques = $st->fetchAll();
+        if (!$cheques) {
+            return null;
+        }
+        $dernier = $cheques[0];
+        $montant = (float) $dernier['montant'];
+        if ($reste > 0 && $reste < $montant) {
+            $montant = $reste;
+        }
+        return ['date' => self::moisSuivant((string) $dernier['date_reglement']), 'montant' => round($montant, 2),
+            'rang' => count($cheques) + 1, 'precedent' => substr((string) $dernier['date_reglement'], 0, 10)];
+    }
 }

@@ -33,7 +33,9 @@
                 <span class="aide">Chèque, date de pose :</span>
                 <button type="button" class="btn btn-petit" data-pose="1">Prochain 1er</button>
                 <button type="button" class="btn btn-petit" data-pose="15">Prochain 15</button>
+                <?php if (!empty($serie)): ?><button type="button" class="btn btn-petit" data-pose-date="<?= e($serie['date']) ?>">Suite de la série : <?= e(dfr($serie['date'])) ?></button><?php endif; ?>
             </div>
+            <?php if (!empty($serie)): ?><p class="aide">Chèque n° <?= (int) $serie['rang'] ?> de la série : proposé le <?= e(dfr($serie['date'])) ?>, un mois après le précédent (<?= e(dfr($serie['precedent'])) ?>).</p><?php endif; ?>
             <p class="aide">Saisissez aussi les règlements à venir dès qu'ils sont sûrs (chèque à poser, coupon ou pass à recevoir) : datés plus tard, ils apparaissent « à venir ».</p>
             <?php if (isset($err['date_reglement'])): ?><p class="msg-erreur" id="f_date-err"><?= e($err['date_reglement']) ?></p><?php endif; ?>
         </div>

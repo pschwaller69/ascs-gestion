@@ -3,6 +3,9 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.9 — 08/11/2026
+- **Chèques en plusieurs fois : la série continue.** Sur « Nouveau règlement » d'une inscription qui a déjà des chèques et n'est pas soldée, le chèque suivant est proposé un mois après le dernier, le même jour de pose (15/11 → 15/12 → 15/01), pour le montant du chèque précédent sans dépasser le reste à régler. Bouton « Suite de la série » à côté de « Prochain 1er / Prochain 15 ». Fonctionne aussi avec « Valider + autre règlement ».
+
 ## 0.3.8 — 08/11/2026
 - **Règlements par type** (Accueil > Par type) : pour la saison, nombre et montant par moyen de paiement, avec la part encaissable et la part à venir ; coupons culture / sport et Pass Senior distingués. Chaque ligne ouvre la liste des règlements correspondants. Rappel du total des inscriptions et du reste à régler.
 - **Facture PDF** (bouton « Facture PDF » sur l'inscription), modèle WinDev : logo, n° d'inscription, adresse, inscription, règlements (à venir signalés), mention « Réglée le … » (ou ce qui reste à encaisser), attestation signée, pied de page de l'association.
@@ -101,7 +104,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.9 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
+- 0.3.10 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

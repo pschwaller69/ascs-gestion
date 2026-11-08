@@ -109,6 +109,9 @@
         };
         mode.addEventListener('change', maj);
         maj();
+        $$('[data-pose-date]', rapide).forEach(function (b) {
+            b.addEventListener('click', function () { date.value = b.getAttribute('data-pose-date'); });
+        });
         $$('[data-pose]', rapide).forEach(function (b) {
             b.addEventListener('click', function () {
                 var auj = new Date(), jour = b.getAttribute('data-pose');

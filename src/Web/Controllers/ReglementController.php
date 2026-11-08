@@ -54,7 +54,14 @@ final class ReglementController
         }
         $reste = max(0.0, round((float) $i['montant'] - (float) $i['regle'], 2));
         $d = ['mode_reglement_id' => '', 'montant' => $reste > 0 ? number_format($reste, 2, ',', '') : '', 'date_reglement' => date('Y-m-d'), 'identifiant' => '', 'remarques' => ''];
-        return $this->app->render('reglements/form', $this->vars($i, null, $d, []), 'Nouveau règlement');
+        // Chèques en plusieurs fois : on continue la série tant qu'il reste quelque chose à régler
+        $serie = $reste > 0 ? $this->reg->chequeSuivant((int) $i['id'], $reste) : null;
+        if ($serie) {
+            $d['mode_reglement_id'] = (string) Reglements::MODE_CHEQUE;
+            $d['date_reglement'] = $serie['date'];
+            $d['montant'] = number_format($serie['montant'], 2, ',', '');
+        }
+        return $this->app->render('reglements/form', $this->vars($i, null, $d, []) + ['serie' => $serie], 'Nouveau règlement');
     }
 
     public function creer(array $p): string
