@@ -171,6 +171,23 @@ final class Fusion
                 }
             }
 
+            // Présences notées par les animateurs (une séance notée sur les deux fiches : on garde « présent » si l'une l'est)
+            $st = $this->pdo->prepare('SELECT id, section_id, saison_id, date_seance, present FROM presence WHERE adherent_id = ?');
+            $st->execute([$autreId]);
+            foreach ($st->fetchAll() as $pr) {
+                $q = $this->pdo->prepare('SELECT id FROM presence WHERE adherent_id = ? AND section_id = ? AND saison_id = ? AND date_seance = ?');
+                $q->execute([$gardeId, $pr['section_id'], $pr['saison_id'], $pr['date_seance']]);
+                $deja = $q->fetchColumn();
+                if ($deja) {
+                    if ((int) $pr['present'] === 1) {
+                        $this->pdo->prepare('UPDATE presence SET present = 1 WHERE id = ?')->execute([$deja]);
+                    }
+                    $this->pdo->prepare('DELETE FROM presence WHERE id = ?')->execute([$pr['id']]);
+                } else {
+                    $this->pdo->prepare('UPDATE presence SET adherent_id = ? WHERE id = ?')->execute([$gardeId, $pr['id']]);
+                }
+            }
+
             // 6. Suppression de l'autre fiche et trace de la fusion
             $this->pdo->prepare('DELETE FROM adherent WHERE id = ?')->execute([$autreId]);
             if (!$rejeu) {

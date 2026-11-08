@@ -229,6 +229,14 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            'presence' => [
+                'cols' => [
+                    'id' => 'auto', 'section_id' => 'int', 'saison_id' => 'int', 'date_seance' => 'date', 'adherent_id' => 'int',
+                    'present' => 'bool', 'saisi_le' => 'datetime', 'saisi_par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+                'unique' => [['section_id', 'saison_id', 'date_seance', 'adherent_id']],
+            ],
             'fusion' => [
                 'cols' => [
                     'id' => 'auto', 'date_fusion' => 'datetime', 'garde_id' => 'int', 'fusionne_id' => 'int',

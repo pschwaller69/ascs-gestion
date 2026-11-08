@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.4.1 — 08/11/2026
+- **Inscriptions par section** (Accueil > Par section) : effectifs de la saison, séances notées, mail de l'animateur ; fiche de section avec les inscrits (âge, téléphone, mail, parent, état du paiement, nombre de présences).
+- **Feuille d'émargement** à imprimer (A4 paysage) : inscrits, téléphone, une colonne par séance datée d'après les créneaux de la section (première séance et nombre de colonnes réglables), trois lignes libres pour les essais.
+- **Liste de présence des animateurs** : page pour téléphone ouverte par un lien secret propre à chaque section, sans mot de passe (QR code et lien sur la fiche de section). L'animateur coche les présents de la séance du jour ou d'une séance passée de la saison et enregistre ; il ne voit que prénom, nom, âge des mineurs et téléphone.
+- Envoi du lien par mail à l'animateur d'une section, ou à tous les animateurs d'un coup ; « Changer le lien » coupe l'ancien.
+- La fusion de fiches reprend aussi les présences.
+
 ## 0.4.0 — 08/11/2026
 - **Tableau de bord** (page d'accueil) pour la saison choisie : inscrits sur trois saisons (avec l'écart à la précédente), inscriptions non payées et reste dû, montant des inscriptions et réglé, recettes / dépenses / résultat d'après les relevés bancaires, inscrits par famille, répartition femmes / hommes, recettes et dépenses par catégorie. Cours d'essai exclus des effectifs.
 - **Paramétrage** : saisons, familles, sections principales et sections (tarif extérieurs, section principale, cours d'essai, mail de l'animateur, campagne HelloAsso, seuil de rentabilité, créneaux jour + heure). Création, modification ; suppression seulement si rien ne s'en sert. Nouvelle saison proposée à la suite de la dernière.
@@ -125,7 +132,6 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.4.1 : inscriptions par section, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions.
 - Abandonnés : scan de chèques, Copilot, imports MonClub et Sportyneo.

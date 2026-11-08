@@ -308,3 +308,32 @@ a.tuile:hover { border-color: var(--teal); }
 .part-2 { fill: var(--viz-2); background: var(--viz-2); }
 .legende { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.25rem; }
 .pastille-couleur { display: inline-block; width: .75rem; height: .75rem; border-radius: 2px; vertical-align: -1px; }
+
+/* Inscriptions par section, émargement, liste de présence */
+.lien-qr { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-start; }
+.lien-qr .qr { width: 150px; height: 150px; flex: none; }
+.lien-copie { width: 100%; max-width: 36rem; font-size: .85rem; }
+.feuille-emargement h1 { font-size: 1.3rem; margin: .5rem 0 .2rem; }
+.feuille-emargement .sous-titre { margin: 0 0 .6rem; color: var(--muted); }
+.table-emargement { width: 100%; border-collapse: collapse; background: #fff; table-layout: fixed; font-size: .9rem; }
+.table-emargement th, .table-emargement td { border: 1px solid #9fb0ae; height: 1.9rem; padding: .15rem .35rem; }
+.table-emargement th { background: #eef3f2; font-weight: 600; font-size: .8rem; }
+.table-emargement .e-nom { width: 13rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table-emargement .e-tel { width: 7rem; font-size: .8rem; }
+.table-emargement .e-date { text-align: center; }
+@page emargement { size: A4 landscape; margin: 10mm; }
+@media print {
+    .feuille-emargement { page: emargement; }
+    .table-emargement { font-size: 9pt; }
+    .table-emargement th { background: #eee !important; }
+    .table-emargement tr { break-inside: avoid; }
+}
+.presence-liste { list-style: none; margin: 0 0 1rem; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.presence-liste li { border-bottom: 1px solid var(--line); }
+.presence-liste li:last-child { border-bottom: 0; }
+.presence-liste label { display: flex; align-items: center; gap: .8rem; padding: .75rem .9rem; min-height: 3rem; cursor: pointer; }
+.presence-liste input[type="checkbox"] { width: 1.4rem; height: 1.4rem; flex: none; accent-color: var(--teal); }
+.presence-liste .p-nom { flex: 1; font-weight: 600; }
+.presence-liste .p-info { color: var(--muted); font-size: .85rem; text-align: right; }
+.presence-liste .p-info a { color: inherit; }
+.presence-compte { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0; display: flex; gap: .75rem; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }

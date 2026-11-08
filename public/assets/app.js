@@ -260,3 +260,18 @@
             .catch(function () { /* l'application fonctionne aussi sans */ });
     });
 }());
+
+// Liste de présence : compteur des présents en direct
+(function () {
+    'use strict';
+    var form = document.getElementById('form-presence');
+    var compte = document.getElementById('compte-presents');
+    if (!form || !compte) { return; }
+    var cases = form.querySelectorAll('input[name="present[]"]');
+    var maj = function () {
+        var n = 0;
+        Array.prototype.forEach.call(cases, function (c) { if (c.checked) { n++; } });
+        compte.textContent = n + ' présent(s) sur ' + cases.length;
+    };
+    Array.prototype.forEach.call(cases, function (c) { c.addEventListener('change', maj); });
+}());

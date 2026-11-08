@@ -14,6 +14,8 @@ use Ascs\Web\Controllers\EnLigneController;
 use Ascs\Web\Controllers\FactureController;
 use Ascs\Web\Controllers\ParametrageController;
 use Ascs\Web\Controllers\ResultatController;
+use Ascs\Web\Controllers\SectionController;
+use Ascs\Web\Controllers\PresenceController;
 use Ascs\Web\Controllers\HelloAssoController;
 use Ascs\Web\Controllers\PublicController;
 use Ascs\Web\Controllers\RemiseController;
@@ -119,6 +121,14 @@ $router->post('/inscription', [PublicController::class, 'envoyerInscription'], t
 $router->get('/essai', [PublicController::class, 'essai'], true);
 $router->post('/essai', [PublicController::class, 'envoyerEssai'], true);
 $router->get('/merci', [PublicController::class, 'merci'], true);
+$router->get('/presence/{jeton}', [PresenceController::class, 'liste'], true);
+$router->post('/presence/{jeton}', [PresenceController::class, 'enregistrer'], true);
+$router->get('/sections', [SectionController::class, 'index']);
+$router->post('/sections/envoyer-liens', [SectionController::class, 'envoyerTous']);
+$router->get('/sections/{id}', [SectionController::class, 'fiche']);
+$router->get('/sections/{id}/emargement', [SectionController::class, 'emargement']);
+$router->post('/sections/{id}/envoyer-lien', [SectionController::class, 'envoyerLien']);
+$router->post('/sections/{id}/nouveau-lien', [SectionController::class, 'nouveauLien']);
 
 $router->get('/demandes', [DemandeController::class, 'index']);
 $router->get('/demandes/{id}', [DemandeController::class, 'fiche']);

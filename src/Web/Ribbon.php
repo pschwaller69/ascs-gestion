@@ -35,8 +35,8 @@ final class Ribbon
                     ['Inscriptions', 'file', '/inscriptions', null],
                     ['Nouvelle inscription', 'file-plus', '/inscriptions/nouveau', null],
                     ['Non payées', 'alert', '/inscriptions?statut=impayees', null],
-                    ['Par section', 'layers', null, '0.4.1'],
-                    ['Émargement', 'list', null, '0.4.1'],
+                    ['Par section', 'layers', '/sections', null],
+                    ['Émargement', 'list', '/sections', null],
                 ],
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
@@ -56,7 +56,7 @@ final class Ribbon
                     ['Saison', 'mail', null, '0.5.0'],
                     ['N-1 non réinscrits', 'mail', null, '0.5.0'],
                     ['Section', 'mail', null, '0.5.0'],
-                    ['Liste de présence', 'list', null, '0.4.1'],
+                    ['Liste de présence', 'list', '/sections', null],
                 ],
                 'Contact' => [
                     ['Ajout Outlook', 'users', null, '0.5.0'],
