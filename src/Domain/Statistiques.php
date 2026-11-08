@@ -127,4 +127,143 @@ final class Statistiques
             LEFT JOIN section_principale sp ON sp.id = s.section_principale_id
             WHERE s.essai = 0 GROUP BY s.id, s.titre, s.montant, s.montant_rentabilite_annuel, sp.titre ORDER BY s.titre', [$saisonId]);
     }
+
+    /** Tranche d'âge au 1er janvier de l'année de début de saison (habitude des dossiers de subvention). */
+    public static function tranche(?string $naissance, string $debutSaison): string
+    {
+        if (!$naissance) {
+            return 'Âge inconnu';
+        }
+        $age = (int) substr($debutSaison, 0, 4) - (int) substr($naissance, 0, 4);
+        return match (true) {
+            $age < 0 || $age > 110 => 'Âge inconnu',
+            $age < 12 => 'Moins de 12 ans',
+            $age < 18 => '12 à 17 ans',
+            $age < 26 => '18 à 25 ans',
+            $age < 60 => '26 à 59 ans',
+            default => '60 ans et plus',
+        };
+    }
+
+    public const TRANCHES = ['Moins de 12 ans', '12 à 17 ans', '18 à 25 ans', '26 à 59 ans', '60 ans et plus', 'Âge inconnu'];
+
+    /**
+     * Adhérents distincts de la saison (cours d'essai exclus) : genre, tranche d'âge, Rillieux / extérieurs, nouveaux / réinscrits.
+     * @return array<string,mixed>
+     */
+    public function adherents(int $saisonId): array
+    {
+        $s = $this->lignes('SELECT * FROM saison WHERE id = ?', [$saisonId])[0] ?? null;
+        if (!$s) {
+            return [];
+        }
+        $prec = $this->col('SELECT id FROM saison WHERE date_debut < ? ORDER BY date_debut DESC LIMIT 1', [$s['date_debut']]);
+        $rows = $this->lignes('SELECT DISTINCT a.id, a.genre, a.date_naissance, a.ville, a.code_postal FROM inscription i JOIN adherent a ON a.id = i.adherent_id
+            JOIN section se ON se.id = i.section_id WHERE i.saison_id = ? AND se.essai = 0', [$saisonId]);
+        $avant = $prec ? array_flip(array_map('intval', array_column($this->lignes('SELECT DISTINCT adherent_id FROM inscription WHERE saison_id = ?', [$prec]), 'adherent_id'))) : [];
+        $deja = array_flip(array_map('intval', array_column($this->lignes('SELECT DISTINCT i.adherent_id FROM inscription i JOIN saison s ON s.id = i.saison_id WHERE s.date_debut < ?', [$s['date_debut']]), 'adherent_id')));
+        $r = ['saison' => $s, 'total' => count($rows), 'femmes' => 0, 'hommes' => 0, 'rillieux' => 0, 'exterieurs' => 0, 'nouveaux' => 0, 'reinscrits' => 0, 'retour' => 0,
+            'tranches' => array_fill_keys(self::TRANCHES, ['f' => 0, 'h' => 0, 'rillieux' => 0])];
+        foreach ($rows as $a) {
+            $g = (int) $a['genre'] === 0 ? 'f' : 'h';
+            $r[$g === 'f' ? 'femmes' : 'hommes']++;
+            $rill = Tarifs::habitantRillieux($a['ville'], $a['code_postal']);
+            $r[$rill ? 'rillieux' : 'exterieurs']++;
+            $t = self::tranche($a['date_naissance'], (string) $s['date_debut']);
+            $r['tranches'][$t][$g]++;
+            $r['tranches'][$t]['rillieux'] += (int) $rill;
+            $id = (int) $a['id'];
+            if (isset($avant[$id])) {
+                $r['reinscrits']++;
+            } elseif (isset($deja[$id])) {
+                $r['retour']++;
+            } else {
+                $r['nouveaux']++;
+            }
+        }
+        return $r;
+    }
+
+    /** Inscriptions par section sur les trois dernières saisons. @return array{saisons:list<array>,lignes:list<array>} */
+    public function parSectionTroisSaisons(int $saisonId): array
+    {
+        $saisons = array_reverse($this->lignes('SELECT id, titre FROM saison WHERE date_debut <= (SELECT date_debut FROM saison WHERE id = ?) ORDER BY date_debut DESC LIMIT 3', [$saisonId]));
+        $ids = array_map(static fn ($x) => (int) $x['id'], $saisons);
+        if (!$ids) {
+            return ['saisons' => [], 'lignes' => []];
+        }
+        $rows = $this->lignes('SELECT s.id, s.titre, sp.titre AS principale, f.titre AS famille, i.saison_id, COUNT(*) AS n FROM inscription i JOIN section s ON s.id = i.section_id
+            LEFT JOIN section_principale sp ON sp.id = s.section_principale_id LEFT JOIN famille_section f ON f.id = sp.famille_section_id
+            WHERE s.essai = 0 AND i.saison_id IN (' . implode(',', $ids) . ') GROUP BY s.id, s.titre, sp.titre, f.titre, i.saison_id');
+        $l = [];
+        foreach ($rows as $r) {
+            $l[(int) $r['id']] ??= ['id' => (int) $r['id'], 'titre' => $r['titre'], 'principale' => $r['principale'], 'famille' => $r['famille'], 'n' => array_fill_keys($ids, 0)];
+            $l[(int) $r['id']]['n'][(int) $r['saison_id']] = (int) $r['n'];
+        }
+        $l = array_values($l);
+        usort($l, static fn ($a, $b) => [$a['famille'], $a['titre']] <=> [$b['famille'], $b['titre']]);
+        return ['saisons' => $saisons, 'lignes' => $l];
+    }
+
+    /**
+     * Courbe d'inscriptions : nombre cumulé d'inscriptions par semaine depuis le début de chaque saison (3 saisons).
+     * @return list<array{titre:string,points:list<int>,courante:bool}>
+     */
+    public function courbe(int $saisonId, int $semaines = 52): array
+    {
+        $saisons = array_reverse($this->lignes('SELECT id, titre, date_debut FROM saison WHERE date_debut <= (SELECT date_debut FROM saison WHERE id = ?) ORDER BY date_debut DESC LIMIT 3', [$saisonId]));
+        $out = [];
+        foreach ($saisons as $s) {
+            // Les inscriptions prises avant le début officiel (préinscriptions de juin…) comptent en semaine 0
+            $debut = strtotime((string) $s['date_debut']);
+            $pts = array_fill(0, $semaines, 0);
+            foreach ($this->lignes('SELECT COALESCE(i.date_inscription, i.date_creation) AS d FROM inscription i JOIN section s ON s.id = i.section_id WHERE i.saison_id = ? AND s.essai = 0', [$s['id']]) as $r) {
+                $t = $r['d'] ? strtotime(substr((string) $r['d'], 0, 10)) : $debut;
+                $w = max(0, min($semaines - 1, intdiv((int) (($t - $debut) / 86400), 7)));
+                $pts[$w]++;
+            }
+            $cumul = 0;
+            foreach ($pts as $k => $n) {
+                $cumul += $n;
+                $pts[$k] = $cumul;
+            }
+            $out[] = ['titre' => $s['titre'], 'points' => $pts, 'courante' => (int) $s['id'] === $saisonId, 'debut' => $s['date_debut']];
+        }
+        return $out;
+    }
+
+    /**
+     * Reporting mairie : adhérents de la saison par activité (section principale), Rillieux / extérieurs, mineurs / majeurs, femmes / hommes.
+     * @return list<array<string,mixed>>
+     */
+    public function mairie(int $saisonId): array
+    {
+        $s = $this->lignes('SELECT date_debut FROM saison WHERE id = ?', [$saisonId])[0] ?? null;
+        if (!$s) {
+            return [];
+        }
+        $rows = $this->lignes('SELECT DISTINCT sp.id AS sp, sp.titre AS activite, f.titre AS famille, a.id, a.genre, a.date_naissance, a.ville, a.code_postal
+            FROM inscription i JOIN adherent a ON a.id = i.adherent_id JOIN section s ON s.id = i.section_id
+            LEFT JOIN section_principale sp ON sp.id = s.section_principale_id LEFT JOIN famille_section f ON f.id = sp.famille_section_id
+            WHERE i.saison_id = ? AND s.essai = 0', [$saisonId]);
+        $out = [];
+        $an = (int) substr((string) $s['date_debut'], 0, 4);
+        foreach ($rows as $r) {
+            $k = (int) $r['sp'];
+            $out[$k] ??= ['activite' => $r['activite'] ?? 'Sans section principale', 'famille' => $r['famille'], 'total' => 0, 'rillieux' => 0, 'exterieurs' => 0,
+                'mineurs' => 0, 'majeurs' => 0, 'femmes' => 0, 'hommes' => 0, 'mineurs_rillieux' => 0];
+            $o = &$out[$k];
+            $o['total']++;
+            $rill = Tarifs::habitantRillieux($r['ville'], $r['code_postal']);
+            $o[$rill ? 'rillieux' : 'exterieurs']++;
+            $mineur = $r['date_naissance'] && $an - (int) substr((string) $r['date_naissance'], 0, 4) < 18;
+            $o[$mineur ? 'mineurs' : 'majeurs']++;
+            $o['mineurs_rillieux'] += (int) ($mineur && $rill);
+            $o[(int) $r['genre'] === 0 ? 'femmes' : 'hommes']++;
+            unset($o);
+        }
+        $out = array_values($out);
+        usort($out, static fn ($a, $b) => [$a['famille'], $a['activite']] <=> [$b['famille'], $b['activite']]);
+        return $out;
+    }
 }

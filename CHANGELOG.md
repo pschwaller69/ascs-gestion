@@ -3,6 +3,17 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.6.0 — 08/11/2026
+- **Compte bancaire** (onglet Financier) : comptes avec leur solde (nommables : « Compte courant », « Livret »…), opérations par saison ou toutes saisons, recherche, filtres recettes / dépenses / à ventiler, état de la ventilation de chaque ligne.
+- **Ventilation d'une opération** : plusieurs lignes (section principale, catégorie, montant, observation), total contrôlé, virement interne. Ventilation proposée d'après l'historique.
+- **Import des relevés bancaires** : CSV de la banque (format WinDev « date ; date valeur ; débit ; crédit ; libellé ; solde », ou CSV avec titres de colonnes) ou OFX. Aperçu avant d'enregistrer ; opérations déjà présentes reconnues (un relevé peut être réimporté sans doublon) ; saison déduite de la date.
+  - **Ventilation automatique** des opérations récurrentes (URSSAF, retraite, assurance, banque…) : reprise de la ventilation des deux dernières opérations au même libellé, y compris les partages (50 / 50 entre deux sections), avec la mention « Traitement Automatique fait le … » comme dans WinDev. Sur la saison 2025-2026, la proposition est juste dans 97 % des cas où elle est faite.
+  - Remises de chèques rapprochées et ventilées juste après l'import.
+- **Contrôle** : opérations non ventilées ou mal ventilées, soldes qui ne s'enchaînent pas (opération manquante), remises de chèques déposées sans ligne bancaire.
+- **Export Excel** (CSV) des comptes de la saison, une ligne par ventilation.
+- **Reporting** : adhérents (femmes / hommes, Rillieux / extérieurs, nouveaux / réinscrits / de retour, tranches d'âge, écart avec la saison précédente), adhérents par section sur trois saisons, courbe d'inscriptions cumulées sur trois saisons, reporting mairie par activité (Rillieux, mineurs, femmes / hommes) avec export Excel.
+- Mode transition : les comptes restent tenus dans WinDev ; l'import d'un relevé fonctionne en aperçu seulement et la ventilation est en lecture. Tout s'active après la bascule.
+
 ## 0.5.2 — 08/11/2026
 - **Deux comptes d'envoi** : les mailings en nombre partent d'un compte SMTP à part (SMTP_MAILING_USER / SMTP_MAILING_PASS, par exemple contact@m.ascs.fr), les factures, confirmations et liens des animateurs du compte principal (SMTP_USER, par exemple contact@a.ascs.fr). Un mailing mal reçu n'abîme pas la réputation des envois individuels. Sans second compte, le principal sert à tout.
 
@@ -155,5 +166,5 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions.
+- Après 0.6.0 : bascule (arrêt de WinDev), puis corrections et demandes au fil de l'usage.
 - Abandonnés : scan de chèques, Copilot, imports MonClub et Sportyneo.

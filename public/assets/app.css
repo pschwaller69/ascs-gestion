@@ -355,3 +355,28 @@ tr.retire td:last-child { text-decoration: none; }
     .table-dest td:nth-child(3) { grid-column: 2; grid-row: 1; }
     .table-dest td:last-child { grid-column: 1 / -1; }
 }
+
+/* Reporting et comptes */
+:root { --viz-3: #b8590f; }
+.viz-1 { stroke: var(--viz-1); fill: var(--viz-1); background: var(--viz-1); }
+.viz-2 { stroke: var(--viz-2); fill: var(--viz-2); background: var(--viz-2); }
+.viz-3 { stroke: var(--viz-3); fill: var(--viz-3); background: var(--viz-3); }
+.graphe { margin: 0 0 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: .75rem; }
+.courbe { width: 100%; height: auto; display: block; }
+.courbe .grille { stroke: #e3e8e7; stroke-width: 1; }
+.courbe .axe { font-size: 11px; fill: var(--muted); }
+.courbe .ligne { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.courbe .ligne.forte { stroke-width: 3; }
+.courbe .point { stroke: #fff; stroke-width: 2; }
+.courbe .cible { fill: transparent; stroke: none; }
+.courbe .cible:hover { fill: rgba(0,0,0,.08); }
+.courbe .etiquette { font-size: 12px; fill: var(--ink); }
+.ligne-total th, .ligne-total td { font-weight: 700; }
+.ligne-groupe th { background: #eef3f2; text-align: left; font-size: .85rem; }
+.texte-ok { color: #14522a; }
+.table-ventilation { width: 100%; border-collapse: collapse; margin-bottom: .5rem; }
+.table-ventilation td, .table-ventilation th { padding: .25rem .3rem; text-align: left; }
+.table-ventilation select, .table-ventilation input { width: 100%; }
+.nom-compte { margin: -.5rem 0 .5rem; }
+.table-ventilation input { padding: .5rem .55rem; border: 1px solid #b9c6c4; border-radius: 4px; font: inherit; background: #fff; }
+.table-ventilation input:disabled, .table-ventilation select:disabled { background: #f3f6f5; color: var(--ink); }

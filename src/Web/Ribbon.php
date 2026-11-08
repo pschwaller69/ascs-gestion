@@ -83,17 +83,24 @@ final class Ribbon
             ]],
             'financier' => ['titre' => 'Financier', 'groupes' => [
                 'Banque' => [
-                    ['Compte bancaire', 'bank', null, '0.6.0'],
-                    ['Contrôle', 'bank', null, '0.6.0'],
-                    ['Export Excel', 'download', null, '0.6.0'],
+                    ['Compte bancaire', 'bank', '/banque', null],
+                    ['Import relevé', 'upload', '/banque/import', null],
+                    ['À ventiler', 'list', '/banque?filtre=a_ventiler', null],
+                    ['Contrôle', 'bank', '/banque/controle', null],
+                    ['Export Excel', 'download', '/banque/export', null],
+                ],
+                'Résultat' => [
+                    ['Par section principale', 'chart', '/resultats/sections-principales', null],
+                    ['Par section', 'chart', '/resultats/sections', null],
+                    ['Par type de règlement', 'chart', '/reglements/par-type', null],
                 ],
             ]],
             'reporting' => ['titre' => 'Reporting', 'groupes' => [
                 'Adhérents' => [
-                    ['Adhérents', 'users', null, '0.6.0'],
-                    ['Adhérent par section', 'layers', null, '0.6.0'],
-                    ['Courbe d\'inscriptions', 'chart', null, '0.6.0'],
-                    ['Reporting mairie', 'town', null, '0.6.0'],
+                    ['Adhérents', 'users', '/reporting/adherents', null],
+                    ['Adhérent par section', 'layers', '/reporting/sections', null],
+                    ['Courbe d\'inscriptions', 'chart', '/reporting/courbe', null],
+                    ['Reporting mairie', 'town', '/reporting/mairie', null],
                 ],
             ]],
         ];
