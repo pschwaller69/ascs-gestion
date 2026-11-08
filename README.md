@@ -47,7 +47,8 @@ Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/
 2. Dans `.env` : `HELLOASSO_CLIENT_ID`, `HELLOASSO_CLIENT_SECRET`, `HELLOASSO_ORGANISATION` (le nom dans helloasso.com/associations/<nom>).
 3. Dans l'application : Accueil > HelloAsso > « Synchroniser maintenant ». Les 12 derniers mois sont lus ; « Récupérer des adhésions plus anciennes » pour remonter plus loin.
 4. cPanel > Tâches Cron, toutes les 15 minutes : `php ~/ascs/bin/helloasso.php` (adapter le chemin du projet ; utiliser le PHP 8.3 si cPanel le demande).
-5. Facultatif, notifications instantanées : mettre un jeton secret dans `HELLOASSO_WEBHOOK_TOKEN` et déclarer chez HelloAsso l'URL `https://<sous-domaine>/helloasso/notification/<jeton>`. La notification ne sert qu'à déclencher une synchronisation : les données sont toujours relues sur l'API.
+5. Validation automatique (depuis 0.3.6, réglage sur la page HelloAsso) : une adhésion est validée seule quand il n'y a aucun doute (fiche unique très probable, ou nouvelle personne sans fiche ressemblante avec le genre dans le formulaire, et section déjà retenue pour ce formulaire et ce tarif). Les autres attendent la validation du bureau, avec la raison affichée.
+6. Facultatif, notifications instantanées : mettre un jeton secret dans `HELLOASSO_WEBHOOK_TOKEN` et déclarer chez HelloAsso l'URL `https://<sous-domaine>/helloasso/notification/<jeton>`. La notification ne sert qu'à déclencher une synchronisation : les données sont toujours relues sur l'API.
 
 ## Importer les données WinDev (rejouable à volonté)
 

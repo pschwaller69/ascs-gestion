@@ -3,6 +3,14 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.6 — 08/11/2026
+- **Validation automatique des adhésions HelloAsso sans doute possible** (activée par défaut, réglage sur la page HelloAsso) :
+  - réinscription : une seule fiche « très probable », même nom, prénom et date de naissance ;
+  - nouvelle personne : aucune fiche ressemblante, genre donné par une question du formulaire (« Genre », « Sexe », « Civilité ») ;
+  - dans les deux cas : section déjà retenue pour ce formulaire et ce tarif, saison reconnue, paiement encaissé.
+- Les autres restent « À valider », avec la raison affichée (homonyme, plusieurs fiches, nouveau formulaire, genre manquant, annulée…). Les validations automatiques portent la marque « auto ».
+- À la réactivation du réglage, les adhésions en attente qui remplissent les conditions sont validées tout de suite.
+
 ## 0.3.5 — 08/11/2026
 - **Application installable** sur téléphone et ordinateur : icône ASCS, ouverture en plein écran (Android : « Installer l'application » ; iPhone : Partager > « Sur l'écran d'accueil »).
   - Aucune page ni donnée n'est gardée sur l'appareil : seuls les fichiers d'interface sont en cache. Sans réseau, une page « Pas de connexion » s'affiche.
@@ -79,7 +87,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.6 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
+- 0.3.7 : règlements par type, facture PDF envoyée par mail (« Réglé le … »).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

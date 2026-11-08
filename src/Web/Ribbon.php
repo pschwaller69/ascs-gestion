@@ -41,7 +41,7 @@ final class Ribbon
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
                     ['Remise de chèques', 'cheque', '/remises', null],
-                    ['Par type', 'chart', null, '0.3.6'],
+                    ['Par type', 'chart', null, '0.3.7'],
                 ],
                 'En ligne' => [
                     ['HelloAsso', 'upload', '/helloasso', null],

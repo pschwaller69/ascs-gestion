@@ -112,6 +112,7 @@ $router->get('/en-ligne/affiches', [EnLigneController::class, 'affiches']);
 
 $router->get('/helloasso', [HelloAssoController::class, 'index']);
 $router->post('/helloasso/synchroniser', [HelloAssoController::class, 'synchroniser']);
+$router->post('/helloasso/automatique', [HelloAssoController::class, 'automatique']);
 $router->post('/helloasso/notification/{jeton}', [HelloAssoController::class, 'notification'], true, false);
 $router->get('/helloasso/{id}', [HelloAssoController::class, 'fiche']);
 $router->post('/helloasso/{id}', [HelloAssoController::class, 'valider']);

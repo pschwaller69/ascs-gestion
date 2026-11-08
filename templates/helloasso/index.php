@@ -32,6 +32,18 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
     </p>
 <?php endif; ?>
 
+<form method="post" action="<?= e(url('/helloasso/automatique')) ?>" class="reglage-auto">
+    <?= csrf_field() ?>
+    <input type="hidden" name="actif" value="<?= $auto ? '0' : '1' ?>">
+    <p>
+        <strong>Validation automatique <?= $auto ? 'activée' : 'coupée' ?>.</strong>
+        <?= $auto
+            ? 'Les adhésions sans aucun doute sont validées seules : réinscription d\'une fiche connue (même nom, prénom et date de naissance) ou nouvelle personne sans fiche ressemblante, dans une section déjà retenue pour ce formulaire et ce tarif. Les autres attendent ici.'
+            : 'Chaque adhésion attend votre validation.' ?>
+    </p>
+    <button type="submit" class="btn btn-petit"><?= $auto ? 'Couper la validation automatique' : 'Activer la validation automatique' ?></button>
+</form>
+
 <nav class="sous-onglets" aria-label="Adhésions HelloAsso">
     <a href="<?= e(url('/helloasso')) ?>"<?= $vue === 'a_traiter' ? ' aria-current="page"' : '' ?>>À valider (<?= (int) $compteurs['a_traiter'] ?>)</a>
     <a href="<?= e(url('/helloasso', ['vue' => 'traites'])) ?>"<?= $vue === 'traites' ? ' aria-current="page"' : '' ?>>Traitées (<?= (int) ($compteurs['importe'] + $compteurs['deja_present']) ?>)</a>
@@ -54,7 +66,9 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
             <td>
                 <?= e($etats[$l['statut']] ?? $l['statut']) ?>
                 <?php if (in_array($l['etat'], $annule, true)): ?><br><span class="pastille pastille-excedent"><?= e($l['etat'] === 'Refunded' ? 'remboursée' : 'annulée') ?> sur HelloAsso</span><?php endif; ?>
+                <?php if ($l['statut'] === 'importe' && $l['traite_par'] === Ascs\HelloAsso\Sync::PAR_AUTO): ?> <span class="pastille pastille-ok" title="Validée automatiquement">auto</span><?php endif; ?>
                 <?php if ($l['section']): ?><br><small class="aide"><?= e($l['section']) ?></small><?php endif; ?>
+                <?php if (!empty($raisons[(int) $l['id']])): ?><br><small class="aide">À vérifier : <?= e($raisons[(int) $l['id']]) ?></small><?php endif; ?>
             </td>
             <td>
                 <?php if ($l['inscription_id'] && $l['statut'] !== 'a_traiter'): ?>

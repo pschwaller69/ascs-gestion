@@ -87,6 +87,74 @@ final class Validation
         ]);
     }
 
+    /** Genre lu dans une question du formulaire (« Genre », « Sexe », « Civilité »…) : 0 femme, 1 homme, null si absent ou ambigu. */
+    public static function genreDepuis(array $it): ?int
+    {
+        $champs = json_decode((string) ($it['champs'] ?? ''), true) ?: [];
+        foreach ($champs as $nom => $val) {
+            $n = DuplicateFinder::norm((string) $nom);
+            if (!str_contains($n, 'genre') && !str_contains($n, 'sexe') && !str_contains($n, 'civilite')) {
+                continue;
+            }
+            $v = DuplicateFinder::norm((string) $val);
+            if (in_array($v, ['f', 'femme', 'fille', 'feminin', 'madame', 'mme', 'mlle', 'mademoiselle'], true)) {
+                return 0;
+            }
+            if (in_array($v, ['m', 'h', 'homme', 'garcon', 'masculin', 'monsieur', 'mr'], true)) {
+                return 1;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Validation automatique, seulement quand il n'y a aucun doute :
+     * - réinscription : une seule fiche « très probable » (même nom, prénom et date de naissance) ;
+     * - nouvelle personne : aucune fiche ressemblante, genre fourni par le formulaire ;
+     * et dans les deux cas une section déjà retenue pour ce formulaire et ce tarif, une saison reconnue, un paiement encaissé.
+     *
+     * @return array{in:?array<string,mixed>,raison:?string} in = saisie à valider, sinon raison de la vérification manuelle
+     */
+    public function propositionAuto(array $it): array
+    {
+        $non = static fn (string $r) => ['in' => null, 'raison' => $r];
+        if (in_array($it['etat'], Sync::ANNULE, true)) {
+            return $non('annulée ou remboursée sur HelloAsso');
+        }
+        $st = $this->pdo->prepare("SELECT COUNT(*) FROM helloasso_paiement WHERE item_id = ? AND etat IN ('Authorized','Registered')");
+        $st->execute([(int) $it['id']]);
+        if ((int) $st->fetchColumn() === 0) {
+            return $non('aucun paiement encaissé');
+        }
+        $section = $this->sectionProposee($it);
+        if ($section['source'] !== 'retenue') {
+            return $non('première adhésion de ce formulaire et de ce tarif : section à confirmer');
+        }
+        $saison = $this->saisonProposee($it);
+        if ($saison === null) {
+            return $non('saison non reconnue');
+        }
+        $in = ['section_id' => (string) $section['id'], 'saison_id' => (string) $saison, 'montant' => self::montantInscription($it)];
+        $cands = $this->candidats($it);
+        if (!$cands) {
+            $g = self::genreDepuis($it);
+            if ($g === null) {
+                return $non('nouvelle personne, genre non indiqué dans le formulaire');
+            }
+            return ['in' => array_merge(self::ficheDepuis($it), ['adherent' => 'nouveau', 'genre' => (string) $g], $in), 'raison' => null];
+        }
+        $a = array_values(array_filter($cands, static fn ($c) => $c['niveau'] === 'A'));
+        $b = array_filter($cands, static fn ($c) => $c['niveau'] === 'B');
+        if (count($a) !== 1 || $b) {
+            return $non(count($a) > 1 || $b ? 'plusieurs fiches possibles' : 'une fiche existante lui ressemble');
+        }
+        $f = $a[0]['fiche'];
+        if (DuplicateFinder::norm($f['nom'] . ' ' . $f['prenom']) !== DuplicateFinder::norm($it['nom'] . ' ' . $it['prenom'])) {
+            return $non('même date de naissance mais nom ou prénom différent');
+        }
+        return ['in' => ['adherent' => (string) $a[0]['id'], 'completer' => '1'] + $in, 'raison' => null];
+    }
+
     /** Fiche à créer à partir des données HelloAsso (le payeur devient le parent s'il est une autre personne). */
     public static function ficheDepuis(array $it): array
     {

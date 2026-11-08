@@ -24,9 +24,10 @@ final class Sync
     /** États d'un paiement considéré comme encaissé. */
     public const PAYE = ['Authorized', 'Registered'];
     /** États d'une adhésion à ne pas importer. */
+    public const PAR_AUTO = 'automatique (HelloAsso)';
     public const ANNULE = ['Canceled', 'Refunded', 'Refused', 'Abandoned', 'Deleted', 'Contested'];
 
-    private array $compte = ['recues' => 0, 'nouvelles' => 0, 'deja_present' => 0, 'reglements' => 0, 'liens_perdus' => 0, 'rejouees' => 0];
+    private array $compte = ['recues' => 0, 'nouvelles' => 0, 'deja_present' => 0, 'reglements' => 0, 'liens_perdus' => 0, 'rejouees' => 0, 'auto' => 0];
 
     public function __construct(private readonly PDO $pdo)
     {
@@ -242,6 +243,9 @@ final class Sync
             $items = $client->adhesions((new DateTimeImmutable($depuis))->format('Y-m-d\T00:00:00P'));
             $c = $this->enregistrer($items);
             $resume = sprintf('%d adhésion(s) lue(s), %d nouvelle(s), %d déjà saisie(s) dans la base, %d règlement(s) créé(s)', $c['recues'], $c['nouvelles'], $c['deja_present'], $c['reglements']);
+            if ($c['auto']) {
+                $resume .= sprintf(', %d validée(s) automatiquement', $c['auto']);
+            }
             if ($c['rejouees']) {
                 $resume .= sprintf(', %d validation(s) refaite(s) automatiquement après un import WinDev', $c['rejouees']);
             }
@@ -310,6 +314,12 @@ final class Sync
         return (int) $st->fetchColumn();
     }
 
+    /** Validation automatique des adhésions sans doute possible : activée sauf si le bureau l'a coupée. */
+    public function autoActive(): bool
+    {
+        return Parametres::get($this->pdo, 'helloasso_auto') !== '0';
+    }
+
     public function rapprocher(): void
     {
         $maj = $this->pdo->prepare('UPDATE helloasso_item SET statut = ?, adherent_id = ?, inscription_id = ? WHERE id = ?');
@@ -337,6 +347,16 @@ final class Sync
                         $this->compte['liens_perdus']--;
                     }
                     continue;
+                } elseif ($this->autoActive()) {
+                    $val = new Validation($this->pdo);
+                    $prop = $val->propositionAuto($it);
+                    if ($prop['in'] !== null) {
+                        $r = $val->valider($id, $prop['in'], self::PAR_AUTO);
+                        if ($r['ok']) {
+                            $this->compte['auto']++;
+                        }
+                        continue;
+                    }
                 }
             }
             if ($it['statut'] !== 'a_traiter') {

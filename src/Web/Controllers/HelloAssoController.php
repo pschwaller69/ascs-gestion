@@ -42,7 +42,46 @@ final class HelloAssoController
             'configure' => $cfg['ha_client_id'] !== '' && $cfg['ha_client_secret'] !== '' && $cfg['ha_organisation'] !== '',
             'organisation' => $cfg['ha_organisation'], 'webhook' => strlen($cfg['ha_webhook_token']) >= 16,
             'depuis' => (new Sync($this->app->pdo))->depuisParDefaut(),
+            'auto' => (new Sync($this->app->pdo))->autoActive(),
+            'raisons' => $vue === 'a_traiter' ? $this->raisons($this->val->liste(['a_traiter'])) : [],
         ], 'HelloAsso', 'accueil');
+    }
+
+    /** Pourquoi chaque adhésion restante attend une vérification (affiché dans la liste). */
+    private function raisons(array $liste): array
+    {
+        $r = [];
+        foreach ($liste as $l) {
+            if ($l['choix']) {
+                continue;
+            }
+            $r[(int) $l['id']] = $this->val->propositionAuto($l)['raison'];
+        }
+        return $r;
+    }
+
+    /** Active ou coupe la validation automatique ; à l'activation, traite tout de suite ce qui attend. */
+    public function automatique(array $p): void
+    {
+        $actif = ($_POST['actif'] ?? '') === '1';
+        \Ascs\Parametres::set($this->app->pdo, 'helloasso_auto', $actif ? '1' : '0');
+        if (!$actif) {
+            $this->app->flash('ok', 'Validation automatique coupée : toutes les nouvelles adhésions attendront votre validation.');
+            $this->app->redirect('/helloasso');
+        }
+        $pdo = $this->app->pdo;
+        $sync = new Sync($pdo);
+        $pdo->beginTransaction();
+        try {
+            $sync->rapprocher();
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+        $n = $sync->compteur()['auto'];
+        $this->app->flash('ok', 'Validation automatique activée' . ($n ? sprintf(' : %d adhésion(s) validée(s) tout de suite.', $n) : '.'));
+        $this->app->redirect('/helloasso');
     }
 
     public function synchroniser(array $p): void

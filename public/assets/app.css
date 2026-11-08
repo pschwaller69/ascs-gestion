@@ -257,3 +257,7 @@ tr.a-venir td { color: var(--muted); }
 
 /* Version affichée en permanence pendant le développement */
 .version-dev { font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* HelloAsso : réglage de la validation automatique */
+.reglage-auto { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 0 0 1rem; padding: .6rem .9rem; background: var(--teal-l); border-left: 4px solid var(--teal); border-radius: 4px; }
+.reglage-auto p { margin: 0; flex: 1 1 28rem; }
