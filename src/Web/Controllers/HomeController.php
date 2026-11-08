@@ -37,6 +37,15 @@ final class HomeController
         } catch (\PDOException) {
             $stats['demandes'] = 0;
         }
-        return $this->app->render('home', ['stats' => $stats], 'Accueil');
+        $st = new \Ascs\Domain\Statistiques($pdo);
+        $tb = [
+            'saisons' => $st->inscritsTroisSaisons($sid),
+            'familles' => $st->parFamille($sid),
+            'genre' => $st->genre($sid),
+            'non_payees' => $st->nonPayees($sid),
+            'comptes' => $st->comptes($sid),
+            'categories' => $st->parCategorie($sid),
+        ];
+        return $this->app->render('home', ['stats' => $stats, 'tb' => $tb], 'Tableau de bord');
     }
 }

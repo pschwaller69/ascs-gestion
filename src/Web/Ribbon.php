@@ -35,8 +35,8 @@ final class Ribbon
                     ['Inscriptions', 'file', '/inscriptions', null],
                     ['Nouvelle inscription', 'file-plus', '/inscriptions/nouveau', null],
                     ['Non payées', 'alert', '/inscriptions?statut=impayees', null],
-                    ['Par section', 'layers', null, '0.4.0'],
-                    ['Émargement', 'list', null, '0.4.0'],
+                    ['Par section', 'layers', null, '0.4.1'],
+                    ['Émargement', 'list', null, '0.4.1'],
                 ],
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
@@ -56,17 +56,17 @@ final class Ribbon
                     ['Saison', 'mail', null, '0.5.0'],
                     ['N-1 non réinscrits', 'mail', null, '0.5.0'],
                     ['Section', 'mail', null, '0.5.0'],
-                    ['Liste de présence', 'list', null, '0.4.0'],
+                    ['Liste de présence', 'list', null, '0.4.1'],
                 ],
                 'Contact' => [
                     ['Ajout Outlook', 'users', null, '0.5.0'],
                 ],
             ]],
             'parametrage' => ['titre' => 'Paramétrage', 'groupes' => [
-                'Saison' => [['Saison', 'calendar', null, '0.4.0']],
-                'Section' => [['Section', 'layers', null, '0.4.0'], ['Résultat section', 'chart', null, '0.4.0']],
-                'Section principale' => [['Section principale', 'layers', null, '0.4.0'], ['Résultat', 'chart', null, '0.4.0']],
-                'Famille' => [['Famille', 'layers', null, '0.4.0']],
+                'Saison' => [['Saisons', 'calendar', '/parametrage/saisons', null]],
+                'Section' => [['Sections', 'layers', '/parametrage/sections', null], ['Résultat section', 'chart', '/resultats/sections', null]],
+                'Section principale' => [['Sections principales', 'layers', '/parametrage/sections-principales', null], ['Résultat', 'chart', '/resultats/sections-principales', null]],
+                'Famille' => [['Familles', 'layers', '/parametrage/familles', null]],
                 'Documents' => [
                     ['Facture', 'file', '/parametres/facture', null],
                 ],

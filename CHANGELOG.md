@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.4.0 — 08/11/2026
+- **Tableau de bord** (page d'accueil) pour la saison choisie : inscrits sur trois saisons (avec l'écart à la précédente), inscriptions non payées et reste dû, montant des inscriptions et réglé, recettes / dépenses / résultat d'après les relevés bancaires, inscrits par famille, répartition femmes / hommes, recettes et dépenses par catégorie. Cours d'essai exclus des effectifs.
+- **Paramétrage** : saisons, familles, sections principales et sections (tarif extérieurs, section principale, cours d'essai, mail de l'animateur, campagne HelloAsso, seuil de rentabilité, créneaux jour + heure). Création, modification ; suppression seulement si rien ne s'en sert. Nouvelle saison proposée à la suite de la dernière.
+- **Résultat par section** (inscrits, inscriptions, réglé, écart au seuil de rentabilité) et **par section principale** (inscriptions, recettes et dépenses ventilées, résultat).
+- Mode transition : un import WinDev remplace le paramétrage (rappel sur les pages).
+
 ## 0.3.11 — 08/11/2026
 - **Fusion de deux fiches en double** (toujours à la main) : sur une fiche, dans « fiches ressemblantes », bouton « Comparer et fusionner ».
   - Écran de comparaison côte à côte : pour chaque champ différent, on coche la valeur à garder ; bouton pour inverser la fiche gardée.
@@ -119,7 +125,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
+- 0.4.1 : inscriptions par section, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions.
 - Abandonnés : scan de chèques, Copilot, imports MonClub et Sportyneo.
