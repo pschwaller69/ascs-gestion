@@ -23,6 +23,12 @@ PHP 8.3 natif + PDO, **aucune dépendance** (pas de Composer à installer sur o2
 
 Les commandes `bin/*.php` restent disponibles pour le Terminal.
 
+## Déploiement automatique (o2switch)
+- Le dossier `/home4/mvpm7496/gestion.ascs.fr` est un clone du dépôt public `pschwaller69/ascs-gestion` (cPanel > Git Version Control).
+- Une tâche cron lance toutes les 5 minutes `bin/deployer.sh`, qui récupère la dernière version publiée sur GitHub (avance rapide seulement ; jamais `.env` ni `storage/`). Journal : `storage/deploiement.log`.
+- Le dossier du clone doit avoir les droits 0711 (cPanel le crée en 0700, ce qui bloque le site avec une erreur 403).
+- Ne modifiez pas les fichiers du projet directement sur le serveur : la mise à jour suivante serait bloquée (voir le journal).
+
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 
