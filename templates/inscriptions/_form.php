@@ -9,7 +9,7 @@
             <select id="f_section_id" name="section_id" required data-prix-section<?= isset($err['section_id']) ? ' aria-invalid="true" aria-describedby="f_section_id-err"' : '' ?>>
                 <option value="">Choisir…</option>
                 <?php foreach ($sections as $s): ?>
-                    <option value="<?= (int) $s['id'] ?>" data-montant="<?= e(number_format((float) $s['montant'], 2, ',', '')) ?>"<?= attr((string) $d['section_id'] === (string) $s['id'], 'selected') ?>><?= e($s['titre']) ?></option>
+                    <option value="<?= (int) $s['id'] ?>" data-montant="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $s['montant'], (string) $s['titre'], $rillieux), 2, ',', '')) ?>"<?= attr((string) $d['section_id'] === (string) $s['id'], 'selected') ?>><?= e($s['titre']) ?></option>
                 <?php endforeach; ?>
             </select>
             <?php if (isset($err['section_id'])): ?><p class="msg-erreur" id="f_section_id-err"><?= e($err['section_id']) ?></p><?php endif; ?>
@@ -21,7 +21,9 @@
             </select>
             <?php if (isset($err['saison_id'])): ?><p class="msg-erreur"><?= e($err['saison_id']) ?></p><?php endif; ?>
         </div>
-        <?= champ('Montant (tarif complet)', 'montant', $d['montant'], ['required' => true, 'inputmode' => 'decimal', 'error' => $err['montant'] ?? null, 'hint' => 'Le prix complet de la section, même payé en plusieurs fois.']) ?>
+        <?= champ('Montant (tarif complet)', 'montant', $d['montant'], ['required' => true, 'inputmode' => 'decimal', 'error' => $err['montant'] ?? null, 'hint' => 'Le prix complet de la section, même payé en plusieurs fois. ' . ($rillieux
+            ? 'Habitant de Rillieux : 10 € de réduction déjà déduits du tarif proposé (sauf jogging et marche).'
+            : 'Adresse hors Rillieux : tarif extérieur.')]) ?>
         <?= champ('Date d\'inscription', 'date_inscription', substr((string) $d['date_inscription'], 0, 10), ['type' => 'date', 'error' => $err['date_inscription'] ?? null]) ?>
         <?= champ('Fait à', 'fait_a', $d['fait_a'], ['maxlength' => 60]) ?>
     </div>

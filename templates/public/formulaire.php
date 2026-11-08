@@ -42,7 +42,7 @@ $cibles = ['sections' => $essai ? 'sec-0' : 'sec-0', 'genre' => 'genre-0', 'droi
                 <?php endif; ?>
                 <span class="carte-texte">
                     <strong><?= e(preg_replace('/^Z\s+ESSAI\s+/i', '', $sec['titre'])) ?></strong>
-                    <?php if (!$essai && (float) $sec['montant'] > 0): ?><span class="prix"><?= e(money($sec['montant'])) ?></span><?php endif; ?>
+                    <?php if (!$essai && (float) $sec['montant'] > 0): $rill = Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true); ?><span class="prix"><?= e(money($sec['montant'])) ?><?= $rill < (float) $sec['montant'] ? ' · ' . e(money($rill)) . ' pour les habitants de Rillieux' : '' ?></span><?php endif; ?>
                     <?php if ($sec['description']): ?><span class="desc"><?= nl2br(e($sec['description'])) ?></span><?php endif; ?>
                 </span>
             </label>

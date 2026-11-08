@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.3.10 — 08/11/2026
+- **Tarif Rillieux** : le tarif enregistré sur la section est celui des extérieurs ; les habitants de Rillieux-la-Pape (code postal 69140 ou ville Rillieux / Crépieux) ont 10 € de réduction, sauf pour le jogging et la marche.
+  - Nouvelle inscription et fiche inscription : le montant proposé tient compte de l'adresse de l'adhérent (rappel sous le champ Montant).
+  - Validation d'une demande en ligne : même règle, d'après l'adresse saisie dans la demande.
+  - Formulaire public : les deux tarifs sont affichés (« 245,00 € · 235,00 € pour les habitants de Rillieux »).
+  - HelloAsso : inchangé, le montant est celui payé sur HelloAsso.
+
 ## 0.3.9 — 08/11/2026
 - **Chèques en plusieurs fois : la série continue.** Sur « Nouveau règlement » d'une inscription qui a déjà des chèques et n'est pas soldée, le chèque suivant est proposé un mois après le dernier, le même jour de pose (15/11 → 15/12 → 15/01), pour le montant du chèque précédent sans dépasser le reste à régler. Bouton « Suite de la série » à côté de « Prochain 1er / Prochain 15 ». Fonctionne aussi avec « Valider + autre règlement ».
 
@@ -104,7 +111,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 - Contrôles indépendants (`tests/verify.php`) : totaux, intégrité, idempotence.
 
 ## À venir (plan révisé le 04/11/2026 : MonClub et Sportyneo n'existent plus, HelloAsso est la seule source d'import)
-- 0.3.10 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
+- 0.3.11 : fusion des fiches en double (choix champ par champ, rejouée après un import WinDev).
 - 0.4.0 : tableau de bord, émargement et listes de présence (animateurs, accès par jeton).
 - 0.5.0 : communication — mailings (saison, section, anciens, N-1 non réinscrits), validation des mails, SMS par section avec validation avant envoi.
 - 0.6.0 : financier (compte bancaire, ventilation, résultat par section), reporting mairie et courbe d'inscriptions, page de fusion des doublons.

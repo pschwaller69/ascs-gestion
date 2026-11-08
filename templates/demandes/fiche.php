@@ -2,6 +2,7 @@
 $essai = $d['type'] === 'essai';
 $creer = $post ? array_map('strval', (array) ($post['creer'] ?? [])) : array_map(static fn ($s) => (string) $s['id'], $d['liste_sections']);
 $montants = (array) ($post['montant'] ?? []);
+$rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d['code_postal'] ?? null);
 ?>
 <div class="titre-page">
     <h1><?= $essai ? 'Demande de cours d\'essai' : 'Demande d\'inscription' ?> <small>réf. <?= e($d['reference']) ?></small></h1>
@@ -74,7 +75,7 @@ $montants = (array) ($post['montant'] ?? []);
                     <?php foreach ($saisons as $s): ?><option value="<?= (int) $s['id'] ?>"<?= attr((string) ($post['saison_id'] ?? $d['saison_id']) === (string) $s['id'], 'selected') ?>><?= e($s['titre']) ?></option><?php endforeach; ?>
                 </select>
             </div>
-            <?php foreach ($d['liste_sections'] as $s): $sid = (int) $s['id']; $m = $montants[$sid] ?? number_format($essai ? 0 : (float) $s['montant'], 2, ',', ''); ?>
+            <?php foreach ($d['liste_sections'] as $s): $sid = (int) $s['id']; $m = $montants[$sid] ?? number_format($essai ? 0 : Ascs\Domain\Tarifs::montant((float) $s['montant'], (string) $s['titre'], $rillieuxDemande), 2, ',', ''); ?>
                 <div class="ligne-insc<?= isset($err['montant_' . $sid]) ? ' en-erreur' : '' ?>">
                     <label class="coche" for="cr-<?= $sid ?>"><input type="checkbox" id="cr-<?= $sid ?>" name="creer[]" value="<?= $sid ?>"<?= attr(in_array((string) $sid, $creer, true), 'checked') ?>> <span><?= e($s['titre']) ?></span></label>
                     <label class="visuellement-cache" for="m-<?= $sid ?>">Montant pour <?= e($s['titre']) ?></label>
@@ -82,7 +83,7 @@ $montants = (array) ($post['montant'] ?? []);
                     <?php if (isset($err['montant_' . $sid])): ?><p class="msg-erreur"><?= e($err['montant_' . $sid]) ?></p><?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <p class="aide"><?= $essai ? 'Le cours d\'essai est enregistré comme une inscription gratuite dans la section « essai ».' : 'Montant = tarif complet de la section. Les règlements se saisissent ensuite sur chaque inscription (ou arrivent par HelloAsso).' ?></p>
+            <p class="aide"><?= $essai ? 'Le cours d\'essai est enregistré comme une inscription gratuite dans la section « essai ».' : 'Montant = tarif complet de la section' . ($rillieuxDemande ? ', avec la réduction Rillieux de 10 € (sauf jogging et marche)' : ', tarif extérieur (adresse hors Rillieux)') . '. Les règlements se saisissent ensuite sur chaque inscription (ou arrivent par HelloAsso).' ?></p>
         </fieldset>
         <div class="actions">
             <button type="submit" class="btn btn-principal" name="suite" value="suivante"><?= icon('check') ?> Valider et passer à la suivante</button>

@@ -51,7 +51,7 @@ final class InscriptionController
             'section_id' => (string) ($_GET['section'] ?? ''), 'saison_id' => (string) $this->app->saisonId(),
             'date_inscription' => date('Y-m-d'), 'fait_a' => 'Rillieux-la-Pape', 'montant' => '', 'remarques' => '',
         ];
-        return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $d, 'err' => [], 'sections' => $this->insc->sections(), 'saisons' => $this->saisons()], 'Nouvelle inscription');
+        return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $d, 'err' => [], 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)], 'Nouvelle inscription');
     }
 
     public function creer(array $p): string
@@ -63,7 +63,7 @@ final class InscriptionController
         }
         [$d, $err] = $this->insc->nettoyer($_POST, $aid);
         if ($err) {
-            return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $this->brut($_POST), 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons()], 'Nouvelle inscription', 'accueil', 422);
+            return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $this->brut($_POST), 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)], 'Nouvelle inscription', 'accueil', 422);
         }
         $id = $this->insc->creer($d);
         $this->app->flash('ok', 'Inscription créée.');
@@ -136,12 +136,18 @@ final class InscriptionController
     }
 
     /** @param array<string,mixed> $i @param array<string,mixed> $d @param array<string,string> $err */
+    private static function rillieux(array $a): bool
+    {
+        return \Ascs\Domain\Tarifs::habitantRillieux($a['ville'] ?? null, $a['code_postal'] ?? null);
+    }
+
     private function afficher(array $i, array $d, array $err, int $status = 200): string
     {
         $r = new Reglements($this->app->pdo);
         return $this->app->render('inscriptions/fiche', [
             'i' => $i, 'd' => $d, 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(),
             'reglements' => $r->deInscription((int) $i['id']),
+            'rillieux' => self::rillieux($this->adh->trouver((int) $i['adherent_id']) ?? []),
             'envois' => (new \Ascs\Mail\Envoi($this->app->pdo))->historique((int) $i['id']),
             'mailFacture' => (string) ($this->adh->trouver((int) $i['adherent_id'])['mail'] ?? ''),
             'messageFacture' => \Ascs\Web\Controllers\FactureController::message($i, $reg = (new \Ascs\Documents\Reglages($this->app->pdo))->tous()),
