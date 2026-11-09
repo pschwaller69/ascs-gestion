@@ -127,12 +127,6 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
             </div>
             <?= champ('Autre', 'canal_autre', $s['canal_autre'], ['maxlength' => 100]) ?>
         </fieldset>
-        <fieldset class="champ groupe-radio<?= isset($err['droit_image']) ? ' en-erreur' : '' ?>">
-            <legend>Droit à l'image : l'ASCS peut-elle publier des photos prises pendant les activités ? <span class="oblig">*</span></legend>
-            <label for="di-1"><input type="radio" id="di-1" name="droit_image" value="1"<?= attr($s['droit_image'] === '1', 'checked') ?>> Oui</label>
-            <label for="di-0"><input type="radio" id="di-0" name="droit_image" value="0"<?= attr($s['droit_image'] === '0', 'checked') ?>> Non</label>
-            <?php if (isset($err['droit_image'])): ?><p class="msg-erreur"><?= e($err['droit_image']) ?></p><?php endif; ?>
-        </fieldset>
     </fieldset>
 
     <fieldset id="bloc-reglement" class="<?= isset($err['moyens']) || isset($err['code_pass_sport']) ? 'en-erreur' : '' ?>">

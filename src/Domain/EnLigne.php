@@ -143,15 +143,8 @@ final class EnLigne
         if ($canal !== null && (int) $this->pdo->query('SELECT COUNT(*) FROM canal WHERE id = ' . $canal)->fetchColumn() === 0) {
             $canal = null;
         }
+        // Droit à l'image : accordé par l'adhésion (règlement intérieur), plus de question séparée (décision du bureau, 09/11/2026)
         $droitImage = null;
-        if ($type === 'inscription') {
-            $di = $in['droit_image'] ?? '';
-            if ($di === '1' || $di === '0') {
-                $droitImage = (int) $di;
-            } else {
-                $err['droit_image'] = 'Répondez à la question sur le droit à l\'image.';
-            }
-        }
         if (empty($in['consentement'])) {
             $err['consentement'] = 'Cochez cette case pour envoyer votre demande.';
         }

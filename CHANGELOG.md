@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.1 — 09/11/2026
+- Inscription en ligne : plus de question « droit à l'image » (l'adhésion l'accorde, comme le dit le règlement intérieur).
+- Règlement intérieur par défaut : la séance d'essai est gratuite (le bulletin papier indiquait 10 €).
+
 ## 0.7.0 — 09/11/2026
 - **Bulletin d'inscription en ligne**, repris du bulletin papier 2026/2027, pour une saisie sur téléphone :
   - tél. portable et tél. domicile, attestation pour le comité d'entreprise, « Où avez-vous connu l'ASCS ? » (plusieurs choix, dont Le Progrès, Plaquette, Boîte aux lettres, et « Autre ») ;

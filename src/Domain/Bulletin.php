@@ -26,7 +26,7 @@ Toute absence est signalée aux parents afin de dégager la responsabilité de l
 Une tenue adaptée est exigée selon l'activité. Un complément de règlement peut être demandé selon les activités pratiquées.
 Un certificat médical est demandé pour les activités sportives (danse, Pilates et musculation inclus).
 L'adhésion autorise l'ASCS à utiliser les photos prises pendant les cours et manifestations pour tous ses besoins.
-Une seule séance d'essai est autorisée pour les non-adhérents, contre une contribution de 10 €, déduite de l'adhésion en cas d'inscription à l'activité.
+Une seule séance d'essai, gratuite, est autorisée pour les non-adhérents.
 Tir à l'arc – pas de tir extérieur : toute personne souhaitant l'utiliser doit être accompagnée par un encadrant ou un licencié FFTA validé par le conseil d'administration et son président.
 TXT;
 
