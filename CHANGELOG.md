@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.3
+
+- Compte bancaire : choix de la période (saison ou année civile, sur la date des opérations). Si le compte n'a aucune opération dans la saison choisie en haut de page, la dernière saison qui en a est affichée, avec un message. Sur téléphone, les onglets des comptes passent à la ligne.
+- Export pour le comptable (Financier > Export comptable) : classeur Excel par saison, année civile ou dates libres, comptes au choix. Feuilles Synthèse (soldes d'ouverture et de clôture par compte, écart avec le dernier solde relevé, résultat par catégorie hors virements internes), Journal de banque, Ventilation, Par catégorie, Par section, À justifier. Synthèse visible à l'écran avant téléchargement ; ventilation seule en CSV.
+
 ## 0.7.2 — 09/11/2026
 - **Mailings et SMS : envoi de test** vers quelques adresses ou numéros (5 au plus, gardés pour la fois suivante) : message préfixé [TEST], personnalisé avec le premier destinataire ; les destinataires de l'envoi ne reçoivent rien. SMS sans passerelle : bouton « Ouvrir Messages » pour le test.
 - **Nombre de destinataires bien visible** : compteur en grand, recalculé dès qu'on change la cible ou les sections (avec la liste des noms et les exclus) ; sur l'envoi, compteur « N adresses recevront ce mail », destinataires numérotés, « N sur M » quand on en retire, nombre rappelé sur le bouton de validation.

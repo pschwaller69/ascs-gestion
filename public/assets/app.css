@@ -122,7 +122,7 @@ legend { font-weight: 600; padding: 0 .5rem 0 0; color: var(--teal-dd); }
 .btn-petit { min-height: 0; padding: .15rem .6rem; font-size: .85rem; }
 .btn.inactif { opacity: .45; cursor: not-allowed; }
 .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; }
-.sous-onglets { display: flex; gap: .25rem; border-bottom: 2px solid var(--line); margin-bottom: 1rem; }
+.sous-onglets { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 2px solid var(--line); margin-bottom: 1rem; }
 .sous-onglets a { padding: .5rem 1rem; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
 .sous-onglets a:hover { color: var(--ink); }
 .sous-onglets a[aria-current="page"] { color: var(--teal-dd); font-weight: 600; border-bottom-color: var(--teal); }
@@ -409,3 +409,8 @@ tr.retire td:last-child { text-decoration: none; }
 .ligne-test { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: flex-start; }
 .ligne-test .champ { flex: 1 1 22rem; margin: 0; }
 .ligne-test .btn { margin-top: 1.7rem; }
+
+/* Comptes bancaires : sur téléphone les onglets passent à la ligne au lieu de déborder */
+@media (max-width: 640px) {
+    .sous-onglets a { padding: .4rem .6rem; flex: 1 1 45%; }
+}

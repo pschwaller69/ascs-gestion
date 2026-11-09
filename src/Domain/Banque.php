@@ -43,18 +43,81 @@ final class Banque
         \Ascs\Parametres::set($this->pdo, 'banque_noms', json_encode($noms, JSON_UNESCAPED_UNICODE));
     }
 
+    /* ---------- Périodes (par dates d'opération, comme le comptable) ---------- */
+
+    /** Saisons puis années civiles ayant des opérations. @return list<array{cle:string,libelle:string,du:string,au:string}> */
+    public function periodes(): array
+    {
+        $b = $this->pdo->query('SELECT MIN(date_operation) AS mi, MAX(date_operation) AS ma FROM compte')->fetch();
+        if (!$b || !$b['mi']) {
+            return [];
+        }
+        $mi = substr((string) $b['mi'], 0, 10);
+        $ma = substr((string) $b['ma'], 0, 10);
+        $out = [];
+        foreach ($this->pdo->query('SELECT id, titre, date_debut, date_fin FROM saison ORDER BY date_debut DESC')->fetchAll() as $s) {
+            $du = substr((string) $s['date_debut'], 0, 10);
+            $au = substr((string) ($s['date_fin'] ?: date('Y-m-d', strtotime($du . ' +1 year -1 day'))), 0, 10);
+            if ($au >= $mi && $du <= max($ma, date('Y-m-d'))) {
+                $out[] = ['cle' => 's' . $s['id'], 'libelle' => 'Saison ' . $s['titre'], 'du' => $du, 'au' => $au];
+            }
+        }
+        for ($a = (int) substr($ma, 0, 4); $a >= (int) substr($mi, 0, 4); $a--) {
+            $out[] = ['cle' => 'a' . $a, 'libelle' => 'Année ' . $a, 'du' => $a . '-01-01', 'au' => $a . '-12-31'];
+        }
+        return $out;
+    }
+
+    /** Période par sa clé (s<id de saison> ou a<année>), ou dates libres jj/mm/aaaa ou aaaa-mm-jj. */
+    public function periode(string $cle, string $du = '', string $au = ''): ?array
+    {
+        if ($cle === 'dates') {
+            $d1 = self::date($du);
+            $d2 = self::date($au);
+            return $d1 && $d2 && $d1 <= $d2 ? ['cle' => 'dates', 'libelle' => 'Du ' . self::fr($d1) . ' au ' . self::fr($d2), 'du' => $d1, 'au' => $d2] : null;
+        }
+        foreach ($this->periodes() as $p) {
+            if ($p['cle'] === $cle) {
+                return $p;
+            }
+        }
+        if (preg_match('/^s(\d+)$/', $cle, $m)) {
+            $st = $this->pdo->prepare('SELECT id, titre, date_debut, date_fin FROM saison WHERE id = ?');
+            $st->execute([(int) $m[1]]);
+            if ($s = $st->fetch()) {
+                return ['cle' => $cle, 'libelle' => 'Saison ' . $s['titre'], 'du' => substr((string) $s['date_debut'], 0, 10), 'au' => substr((string) $s['date_fin'], 0, 10)];
+            }
+        }
+        return null;
+    }
+
+    /** Nombre d'opérations d'un compte sur une période. */
+    public function nbOperations(string $numero, array $p): int
+    {
+        $st = $this->pdo->prepare('SELECT COUNT(*) FROM compte WHERE numero_compte = ? AND date_operation >= ? AND date_operation <= ?');
+        $st->execute([$numero, $p['du'], $p['au'] . ' 23:59:59']);
+        return (int) $st->fetchColumn();
+    }
+
+    private static function fr(string $iso): string
+    {
+        return substr($iso, 8, 2) . '/' . substr($iso, 5, 2) . '/' . substr($iso, 0, 4);
+    }
+
     /**
-     * Lignes d'un compte pour une saison, avec le total ventilé.
+     * Lignes d'un compte sur une période (dates d'opération), avec le total ventilé.
+     * @param ?array{du:string,au:string} $periode null = tout
      * @param string $filtre '' | 'a_ventiler' | 'credit' | 'debit'
      * @return list<array<string,mixed>>
      */
-    public function lignes(string $numero, ?int $saisonId, string $filtre = '', string $q = ''): array
+    public function lignes(string $numero, ?array $periode, string $filtre = '', string $q = ''): array
     {
         $w = ['c.numero_compte = ?'];
         $a = [$numero];
-        if ($saisonId) {
-            $w[] = 'c.saison_id = ?';
-            $a[] = $saisonId;
+        if ($periode) {
+            $w[] = 'c.date_operation >= ? AND c.date_operation <= ?';
+            $a[] = $periode['du'];
+            $a[] = $periode['au'] . ' 23:59:59';
         }
         if ($filtre === 'credit') {
             $w[] = 'c.valeur > 0';
@@ -416,6 +479,94 @@ final class Banque
         return $r;
     }
 
+    /* ---------- Export pour le comptable ---------- */
+
+    /**
+     * Données de l'export comptable sur une période : synthèse par compte (soldes d'ouverture et de clôture),
+     * journal de banque, ventilation, totaux par catégorie et par section, opérations à justifier.
+     * @param list<string> $numeros comptes retenus (vide = tous)
+     */
+    public function comptable(array $p, array $numeros = []): array
+    {
+        $noms = [];
+        foreach ($this->comptes() as $c) {
+            $noms[$c['numero']] = $c['nom'];
+        }
+        $tous = array_map('strval', array_keys($noms));
+        $numeros = array_values(array_intersect(array_map('strval', $numeros) ?: $tous, $tous));
+        sort($numeros);
+        $fin = $p['au'] . ' 23:59:59';
+        $out = ['periode' => $p, 'comptes' => [], 'journal' => [], 'ventilation' => [], 'categories' => [], 'sections' => [], 'a_justifier' => [], 'internes' => 0.0];
+        $det = $this->pdo->prepare('SELECT d.valeur, d.observation, d.libelle, sp.titre AS section, t.libelle AS categorie FROM detail_compte d
+            LEFT JOIN section_principale sp ON sp.id = d.section_principale_id LEFT JOIN type_compte t ON t.id = d.type_compte_id WHERE d.compte_id = ? ORDER BY d.id');
+        foreach ($numeros as $n) {
+            $st = $this->pdo->prepare('SELECT solde FROM compte WHERE numero_compte = ? AND date_operation < ? AND solde IS NOT NULL ORDER BY date_operation DESC, id DESC LIMIT 1');
+            $st->execute([$n, $p['du']]);
+            $ouv = $st->fetchColumn();
+            $st = $this->pdo->prepare('SELECT * FROM compte WHERE numero_compte = ? AND date_operation >= ? AND date_operation <= ? ORDER BY date_operation, id');
+            $st->execute([$n, $p['du'], $fin]);
+            $ops = $st->fetchAll();
+            if ($ouv === false && $ops && $ops[0]['solde'] !== null) {
+                $ouv = (float) $ops[0]['solde'] - (float) $ops[0]['valeur'];
+            }
+            $ouv = $ouv === false || $ouv === null ? null : round((float) $ouv, 2);
+            $rec = 0.0;
+            $dep = 0.0;
+            $soldeBanque = null;
+            foreach ($ops as $o) {
+                $v = (float) $o['valeur'];
+                $v > 0 ? $rec += $v : $dep += -$v;
+                if ($o['solde'] !== null) {
+                    $soldeBanque = (float) $o['solde'];
+                }
+                $det->execute([$o['id']]);
+                $details = $det->fetchAll();
+                $interne = (bool) (int) $o['virement_interne'];
+                $ventile = array_sum(array_map(static fn ($d) => (float) $d['valeur'], $details));
+                $reste = $interne ? 0.0 : round($v - $ventile, 2);
+                $resume = $interne ? 'Virement interne' : implode(' + ', array_map(static fn ($d) => trim(($d['categorie'] ?? '?') . ' ' . ($d['section'] ? '(' . $d['section'] . ')' : '')), $details));
+                $out['journal'][] = ['compte' => $n, 'date' => substr((string) $o['date_operation'], 0, 10), 'date_valeur' => $o['date_valeur'] ? substr((string) $o['date_valeur'], 0, 10) : null,
+                    'libelle' => (string) $o['libelle'], 'debit' => $v < 0 ? -$v : null, 'credit' => $v > 0 ? $v : null, 'solde' => $o['solde'] !== null ? (float) $o['solde'] : null,
+                    'ventilation' => $resume, 'observation' => (string) $o['observation'], 'reste' => abs($reste) > 0.005 ? $reste : null];
+                if ($interne) {
+                    $out['internes'] += $v;
+                    $out['ventilation'][] = ['compte' => $n, 'date' => substr((string) $o['date_operation'], 0, 10), 'libelle' => (string) $o['libelle'], 'section' => '', 'categorie' => 'Virement interne',
+                        'valeur' => $v, 'observation' => (string) $o['observation']];
+                    continue;
+                }
+                foreach ($details as $d) {
+                    $dv = (float) $d['valeur'];
+                    $cat = $d['categorie'] ?? 'Sans catégorie';
+                    $sec = $d['section'] ?? 'Sans section';
+                    $out['ventilation'][] = ['compte' => $n, 'date' => substr((string) $o['date_operation'], 0, 10), 'libelle' => (string) $o['libelle'], 'section' => $sec, 'categorie' => $cat,
+                        'valeur' => $dv, 'observation' => (string) ($d['observation'] ?: $o['observation'])];
+                    self::cumul($out['categories'], $cat, $dv);
+                    self::cumul($out['sections'], $sec, $dv);
+                }
+                if (abs($reste) > 0.005) {
+                    $out['ventilation'][] = ['compte' => $n, 'date' => substr((string) $o['date_operation'], 0, 10), 'libelle' => (string) $o['libelle'], 'section' => '', 'categorie' => 'À ventiler',
+                        'valeur' => $reste, 'observation' => (string) $o['observation']];
+                    self::cumul($out['categories'], 'À ventiler', $reste);
+                    self::cumul($out['sections'], 'À ventiler', $reste);
+                    $out['a_justifier'][] = ['compte' => $n, 'date' => substr((string) $o['date_operation'], 0, 10), 'libelle' => (string) $o['libelle'], 'valeur' => $v, 'reste' => $reste,
+                        'id' => (int) $o['id']];
+                }
+            }
+            $clo = $ouv === null ? null : round($ouv + $rec - $dep, 2);
+            $out['comptes'][] = ['numero' => $n, 'nom' => $noms[$n] ?: 'Compte ' . $n, 'ouverture' => $ouv, 'recettes' => round($rec, 2), 'depenses' => round($dep, 2), 'cloture' => $clo,
+                'solde_banque' => $soldeBanque, 'nb' => count($ops), 'ecart' => $clo !== null && $soldeBanque !== null && abs($clo - $soldeBanque) > 0.005 ? round($soldeBanque - $clo, 2) : null];
+        }
+        ksort($out['categories'], SORT_NATURAL | SORT_FLAG_CASE);
+        ksort($out['sections'], SORT_NATURAL | SORT_FLAG_CASE);
+        return $out;
+    }
+
+    private static function cumul(array &$t, string $k, float $v): void
+    {
+        $t[$k] ??= ['recettes' => 0.0, 'depenses' => 0.0];
+        $v > 0 ? $t[$k]['recettes'] += $v : $t[$k]['depenses'] += -$v;
+    }
+
     /* ---------- Contrôles ---------- */
 
     /** @return array{a_ventiler:list<array>,soldes:list<array>,remises:list<array>} */
@@ -423,7 +574,7 @@ final class Banque
     {
         $aV = [];
         foreach ($this->comptes() as $c) {
-            foreach ($this->lignes($c['numero'], $saisonId, 'a_ventiler') as $l) {
+            foreach ($this->lignes($c['numero'], $saisonId ? $this->periode('s' . $saisonId) : null, 'a_ventiler') as $l) {
                 $aV[] = $l;
             }
         }

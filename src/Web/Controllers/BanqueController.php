@@ -31,10 +31,30 @@ final class BanqueController
         $numero = (string) ($_GET['compte'] ?? ($comptes[0]['numero'] ?? ''));
         $filtre = in_array($_GET['filtre'] ?? '', ['a_ventiler', 'credit', 'debit'], true) ? $_GET['filtre'] : '';
         $q = trim((string) ($_GET['q'] ?? ''));
-        $toutes = isset($_GET['toutes']);
+        $cle = (string) ($_GET['p'] ?? (isset($_GET['toutes']) ? 'toutes' : ''));
+        $periodes = $this->b->periodes();
+        $note = null;
+        if ($cle === 'toutes') {
+            $periode = null;
+        } else {
+            $periode = $cle !== '' ? $this->b->periode($cle) : null;
+            if (!$periode) {
+                // Par défaut : la saison choisie en haut de page ; si le compte n'y a aucune opération, la dernière saison qui en a.
+                $periode = $this->b->periode('s' . $this->app->saisonId());
+                if ($periode && $numero !== '' && !$this->b->nbOperations($numero, $periode)) {
+                    foreach ($periodes as $pp) {
+                        if ($pp['cle'][0] === 's' && $this->b->nbOperations($numero, $pp)) {
+                            $note = 'Aucune opération sur ce compte en ' . mb_strtolower($periode['libelle']) . ' : affichage de la ' . mb_strtolower($pp['libelle']) . '.';
+                            $periode = $pp;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return $this->app->render('banque/index', [
-            'comptes' => $comptes, 'numero' => $numero, 'filtre' => $filtre, 'q' => $q, 'toutes' => $toutes,
-            'lignes' => $numero !== '' ? $this->b->lignes($numero, $toutes ? null : $this->app->saisonId(), $filtre, $q) : [],
+            'comptes' => $comptes, 'numero' => $numero, 'filtre' => $filtre, 'q' => $q, 'periodes' => $periodes, 'periode' => $periode, 'note' => $note,
+            'lignes' => $numero !== '' ? $this->b->lignes($numero, $periode, $filtre, $q) : [],
         ], 'Compte bancaire', 'financier');
     }
 
@@ -119,28 +139,121 @@ final class BanqueController
         return $this->app->render('banque/controle', $this->b->controles($this->app->saisonId()), 'Contrôle des comptes', 'financier');
     }
 
-    /** Export pour Excel : une ligne par ventilation (ou par opération non ventilée), saison choisie. */
+    /**
+     * Export pour le comptable. Sans période choisie : la page de choix. Sinon un classeur Excel
+     * (Synthèse, Journal de banque, Ventilation, Par catégorie, Par section, À justifier), ou le CSV de ventilation.
+     */
     public function export(array $p): string
     {
-        $st = $this->app->pdo->prepare('SELECT c.numero_compte, c.date_operation, c.libelle, c.valeur AS montant_ligne, c.observation AS obs_ligne, c.virement_interne,
-                sp.titre AS section, t.libelle AS categorie, d.valeur, d.observation
-            FROM compte c LEFT JOIN detail_compte d ON d.compte_id = c.id LEFT JOIN section_principale sp ON sp.id = d.section_principale_id LEFT JOIN type_compte t ON t.id = d.type_compte_id
-            WHERE c.saison_id = ? ORDER BY c.numero_compte, c.date_operation, c.id, d.id');
-        $st->execute([$this->app->saisonId()]);
-        $out = fopen('php://temp', 'r+');
-        fwrite($out, "\xEF\xBB\xBF");
-        $nb = static fn ($v) => $v === null ? '' : number_format((float) $v, 2, ',', '');
-        fputcsv($out, ['Compte', 'Date', 'Libellé', 'Montant opération', 'Section principale', 'Catégorie', 'Montant ventilé', 'Recette', 'Dépense', 'Observation', 'Virement interne'], ';', '"', '');
-        foreach ($st->fetchAll() as $r) {
-            $v = $r['valeur'] ?? null;
-            fputcsv($out, [$r['numero_compte'], date('d/m/Y', strtotime((string) $r['date_operation'])), $r['libelle'], $nb($r['montant_ligne']), $r['section'], $r['categorie'], $nb($v),
-                $v !== null && $v > 0 ? $nb($v) : '', $v !== null && $v < 0 ? $nb(-$v) : '', $r['observation'] ?? $r['obs_ligne'], $r['virement_interne'] ? 'oui' : ''], ';', '"', '');
+        $periodes = $this->b->periodes();
+        $comptes = $this->b->comptes();
+        if (!isset($_GET['periode'])) {
+            $defaut = 's' . $this->app->saisonId();
+            // Saison précédente proposée d'abord quand la saison en cours vient de commencer : c'est elle que le comptable clôture.
+            $cour = $this->b->periode($defaut);
+            if ($cour && $cour['du'] > date('Y-m-d', strtotime('-4 months'))) {
+                foreach ($periodes as $i => $pp) {
+                    if ($pp['cle'] === $defaut && isset($periodes[$i + 1]) && $periodes[$i + 1]['cle'][0] === 's') {
+                        $defaut = $periodes[$i + 1]['cle'];
+                        break;
+                    }
+                }
+            }
+            return $this->app->render('banque/export', ['periodes' => $periodes, 'comptes' => $comptes, 'defaut' => $defaut, 'xlsx' => \Ascs\Documents\Xlsx::disponible(), 'apercu' => null],
+                'Export pour le comptable', 'financier');
         }
-        rewind($out);
-        $s = $this->app->pdo->prepare('SELECT titre FROM saison WHERE id = ?');
-        $s->execute([$this->app->saisonId()]);
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="comptes-ascs-' . preg_replace('/[^0-9-]/', '', (string) $s->fetchColumn()) . '.csv"');
-        return (string) stream_get_contents($out);
+        $per = $this->b->periode((string) $_GET['periode'], (string) ($_GET['du'] ?? ''), (string) ($_GET['au'] ?? ''));
+        if (!$per) {
+            $this->app->flash('erreur', 'Période invalide : choisissez une saison, une année, ou deux dates (jj/mm/aaaa).');
+            $this->app->redirect('/banque/export');
+        }
+        $numeros = array_values(array_filter(array_map('strval', (array) ($_GET['comptes'] ?? [])), static fn ($n) => preg_match('/^\d+$/', $n)));
+        $d = $this->b->comptable($per, $numeros);
+        if (($_GET['format'] ?? '') === 'apercu') {
+            return $this->app->render('banque/export', ['periodes' => $periodes, 'comptes' => $comptes, 'defaut' => $per['cle'], 'xlsx' => \Ascs\Documents\Xlsx::disponible(), 'apercu' => $d,
+                'choisis' => $numeros, 'du' => $_GET['du'] ?? '', 'au' => $_GET['au'] ?? ''], 'Export pour le comptable', 'financier');
+        }
+        $nom = 'comptes-ascs-' . $per['du'] . '-au-' . $per['au'];
+        if (($_GET['format'] ?? '') === 'csv' || !\Ascs\Documents\Xlsx::disponible()) {
+            $out = fopen('php://temp', 'r+');
+            fwrite($out, "\xEF\xBB\xBF");
+            $nb = static fn ($v) => $v === null ? '' : number_format((float) $v, 2, ',', '');
+            fputcsv($out, ['Compte', 'Date', 'Libellé', 'Section principale', 'Catégorie', 'Recette', 'Dépense', 'Observation'], ';', '"', '');
+            foreach ($d['ventilation'] as $r) {
+                fputcsv($out, [$r['compte'], date('d/m/Y', strtotime($r['date'])), $r['libelle'], $r['section'], $r['categorie'],
+                    $r['valeur'] > 0 ? $nb($r['valeur']) : '', $r['valeur'] < 0 ? $nb(-$r['valeur']) : '', $r['observation']], ';', '"', '');
+            }
+            rewind($out);
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $nom . '.csv"');
+            return (string) stream_get_contents($out);
+        }
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $nom . '.xlsx"');
+        return self::classeur($d)->contenu();
+    }
+
+    private static function classeur(array $d): \Ascs\Documents\Xlsx
+    {
+        $x = new \Ascs\Documents\Xlsx();
+        $eu = static fn ($v) => $v === null ? null : ['v' => (float) $v, 't' => 'euro'];
+        $eg = static fn ($v) => $v === null ? null : ['v' => (float) $v, 't' => 'euro_gras'];
+        $g = static fn ($v) => ['v' => $v, 't' => 'gras'];
+        $dt = static fn ($v) => $v ? ['v' => $v, 't' => 'date'] : null;
+        $per = $d['periode'];
+
+        $l = [[$g('ASCS — comptes bancaires'), $g($per['libelle'])], ['Période', $dt($per['du']), $dt($per['au'])], ['Édité le', $dt(date('Y-m-d'))], [],
+            [$g('Compte'), $g('Numéro'), $g('Solde d\'ouverture'), $g('Recettes'), $g('Dépenses'), $g('Solde de clôture'), $g('Dernier solde relevé'), $g('Écart'), $g('Opérations')]];
+        $t = ['ouverture' => 0.0, 'recettes' => 0.0, 'depenses' => 0.0, 'cloture' => 0.0];
+        foreach ($d['comptes'] as $c) {
+            $l[] = [$c['nom'], $c['numero'], $eu($c['ouverture']), $eu($c['recettes']), $eu($c['depenses']), $eu($c['cloture']), $eu($c['solde_banque']), $eu($c['ecart']), $c['nb']];
+            foreach ($t as $k => $_) {
+                $t[$k] += (float) $c[$k];
+            }
+        }
+        $l[] = [$g('Total'), '', $eg($t['ouverture']), $eg($t['recettes']), $eg($t['depenses']), $eg($t['cloture'])];
+        $l[] = [];
+        $l[] = ['Les recettes et dépenses incluent les virements entre comptes de l\'association (' . number_format($d['internes'], 2, ',', ' ') . ' € au net) ; ils sont exclus des totaux par catégorie.'];
+        $l[] = [$g('Résultat par catégorie (hors virements internes)')];
+        $l[] = [$g('Catégorie'), $g('Recettes'), $g('Dépenses'), $g('Solde')];
+        $tr = $td = 0.0;
+        foreach ($d['categories'] as $k => $v) {
+            $l[] = [$k, $eu($v['recettes']), $eu($v['depenses']), $eu($v['recettes'] - $v['depenses'])];
+            $tr += $v['recettes'];
+            $td += $v['depenses'];
+        }
+        $l[] = [$g('Résultat'), $eg($tr), $eg($td), $eg($tr - $td)];
+        if ($d['a_justifier']) {
+            $l[] = [];
+            $l[] = [count($d['a_justifier']) . ' opération(s) non ventilée(s) : voir la feuille « À justifier ».'];
+        }
+        $x->feuille('Synthèse', $l, [34, 14, 16, 16, 16, 16, 18, 12, 11], false);
+
+        $l = [['Compte', 'Date', 'Date valeur', 'Libellé', 'Débit', 'Crédit', 'Solde', 'Ventilation', 'Observation', 'Reste à ventiler']];
+        foreach ($d['journal'] as $r) {
+            $l[] = [$r['compte'], $dt($r['date']), $dt($r['date_valeur']), $r['libelle'], $eu($r['debit']), $eu($r['credit']), $eu($r['solde']), $r['ventilation'], $r['observation'], $eu($r['reste'])];
+        }
+        $x->feuille('Journal de banque', $l, [11, 11, 11, 50, 13, 13, 14, 40, 40, 14]);
+
+        $l = [['Compte', 'Date', 'Libellé', 'Section principale', 'Catégorie', 'Recette', 'Dépense', 'Montant', 'Observation']];
+        foreach ($d['ventilation'] as $r) {
+            $l[] = [$r['compte'], $dt($r['date']), $r['libelle'], $r['section'], $r['categorie'], $eu($r['valeur'] > 0 ? $r['valeur'] : null), $eu($r['valeur'] < 0 ? -$r['valeur'] : null), $eu($r['valeur']), $r['observation']];
+        }
+        $x->feuille('Ventilation', $l, [11, 11, 50, 22, 20, 13, 13, 13, 40]);
+
+        foreach (['categories' => ['Par catégorie', 'Catégorie'], 'sections' => ['Par section', 'Section principale']] as $k => [$titre, $col]) {
+            $l = [[$col, 'Recettes', 'Dépenses', 'Solde']];
+            foreach ($d[$k] as $n => $v) {
+                $l[] = [$n, $eu($v['recettes']), $eu($v['depenses']), $eu($v['recettes'] - $v['depenses'])];
+            }
+            $x->feuille($titre, $l, [28, 15, 15, 15]);
+        }
+
+        $l = [['Compte', 'Date', 'Libellé', 'Montant', 'Reste à ventiler']];
+        foreach ($d['a_justifier'] as $r) {
+            $l[] = [$r['compte'], $dt($r['date']), $r['libelle'], $eu($r['valeur']), $eu($r['reste'])];
+        }
+        $x->feuille('À justifier', $l, [11, 11, 60, 14, 16]);
+        return $x;
     }
 }

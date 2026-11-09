@@ -87,7 +87,7 @@ final class Ribbon
                     ['Import relevé', 'upload', '/banque/import', null],
                     ['À ventiler', 'list', '/banque?filtre=a_ventiler', null],
                     ['Contrôle', 'bank', '/banque/controle', null],
-                    ['Export Excel', 'download', '/banque/export', null],
+                    ['Export comptable', 'download', '/banque/export', null],
                 ],
                 'Résultat' => [
                     ['Par section principale', 'chart', '/resultats/sections-principales', null],

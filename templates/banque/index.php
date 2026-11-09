@@ -1,4 +1,4 @@
-<?php /** @var array $comptes @var string $numero @var string $filtre @var string $q @var bool $toutes @var array $lignes */
+<?php /** @var array $comptes @var string $numero @var string $filtre @var string $q @var array $periodes @var ?array $periode @var ?string $note @var array $lignes */
 use Ascs\Domain\Banque;
 $courant = null;
 foreach ($comptes as $c) { if ($c['numero'] === $numero) { $courant = $c; } }
@@ -9,14 +9,14 @@ foreach ($lignes as $l) { (float) $l['valeur'] > 0 ? $totC += (float) $l['valeur
     <h1>Compte bancaire</h1>
     <div class="actions-titre">
         <a class="btn btn-principal" href="<?= e(url('/banque/import')) ?>"><?= icon('upload') ?> Importer un relevé</a>
-        <a class="btn" href="<?= e(url('/banque/export')) ?>"><?= icon('download') ?> Export Excel</a>
+        <a class="btn" href="<?= e(url('/banque/export')) ?>"><?= icon('download') ?> Export pour le comptable</a>
     </div>
 </div>
 <?php if ($app->transition()): ?><p class="contexte">Mode transition : les relevés et la ventilation restent dans WinDev ; cette page montre les comptes importés de WinDev. L'import d'un relevé peut être essayé ici (aperçu sans enregistrement).</p><?php endif; ?>
 
 <nav class="sous-onglets" aria-label="Comptes">
     <?php foreach ($comptes as $c): ?>
-        <a href="<?= e(url('/banque', ['compte' => $c['numero']])) ?>"<?= $c['numero'] === $numero ? ' aria-current="page"' : '' ?>><?= e($c['nom'] ?: 'Compte ' . $c['numero']) ?> <small><?= $c['solde'] !== null ? e(money($c['solde'])) : '' ?></small></a>
+        <a href="<?= e(url('/banque', ['compte' => $c['numero'], 'p' => $_GET['p'] ?? null])) ?>"<?= $c['numero'] === $numero ? ' aria-current="page"' : '' ?>><?= e($c['nom'] ?: 'Compte ' . $c['numero']) ?> <small><?= $c['solde'] !== null ? e(money($c['solde'])) : '' ?></small></a>
     <?php endforeach; ?>
 </nav>
 <?php if ($courant): ?>
@@ -36,11 +36,15 @@ foreach ($lignes as $l) { (float) $l['valeur'] > 0 ? $totC += (float) $l['valeur
     <div class="champ"><label for="filtre">Afficher</label><select id="filtre" name="filtre">
         <?php foreach (['' => 'Toutes les opérations', 'a_ventiler' => 'À ventiler', 'credit' => 'Recettes', 'debit' => 'Dépenses'] as $k => $lib): ?><option value="<?= e($k) ?>"<?= attr($filtre === $k, 'selected') ?>><?= e($lib) ?></option><?php endforeach; ?>
     </select></div>
-    <label class="choix-case"><input type="checkbox" name="toutes" value="1"<?= attr($toutes, 'checked') ?>> Toutes les saisons</label>
+    <div class="champ"><label for="p">Période</label><select id="p" name="p">
+        <?php foreach ($periodes as $pp): ?><option value="<?= e($pp['cle']) ?>"<?= attr($periode && $periode['cle'] === $pp['cle'], 'selected') ?>><?= e($pp['libelle']) ?></option><?php endforeach; ?>
+        <option value="toutes"<?= attr(!$periode, 'selected') ?>>Toutes les opérations</option>
+    </select></div>
     <button class="btn" type="submit"><?= icon('search') ?> Filtrer</button>
 </form>
-<p class="aide"><?= count($lignes) ?> opération(s)<?= $toutes ? '' : ' de la saison choisie en haut de page' ?> · recettes <?= e(money($totC)) ?> · dépenses <?= e(money(-$totD)) ?><?= $nbV ? ' · <strong>' . $nbV . ' à ventiler</strong>' : '' ?></p>
-<?php if (!$lignes): ?><p class="vide">Aucune opération.</p><?php else: ?>
+<?php if ($note): ?><p class="flash flash-info"><?= e($note) ?></p><?php endif; ?>
+<p class="aide"><?= count($lignes) ?> opération(s)<?= $periode ? ' · ' . e(mb_strtolower($periode['libelle'])) . ' (' . e(dfr($periode['du'])) . ' au ' . e(dfr($periode['au'])) . ')' : '' ?> · recettes <?= e(money($totC)) ?> · dépenses <?= e(money(-$totD)) ?><?= $nbV ? ' · <strong>' . $nbV . ' à ventiler</strong>' : '' ?></p>
+<?php if (!$lignes): ?><p class="vide">Aucune opération sur cette période. Choisissez une autre période ou « Toutes les opérations ».</p><?php else: ?>
 <div class="table-cadre"><table>
     <thead><tr><th>Date</th><th>Libellé</th><th class="num">Montant</th><th class="num">Solde</th><th>Ventilation</th></tr></thead>
     <tbody>
