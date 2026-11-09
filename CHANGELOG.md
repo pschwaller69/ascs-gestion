@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.2 — 09/11/2026
+- **Mailings et SMS : envoi de test** vers quelques adresses ou numéros (5 au plus, gardés pour la fois suivante) : message préfixé [TEST], personnalisé avec le premier destinataire ; les destinataires de l'envoi ne reçoivent rien. SMS sans passerelle : bouton « Ouvrir Messages » pour le test.
+- **Nombre de destinataires bien visible** : compteur en grand, recalculé dès qu'on change la cible ou les sections (avec la liste des noms et les exclus) ; sur l'envoi, compteur « N adresses recevront ce mail », destinataires numérotés, « N sur M » quand on en retire, nombre rappelé sur le bouton de validation.
+
 ## 0.7.1 — 09/11/2026
 - Inscription en ligne : plus de question « droit à l'image » (l'adhésion l'accorde, comme le dit le règlement intérieur).
 - Règlement intérieur par défaut : la séance d'essai est gratuite (le bulletin papier indiquait 10 €).

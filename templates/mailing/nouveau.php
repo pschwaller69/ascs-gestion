@@ -19,10 +19,14 @@ $exclus = ['refus' => $sms ? 'ont refusé les SMS' : 'ont refusé les mails', 's
                 <label class="choix-case"><input type="checkbox" name="sections[]" value="<?= (int) $s['id'] ?>"<?= attr(in_array((int) $s['id'], $d['sections'], true), 'checked') ?>> <?= e($s['titre']) ?> <small class="aide">(<?= (int) $s['n'] ?>)</small></label>
             <?php endforeach; ?>
         </div>
-        <p class="apercu-dest"><strong><?= count($apercu['retenus']) ?> destinataire<?= count($apercu['retenus']) > 1 ? 's' : '' ?></strong> pour la saison choisie en haut de page<?php
+        <div class="compteur-envoi" id="compteur-dest" data-url="<?= e(url('/mailing/compter')) ?>" role="status" aria-live="polite">
+            <span class="val"><?= count($apercu['retenus']) ?></span><span class="lib">destinataire<?= count($apercu['retenus']) > 1 ? 's' : '' ?> pour ce choix (saison choisie en haut de page)</span>
+        </div>
+        <details class="noms-dest"><summary>Voir les noms</summary><p id="noms-dest"><?= e(implode(', ', array_map(static fn ($x) => trim($x['prenom'] . ' ' . $x['nom']), $apercu['retenus']))) ?></p></details>
+        <p class="apercu-dest" id="exclus-dest" data-libelles="<?= e(json_encode($exclus, JSON_UNESCAPED_UNICODE)) ?>"><?php
             $ex = array_map(static fn ($k, $n) => $n . ' ' . $exclus[$k], array_keys($apercu['exclus']), $apercu['exclus']);
-            echo $ex ? ' · exclus : ' . e(implode(', ', $ex)) : ''; ?>.
-            <button type="submit" name="actualiser" value="1" class="btn btn-petit">Recompter</button></p>
+            echo $ex ? 'Exclus : ' . e(implode(', ', $ex)) . '.' : ''; ?></p>
+        <noscript><button type="submit" name="actualiser" value="1" class="btn btn-petit">Recompter</button></noscript>
     </fieldset>
     <?php if (!$sms): ?><?= champ('Objet', 'objet', $d['objet'], ['required' => true, 'maxlength' => 200, 'error' => $err['objet'] ?? null]) ?><?php endif; ?>
     <?= champ('Message', 'texte', $d['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 12, 'required' => true, 'error' => $err['texte'] ?? null,

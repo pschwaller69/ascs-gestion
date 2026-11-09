@@ -401,3 +401,11 @@ tr.retire td:last-child { text-decoration: none; }
 .reglement-interieur li { margin-bottom: .35rem; }
 .valeur-fixe { margin: .35rem 0 0; padding: .55rem 0; }
 .pieces { padding-left: 1.2rem; }
+.compteur-envoi { display: flex; align-items: baseline; gap: .6rem; padding: .6rem .9rem; margin: .75rem 0; background: var(--teal-l); border-left: 4px solid var(--teal); border-radius: 4px; }
+.compteur-envoi .val { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.compteur-envoi.en-cours { opacity: .55; }
+.noms-dest summary { cursor: pointer; color: var(--teal-d); }
+.noms-dest p { max-height: 10rem; overflow-y: auto; font-size: .9rem; }
+.ligne-test { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: flex-start; }
+.ligne-test .champ { flex: 1 1 22rem; margin: 0; }
+.ligne-test .btn { margin-top: 1.7rem; }

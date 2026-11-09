@@ -10,6 +10,10 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
     <h1><?= $sms ? 'SMS' : 'Mail' ?> <?= $c['objet'] ? '« ' . e($c['objet']) . ' »' : '' ?></h1>
     <a class="btn" href="<?= e(url('/mailing')) ?>">Mailings et SMS</a>
 </div>
+<div class="compteur-envoi" role="status">
+    <span class="val"><?= count($actifs) ?></span>
+    <span class="lib"><?= $sms ? 'numéro' : 'adresse' ?><?= count($actifs) > 1 ? 's' : '' ?> <?= $brouillon ? 'recevront ce ' . ($sms ? 'SMS' : 'mail') : 'pour cet envoi' ?><?= count($dest) - count($actifs) ? ' · ' . (count($dest) - count($actifs)) . ' retiré(s)' : '' ?><?= $c['envoyes'] ? ' · ' . (int) $c['envoyes'] . ' déjà envoyé(s)' : '' ?></span>
+</div>
 <p class="contexte"><strong><?= e($etat) ?></strong> · <?= e(Mailing::CIBLES[$c['cible']] ?? $c['cible']) ?><?= $sectionsNoms ? ' : ' . e(implode(', ', $sectionsNoms)) : '' ?> ·
     <?= count($actifs) ?> destinataire(s)<?= $c['envoyes'] ? ' · ' . (int) $c['envoyes'] . ' envoyé(s)' : '' ?><?= $c['echecs'] ? ' · <span class="texte-erreur">' . (int) $c['echecs'] . ' échec(s)</span>' : '' ?>
     <?= $c['valide_par'] ? ' · validé par ' . e($c['valide_par']) . ' le ' . e(dfr($c['valide_le'])) : '' ?></p>
@@ -31,11 +35,21 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
     <?php if ($sms): ?><p class="aide"><?= mb_strlen($apercu) ?> caractères, <?= Sms::parties($apercu) ?> SMS par destinataire.</p><?php endif; ?>
 </section>
 
+<section class="fiche" id="test">
+    <h2>Envoyer un test</h2>
+    <form method="post" action="<?= e(url('/mailing/' . $c['id'] . '/test')) ?>" class="ligne-test">
+        <?= csrf_field() ?>
+        <?= champ($sms ? 'Numéros de test' : 'Adresses de test', 'test', $test, ['maxlength' => 400, 'hint' => ($sms ? 'Portables' : 'Mails') . ' séparés par des virgules (5 au plus), gardés pour les prochains tests. Le message part tel quel, préfixé [TEST], personnalisé avec le premier destinataire ; les destinataires de l\'envoi ne reçoivent rien.']) ?>
+        <button type="submit" class="btn">Envoyer le test</button>
+    </form>
+    <?php foreach ($liensTest as $lt): ?><p><a class="btn btn-principal" href="<?= e($lt) ?>">Ouvrir Messages pour le SMS de test (<?= e(substr($lt, 4, strpos($lt, '?') - 4)) ?>)</a></p><?php endforeach; ?>
+</section>
+
 <?php if ($brouillon): ?>
 <div class="actions">
     <form method="post" action="<?= e(url('/mailing/' . $c['id'] . '/valider')) ?>" data-confirmer="<?= $sms ? 'Valider ce SMS pour ' . count($actifs) . ' destinataire(s) ?' : 'Envoyer ce mail à ' . count($actifs) . ' destinataire(s) ?' ?>">
         <?= csrf_field() ?>
-        <button type="submit" class="btn btn-principal"<?= $actifs ? '' : ' disabled' ?>><?= icon('check') ?> <?= $sms ? 'Valider le SMS' : 'Valider et envoyer' ?></button>
+        <button type="submit" class="btn btn-principal"<?= $actifs ? '' : ' disabled' ?>><?= icon('check') ?> <?= $sms ? 'Valider le SMS pour ' . count($actifs) . ' numéro(s)' : 'Valider et envoyer à ' . count($actifs) . ' adresse(s)' ?></button>
     </form>
     <form method="post" action="<?= e(url('/mailing/' . $c['id'] . '/supprimer')) ?>" data-confirmer="Supprimer ce brouillon ?">
         <?= csrf_field() ?><button type="submit" class="btn btn-danger">Supprimer le brouillon</button>
@@ -67,12 +81,13 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
 </section>
 <?php endif; ?>
 
-<h2>Destinataires</h2>
+<h2>Destinataires <small class="aide"><?= count($actifs) ?> sur <?= count($dest) ?></small></h2>
 <div class="table-cadre"><table class="table-dest">
-    <thead><tr><th>Nom</th><th><?= $sms ? 'Portable' : 'Mail' ?></th><th>État</th><th><span class="visuellement-cache">Action</span></th></tr></thead>
+    <thead><tr><th class="num">N°</th><th>Nom</th><th><?= $sms ? 'Portable' : 'Mail' ?></th><th>État</th><th><span class="visuellement-cache">Action</span></th></tr></thead>
     <tbody>
-    <?php foreach ($dest as $d): $txt = Mailing::personnaliser((string) $c['texte'], $d, 'sms'); ?>
+    <?php $rang = 0; foreach ($dest as $d): $txt = Mailing::personnaliser((string) $c['texte'], $d, 'sms'); ?>
         <tr id="d<?= (int) $d['id'] ?>"<?= $d['statut'] === 'retire' ? ' class="retire"' : '' ?>>
+            <td class="num"><small><?= $d['statut'] === 'retire' ? '—' : ++$rang ?></small></td>
             <td><?= $d['adherent_id'] ? '<a href="' . e(url('/adherents/' . $d['adherent_id'])) . '">' . e(trim($d['nom'] . ' ' . $d['prenom'])) . '</a>' : e(trim($d['nom'] . ' ' . $d['prenom'])) ?></td>
             <td><?= e($d['adresse']) ?></td>
             <td><?= match ($d['statut']) {

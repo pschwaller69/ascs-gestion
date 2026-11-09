@@ -54,6 +54,17 @@ final class MailingController
         ], $d['canal'] === 'sms' ? 'Nouveau SMS' : 'Nouveau mail', 'mail', $status);
     }
 
+    /** Nombre de destinataires pour le choix en cours (formulaire « Nouveau mail / SMS », sans recharger la page). */
+    public function compter(array $p): string
+    {
+        $canal = ($_GET['canal'] ?? '') === 'sms' ? 'sms' : 'mail';
+        $cible = isset(Mailing::CIBLES[$_GET['cible'] ?? '']) ? $_GET['cible'] : 'saison';
+        $r = $this->m->destinataires($canal, $cible, $this->app->saisonId(), array_map('intval', (array) ($_GET['sections'] ?? [])));
+        header('Content-Type: application/json');
+        return (string) json_encode(['n' => count($r['retenus']), 'exclus' => $r['exclus'],
+            'noms' => array_slice(array_map(static fn ($x) => trim($x['prenom'] . ' ' . $x['nom']), $r['retenus']), 0, 400)], JSON_UNESCAPED_UNICODE);
+    }
+
     public function creer(array $p): ?string
     {
         $d = [
@@ -116,7 +127,15 @@ final class MailingController
             'c' => $c, 'dest' => $dest, 'sectionsNoms' => $noms,
             'apercu' => $premier ? Mailing::personnaliser((string) $c['texte'], $premier, (string) $c['canal']) : (string) $c['texte'],
             'reglages' => (new Reglages($this->app->pdo))->tous(), 'smsPret' => Sms::depuisConfig() !== null,
+            'test' => implode(', ', $this->m->destinatairesTest((string) $c['canal'])), 'liensTest' => $this->lienTests(),
         ], ($c['canal'] === 'sms' ? 'SMS' : 'Mail') . ' ' . ($c['objet'] ?: '#' . $c['id']), 'mail');
+    }
+
+    private function lienTests(): array
+    {
+        $l = $_SESSION['liens_test_sms'] ?? [];
+        unset($_SESSION['liens_test_sms']);
+        return $l;
     }
 
     public function modifier(array $p): void
@@ -148,6 +167,20 @@ final class MailingController
         $r = $this->m->envoyerLot((int) $c['id']);
         $this->app->flash($r['echecs'] ? 'erreur' : 'ok', $this->bilan($r, (string) $c['canal']));
         $this->app->redirect('/mailing/' . $c['id']);
+    }
+
+    public function test(array $p): ?string
+    {
+        $c = $this->campagne($p);
+        $r = $this->m->envoyerTest((int) $c['id'], (string) ($_POST['test'] ?? ''), $this->par());
+        $msg = $r['envoyes'] ? ($c['canal'] === 'sms' && $r['liens'] ? 'SMS de test prêt' : 'Test envoyé') . ' à ' . implode(', ', $r['envoyes']) . '.' : 'Aucun test envoyé.';
+        if ($r['erreurs']) {
+            $msg .= ' Problème : ' . implode(' ; ', $r['erreurs']);
+        }
+        $this->app->flash($r['erreurs'] || !$r['envoyes'] ? 'erreur' : 'ok', $msg);
+        $_SESSION['liens_test_sms'] = $r['liens'];
+        $this->app->redirect('/mailing/' . $c['id'] . '#test');
+        return null;
     }
 
     public function lot(array $p): void

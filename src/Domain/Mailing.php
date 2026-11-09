@@ -268,6 +268,59 @@ final class Mailing
         return $n;
     }
 
+    /** Adresses ou numéros de test enregistrés (Paramétrage), un par ligne ou séparés par des virgules. @return list<string> */
+    public function destinatairesTest(string $canal): array
+    {
+        $brut = (string) (Parametres::get($this->pdo, $canal === 'sms' ? 'test_tels' : 'test_mails') ?? '');
+        return array_values(array_filter(array_map('trim', preg_split('/[,;\r\n]+/', $brut))));
+    }
+
+    /**
+     * Envoi de test : le message de la campagne, préfixé [TEST], personnalisé avec le premier destinataire,
+     * vers les adresses ou numéros donnés (enregistrés pour la prochaine fois). Ne touche pas aux destinataires de la campagne.
+     * @return array{envoyes:list<string>,erreurs:list<string>,liens:list<string>} liens : SMS à ouvrir dans Messages (sans passerelle)
+     */
+    public function envoyerTest(int $campagneId, string $saisie, string $par): array
+    {
+        $c = $this->campagne($campagneId);
+        $r = ['envoyes' => [], 'erreurs' => [], 'liens' => []];
+        if (!$c) {
+            return $r;
+        }
+        $canal = (string) $c['canal'];
+        $cibles = [];
+        foreach (array_filter(array_map('trim', preg_split('/[,;\r\n]+/', $saisie))) as $x) {
+            $ok = $canal === 'sms' ? Sms::mobile($x) : (filter_var($x, FILTER_VALIDATE_EMAIL) ? mb_strtolower($x) : null);
+            $ok === null ? $r['erreurs'][] = $x . ' : ' . ($canal === 'sms' ? 'pas un numéro de portable' : 'adresse invalide') : $cibles[$ok] = true;
+        }
+        $cibles = array_slice(array_keys($cibles), 0, 5);
+        Parametres::set($this->pdo, $canal === 'sms' ? 'test_tels' : 'test_mails', implode(', ', $cibles));
+        $st = $this->pdo->prepare("SELECT * FROM campagne_destinataire WHERE campagne_id = ? AND statut <> 'retire' ORDER BY nom, prenom LIMIT 1");
+        $st->execute([$campagneId]);
+        $modele = $st->fetch() ?: ['prenom' => 'Prénom', 'nom' => 'NOM', 'adherent_id' => 0];
+        $texte = self::personnaliser((string) $c['texte'], $modele, $canal);
+        if ($canal === 'sms') {
+            $sms = Sms::depuisConfig();
+            foreach ($cibles as $num) {
+                if ($sms) {
+                    $e = $sms->envoyer($num, '[TEST] ' . $texte);
+                    $e ? $r['erreurs'][] = $num . ' : ' . $e : $r['envoyes'][] = $num;
+                } else {
+                    $r['liens'][] = 'sms:' . $num . '?&body=' . rawurlencode('[TEST] ' . $texte);
+                    $r['envoyes'][] = $num;
+                }
+            }
+            return $r;
+        }
+        $reg = (new Reglages($this->pdo))->tous();
+        $envoi = new Envoi($this->pdo, 'mailing');
+        foreach ($cibles as $a) {
+            $e = $envoi->envoyer($reg['expediteur'], $reg['association'] ?: 'ASCS', $a, '[TEST] ' . $c['objet'], $texte, [], null, 'test mailing ' . $campagneId . ' (' . $par . ')');
+            $e ? $r['erreurs'][] = $a . ' : ' . $e : $r['envoyes'][] = $a;
+        }
+        return $r;
+    }
+
     /** Jeton de désinscription : signature de l'identifiant, sans rien stocker. */
     public static function jeton(int $adherentId): string
     {

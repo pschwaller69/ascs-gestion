@@ -378,3 +378,36 @@
     form.addEventListener('input', function (ev) { if (/^f_(nom|prenom|nom_parent|prenom_parent|code_postal|ville)$/.test(ev.target.id)) { maj(); } });
     maj();
 }());
+
+// Nouveau mail / SMS : nombre de destinataires recalculé dès qu'on change la cible ou les sections
+(function () {
+    'use strict';
+    var bloc = document.getElementById('compteur-dest');
+    if (!bloc) { return; }
+    var form = bloc.closest('form');
+    var noms = document.getElementById('noms-dest');
+    var exclus = document.getElementById('exclus-dest');
+    var libelles = JSON.parse(exclus.getAttribute('data-libelles') || '{}');
+    var minuteur = null;
+    var maj = function () {
+        var q = new URLSearchParams();
+        q.set('canal', form.querySelector('[name="canal"]').value);
+        var c = form.querySelector('[name="cible"]:checked'); if (c) { q.set('cible', c.value); }
+        Array.prototype.forEach.call(form.querySelectorAll('[name="sections[]"]:checked'), function (s) { q.append('sections[]', s.value); });
+        bloc.classList.add('en-cours');
+        fetch(bloc.getAttribute('data-url') + '?' + q.toString(), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                bloc.querySelector('.val').textContent = d.n;
+                bloc.querySelector('.lib').textContent = 'destinataire' + (d.n > 1 ? 's' : '') + ' pour ce choix (saison choisie en haut de page)';
+                noms.textContent = d.noms.join(', ');
+                var parts = Object.keys(d.exclus).map(function (k) { return d.exclus[k] + ' ' + (libelles[k] || k); });
+                exclus.textContent = parts.length ? 'Exclus : ' + parts.join(', ') + '.' : '';
+            })
+            .catch(function () {})
+            .then(function () { bloc.classList.remove('en-cours'); });
+    };
+    form.addEventListener('change', function (ev) {
+        if (ev.target.name === 'cible' || ev.target.name === 'sections[]') { clearTimeout(minuteur); minuteur = setTimeout(maj, 150); }
+    });
+}());
