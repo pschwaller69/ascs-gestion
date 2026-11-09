@@ -4,6 +4,22 @@
 <p><?= $m['type'] === 'essai'
     ? 'Le bureau vous recontacte pour confirmer la date de votre cours d\'essai.'
     : 'Le bureau valide votre inscription. Elle sera définitive une fois le règlement reçu.' ?></p>
+<?php if (!empty($m['recap'])): $r = $m['recap']; ?>
+    <section class="recap">
+        <h2>Récapitulatif</h2>
+        <ul>
+            <?php foreach ($r['lignes'] as $l): ?><li><span><?= e($l['libelle']) ?></span><span><?= e(money($l['montant'])) ?></span></li><?php endforeach; ?>
+            <?php foreach ($r['aides'] as $a): ?><li class="recap-aide"><span><?= e($a['libelle']) ?></span><span>− <?= e(money($a['montant'])) ?></span></li><?php endforeach; ?>
+            <?php if ($r['frais'] > 0): ?><li><span>Frais de gestion ANCV</span><span><?= e(money($r['frais'])) ?></span></li><?php endif; ?>
+        </ul>
+        <p class="recap-total"><span>Reste à régler</span><strong><?= e(money($r['reste'])) ?></strong></p>
+        <p class="aide">Montant indicatif, confirmé par le bureau.</p>
+    </section>
+<?php endif; ?>
+<?php if (!empty($m['pieces'])): ?>
+    <h2>À apporter au premier cours</h2>
+    <ul class="pieces"><?php foreach ($m['pieces'] as $pc): ?><li><?= e($pc) ?></li><?php endforeach; ?></ul>
+<?php endif; ?>
 <?php if ($paiements): ?>
     <h2>Régler en ligne</h2>
     <p>Vous pouvez régler par carte bancaire sur HelloAsso :</p>

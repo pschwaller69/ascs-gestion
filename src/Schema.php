@@ -229,6 +229,10 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            'demande_complement' => [
+                'cols' => ['demande_id' => 'int', 'donnees' => 'text'],
+                'pk' => ['demande_id'],
+            ],
             'campagne' => [
                 'cols' => [
                     'id' => 'auto', 'canal' => 'str:10', 'cible' => 'str:30', 'saison_id' => 'int', 'sections' => 'text?',
@@ -296,7 +300,8 @@ final class Schema
             ],
             'canal' => [
                 [1, 'internet', 'Internet'], [2, 'ancien', 'Ancien adhérent'], [3, 'site_ascs', 'Site ASCS'],
-                [4, 'ville', 'Ville'], [5, 'connaissances', 'Connaissances'],
+                [4, 'ville', 'Ville de Rillieux'], [5, 'connaissances', 'Connaissances'],
+                [6, 'le_progres', 'Le Progrès'], [7, 'plaquette', 'Plaquette'], [8, 'boite_lettres', 'Boîte aux lettres'],
             ],
         ];
     }

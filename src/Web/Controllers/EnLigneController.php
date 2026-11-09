@@ -24,6 +24,7 @@ final class EnLigneController
             'sections' => $this->el->toutesSections(), 'err' => $err,
             'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'),
             'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
+            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(),
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
             'urlInscription' => App::urlAbsolue('/inscription'), 'urlEssai' => App::urlAbsolue('/essai'),
         ], 'Inscriptions en ligne', 'accueil');
@@ -53,6 +54,8 @@ final class EnLigneController
         Parametres::set($pdo, 'essai_ouvert', !empty($_POST['essai_ouvert']) ? '1' : null);
         Parametres::set($pdo, 'en_ligne_saison', (string) $saison);
         Parametres::set($pdo, 'en_ligne_message', Input::text($_POST, 'message', 1000));
+        $ri = trim(str_replace("\r\n", "\n", (string) ($_POST['reglement_interieur'] ?? '')));
+        Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
         $up = \Ascs\Db::upsertStatement($pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id']);
         $existe = $pdo->prepare('SELECT COUNT(*) FROM section WHERE id = ?');
         foreach ($sections as $sid => $r) {

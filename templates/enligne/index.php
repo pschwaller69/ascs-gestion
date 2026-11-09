@@ -37,6 +37,7 @@
         </div>
     </div>
     <?= champ('Message affiché sur les formulaires (facultatif)', 'message', $message, ['type' => 'textarea', 'rows' => 2, 'hint' => 'Par exemple : chèques à l\'ordre de l\'ASCS, certificat médical, dates du forum…']) ?>
+    <?= champ('Règlement intérieur (accepté et signé en ligne à l\'inscription)', 'reglement_interieur', $reglement, ['type' => 'textarea', 'rows' => 12, 'hint' => 'Un article par ligne, comme sur le bulletin papier. Vide : texte du bulletin 2026/2027.']) ?>
 
     <?php foreach ([0 => 'Activités proposées à l\'inscription', 1 => 'Activités proposées en cours d\'essai (sections « essai »)'] as $essai => $titre): ?>
     <h3><?= e($titre) ?></h3>

@@ -36,6 +36,12 @@ final class Demandes
             $in = implode(',', array_map('intval', $ids));
             $d['liste_sections'] = $this->pdo->query("SELECT id, titre, montant, essai FROM section WHERE id IN ($in) ORDER BY titre")->fetchAll();
         }
+        // Bulletin d'inscription en ligne (téléphone domicile, attestation CE, canaux, règlement prévu, signature)
+        try {
+            $d['complement'] = (new Bulletin($this->pdo))->lire((int) $d['id']);
+        } catch (\PDOException) {
+            $d['complement'] = null;
+        }
         return $d;
     }
 
@@ -78,6 +84,8 @@ final class Demandes
             'date_naissance' => (string) $d['date_naissance'], 'mail' => (string) $d['mail'], 'telephone1' => (string) $d['telephone'],
             'adresse' => (string) $d['adresse'], 'code_postal' => (string) $d['code_postal'], 'ville' => (string) $d['ville'],
             'nom_parent' => (string) $d['nom_parent'], 'prenom_parent' => (string) $d['prenom_parent'],
+            'telephone2' => (string) ($d['complement']['telephone2'] ?? ''), 'attestation_ce' => !empty($d['complement']['attestation_ce']) ? '1' : '',
+            'canal_autre' => (string) ($d['complement']['canal_autre'] ?? ''),
         ]);
     }
 
@@ -157,11 +165,24 @@ final class Demandes
                         ->execute([trim((string) $st->fetchColumn() . "\n" . $note), $adherentId]);
                 }
             }
-            if ($d['canal_id']) {
+            $comp = $d['complement'] ?? null;
+            $canaux = array_unique(array_filter(array_map('intval', array_merge([$d['canal_id']], (array) ($comp['canaux'] ?? [])))));
+            foreach ($canaux as $canal) {
                 $st = $this->pdo->prepare('SELECT COUNT(*) FROM adherent_canal WHERE adherent_id = ? AND canal_id = ?');
-                $st->execute([$adherentId, $d['canal_id']]);
+                $st->execute([$adherentId, $canal]);
                 if ((int) $st->fetchColumn() === 0) {
-                    $this->pdo->prepare('INSERT INTO adherent_canal (adherent_id, canal_id) VALUES (?,?)')->execute([$adherentId, $d['canal_id']]);
+                    $this->pdo->prepare('INSERT INTO adherent_canal (adherent_id, canal_id) VALUES (?,?)')->execute([$adherentId, $canal]);
+                }
+            }
+            if ($comp && $fiche === null && !empty($in['completer'])) {
+                // Fiche existante complétée : téléphone domicile et autre canal si vides, attestation CE si demandée
+                foreach (['telephone2' => $comp['telephone2'] ?? null, 'canal_autre' => $comp['canal_autre'] ?? null] as $col => $val) {
+                    if ($val) {
+                        $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND ($col IS NULL OR $col = '')")->execute([$val, $adherentId]);
+                    }
+                }
+                if (!empty($comp['attestation_ce'])) {
+                    $this->pdo->prepare('UPDATE adherent SET attestation_ce = 1 WHERE id = ?')->execute([$adherentId]);
                 }
             }
             $insc = new Inscriptions($this->pdo);
@@ -174,7 +195,9 @@ final class Demandes
                 }
                 $rem = 'Demande en ligne ' . $d['reference']
                     . ($d['date_essai'] ? ', essai prévu le ' . self::jma($d['date_essai']) : '')
-                    . ($d['remarques'] ? ' : ' . $d['remarques'] : '');
+                    . ($d['remarques'] ? ' : ' . $d['remarques'] : '')
+                    . ($comp ? "\n" . Bulletin::resumeReglement($comp) . "\nRèglement intérieur accepté en ligne par " . $comp['soussigne']
+                        . ' (fait à ' . ($comp['fait_a'] ?: '?') . ' le ' . self::jma((string) $comp['signe_le']) . ')' : '');
                 $creees[] = $insc->creer([
                     'adherent_id' => $adherentId, 'section_id' => $sid, 'saison_id' => $saison,
                     'date_inscription' => $d['date_essai'] ?: substr((string) $d['cree_le'], 0, 10), 'fait_a' => 'En ligne',

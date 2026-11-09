@@ -313,3 +313,68 @@
         a.href = 'sms:/open?addresses=' + a.getAttribute('data-sms-numeros') + '&body=' + encodeURIComponent(corps);
     });
 }());
+
+// Bulletin d'inscription en ligne : blocs conditionnels, signature proposée, récapitulatif du montant
+(function () {
+    'use strict';
+    var recap = document.getElementById('recap');
+    if (!recap) { return; }
+    var form = recap.closest('form');
+    var montrer = function (id, oui) { var el = document.getElementById(id); if (el) { el.hidden = !oui; } };
+    var coche = function (sel) { var el = form.querySelector(sel); return !!(el && el.checked); };
+    var norm = function (t) { return (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); };
+    var euros = function (v) { return v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; };
+    var val = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    var signature = document.getElementById('f_soussigne');
+    var signatureAuto = signature ? signature.value : '';
+    var ligne = function (lib, montant, classe) {
+        var li = document.createElement('li'); if (classe) { li.className = classe; }
+        var a = document.createElement('span'); a.textContent = lib;
+        var b = document.createElement('span'); b.textContent = montant;
+        li.appendChild(a); li.appendChild(b); return li;
+    };
+    var maj = function () {
+        montrer('bloc-nb-cheques', coche('[data-moyen="cheque"]'));
+        montrer('note-ancv', coche('[data-moyen="ancv"]'));
+        montrer('bloc-code-pass', coche('#aide-pass_sport'));
+        montrer('bloc-option', coche('#ass-oui'));
+        // Signature proposée : le parent pour un mineur, sinon l'adhérent (tant qu'elle n'a pas été modifiée à la main)
+        if (signature && (signature.value === '' || signature.value === signatureAuto)) {
+            var parent = (val('f_prenom_parent') + ' ' + val('f_nom_parent')).trim();
+            var bloc = document.querySelector('[data-bloc-parent]');
+            signatureAuto = (bloc && !bloc.hidden && parent) ? parent : (val('f_prenom') + ' ' + val('f_nom')).trim();
+            signature.value = signatureAuto;
+        }
+        var cp = val('f_code_postal').replace(/\D/g, ''), ville = norm(val('f_ville'));
+        var rill = cp === '69140' || ville.indexOf('rillieux') >= 0 || ville.indexOf('crepieux') >= 0;
+        var total = 0, n = 0;
+        var ul = document.createElement('ul');
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="sections[]"]:checked'), function (c) {
+            var t = parseFloat(c.getAttribute(rill ? 'data-tarif-rillieux' : 'data-tarif')) || 0;
+            total += t; n++;
+            ul.appendChild(ligne(c.getAttribute('data-titre'), euros(t)));
+        });
+        recap.textContent = '';
+        if (!n) { var p = document.createElement('p'); p.className = 'aide'; p.textContent = 'Cochez vos activités pour voir le montant.'; recap.appendChild(p); return; }
+        var aides = 0;
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="aides[]"]:checked'), function (c) {
+            var m = parseFloat(c.getAttribute('data-aide-montant')) || 0; aides += m;
+            ul.appendChild(ligne(c.getAttribute('data-aide-libelle'), '− ' + euros(m), 'recap-aide'));
+        });
+        var frais = coche('[data-moyen="ancv"]') ? 5 : 0;
+        if (frais) { ul.appendChild(ligne('Frais de gestion ANCV', euros(frais))); }
+        var h = document.createElement('h3'); h.textContent = 'Récapitulatif';
+        recap.appendChild(h); recap.appendChild(ul);
+        var reste = Math.max(0, total - aides) + frais;
+        var tot = document.createElement('p'); tot.className = 'recap-total';
+        tot.appendChild(document.createTextNode('Reste à régler : ')); var s = document.createElement('strong'); s.textContent = euros(reste); tot.appendChild(s);
+        recap.appendChild(tot);
+        var note = document.createElement('p'); note.className = 'aide';
+        note.textContent = (rill ? 'Tarif habitant de Rillieux (10 € de réduction, sauf jogging et marche). ' : 'Tarif extérieur : les habitants de Rillieux ont 10 € de réduction (sauf jogging et marche). ')
+            + 'Montant indicatif, confirmé par le bureau.';
+        recap.appendChild(note);
+    };
+    form.addEventListener('change', maj);
+    form.addEventListener('input', function (ev) { if (/^f_(nom|prenom|nom_parent|prenom_parent|code_postal|ville)$/.test(ev.target.id)) { maj(); } });
+    maj();
+}());

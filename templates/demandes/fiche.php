@@ -24,6 +24,15 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
         <?php if ($d['droit_image'] !== null): ?><tr><th>Droit à l'image</th><td><?= (int) $d['droit_image'] === 1 ? 'oui' : '<strong>non</strong>' ?></td></tr><?php endif; ?>
         <?php if ($d['canal']): ?><tr><th>A connu l'ASCS par</th><td><?= e($d['canal']) ?></td></tr><?php endif; ?>
         <?php if ($d['remarques']): ?><tr><th>Remarque</th><td><?= nl2br(e($d['remarques'])) ?></td></tr><?php endif; ?>
+        <?php if ($c = $d['complement'] ?? null): ?>
+            <?php if ($c['telephone2']): ?><tr><th>Tél. domicile</th><td><?= e($c['telephone2']) ?></td></tr><?php endif; ?>
+            <tr><th>Attestation CE</th><td><?= $c['attestation_ce'] ? '<strong>oui</strong>' : 'non' ?></td></tr>
+            <?php if ($c['canal_autre']): ?><tr><th>Connu aussi par</th><td><?= e($c['canal_autre']) ?></td></tr><?php endif; ?>
+            <tr><th>Assurance</th><td><?= $c['assurance'] === 'oui' ? '<strong>souscrit</strong>' . ($c['assurance_option'] ? ', option ' . e($c['assurance_option']) : '') : 'ne souscrit pas' ?></td></tr>
+            <tr><th>Règlement prévu</th><td><?= e(preg_replace('/^Règlement prévu : | ; assurance.*$/u', '', Ascs\Domain\Bulletin::resumeReglement($c))) ?>
+                <?php $r = $c['recap']; ?><br><small>Total <?= e(money($r['total'])) ?><?= $r['aides'] ? ', aides ' . e(money(array_sum(array_column($r['aides'], 'montant')))) : '' ?><?= $r['frais'] ? ', frais ANCV ' . e(money($r['frais'])) : '' ?> : reste annoncé <strong><?= e(money($r['reste'])) ?></strong></small></td></tr>
+            <tr><th>Signature</th><td>« Je soussigné(e) <?= e($c['soussigne']) ?> reconnais avoir pris connaissance du règlement intérieur » — fait à <?= e($c['fait_a'] ?: '?') ?> le <?= e(dfr($c['signe_le'])) ?></td></tr>
+        <?php endif; ?>
     </table>
 </section>
 

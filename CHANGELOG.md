@@ -3,6 +3,16 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.0 — 09/11/2026
+- **Bulletin d'inscription en ligne**, repris du bulletin papier 2026/2027, pour une saisie sur téléphone :
+  - tél. portable et tél. domicile, attestation pour le comité d'entreprise, « Où avez-vous connu l'ASCS ? » (plusieurs choix, dont Le Progrès, Plaquette, Boîte aux lettres, et « Autre ») ;
+  - **règlement** : moyens prévus (chèque — en 1 à 3 fois —, espèces, chèques ANCV avec 5 € de frais, carte bancaire) et aides du bulletin (coupons sport / culture de la mairie, Pass'Région, Pass'Sport avec son code), conditions affichées ; **récapitulatif en direct** : tarif de chaque activité (réduction Rillieux d'après l'adresse saisie), aides déduites, frais, reste à régler ;
+  - assurance « groupements sportifs » : souscrite (option n°) ou non ;
+  - **règlement intérieur** affiché, case « reconnais avoir pris connaissance du règlement intérieur », « Je soussigné(e) » proposé (le parent pour un mineur), fait à, date du jour.
+- Après l'envoi : récapitulatif et **pièces à apporter** (certificat médical pour les activités sportives, coupon et chèque de caution, copie Pass'Région, Pass'Sport, chèques), aussi dans le mail de confirmation.
+- Côté bureau : tout apparaît sur la demande ; à la validation, tél. domicile, attestation CE et canaux vont sur la fiche, le règlement prévu, l'assurance et la signature dans les remarques de l'inscription.
+- Règlement intérieur modifiable dans Accueil > QR codes (texte du bulletin 2026/2027 par défaut).
+
 ## 0.6.0 — 08/11/2026
 - **Compte bancaire** (onglet Financier) : comptes avec leur solde (nommables : « Compte courant », « Livret »…), opérations par saison ou toutes saisons, recherche, filtres recettes / dépenses / à ventiler, état de la ventilation de chaque ligne.
 - **Ventilation d'une opération** : plusieurs lignes (section principale, catégorie, montant, observation), total contrôlé, virement interne. Ventilation proposée d'après l'historique.

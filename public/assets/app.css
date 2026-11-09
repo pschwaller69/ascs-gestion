@@ -380,3 +380,24 @@ tr.retire td:last-child { text-decoration: none; }
 .nom-compte { margin: -.5rem 0 .5rem; }
 .table-ventilation input { padding: .5rem .55rem; border: 1px solid #b9c6c4; border-radius: 4px; font: inherit; background: #fff; }
 .table-ventilation input:disabled, .table-ventilation select:disabled { background: #f3f6f5; color: var(--ink); }
+
+/* Bulletin d'inscription en ligne */
+.cases-canaux, .cases-moyens { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: .35rem 1rem; margin: .4rem 0 .6rem; }
+.cases-canaux label, .cases-moyens label, .aide-choix > label { display: flex; gap: .5rem; align-items: center; min-height: 2.4rem; }
+.cases-canaux input, .cases-moyens input, .aide-choix input[type="checkbox"] { width: 1.25rem; height: 1.25rem; flex: none; accent-color: var(--teal); }
+.sous-legende { font-size: 1rem; margin: 1rem 0 .25rem; }
+.sous-legende small { font-weight: 400; color: var(--muted); }
+.aide-choix { border-top: 1px solid var(--line); padding: .4rem 0; }
+.aide-choix .aide { margin: 0 0 .3rem 1.75rem; }
+.recap { margin-top: 1rem; padding: .75rem 1rem; background: var(--teal-l); border-radius: 6px; }
+.recap h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.recap ul { list-style: none; margin: 0; padding: 0; }
+.recap li { display: flex; justify-content: space-between; gap: 1rem; padding: .15rem 0; }
+.recap .recap-aide { color: var(--muted); }
+.recap-total { display: flex; justify-content: space-between; border-top: 2px solid var(--teal); margin: .4rem 0 .3rem; padding-top: .4rem; font-size: 1.1rem; }
+.reglement-interieur { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: .5rem .9rem; margin-bottom: 1rem; }
+.reglement-interieur summary { font-weight: 600; cursor: pointer; padding: .25rem 0; }
+.reglement-interieur ul { max-height: 18rem; overflow-y: auto; margin: .5rem 0; padding-left: 1.1rem; font-size: .92rem; }
+.reglement-interieur li { margin-bottom: .35rem; }
+.valeur-fixe { margin: .35rem 0 0; padding: .55rem 0; }
+.pieces { padding-left: 1.2rem; }
