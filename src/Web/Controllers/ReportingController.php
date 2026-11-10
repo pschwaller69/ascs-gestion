@@ -45,9 +45,9 @@ final class ReportingController
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['Activité', 'Famille', 'Adhérents', 'Habitants de Rillieux', 'Extérieurs', 'Mineurs', 'dont mineurs de Rillieux', 'Majeurs', 'Femmes', 'Hommes'], ';', '"', '');
             foreach ($lignes as $l) {
-                fputcsv($out, [$l['activite'], $l['famille'], $l['total'], $l['rillieux'], $l['exterieurs'], $l['mineurs'], $l['mineurs_rillieux'], $l['majeurs'], $l['femmes'], $l['hommes']], ';', '"', '');
+                fputcsv($out, csv_sur([$l['activite'], $l['famille'], $l['total'], $l['rillieux'], $l['exterieurs'], $l['mineurs'], $l['mineurs_rillieux'], $l['majeurs'], $l['femmes'], $l['hommes']]), ';', '"', '');
             }
-            fputcsv($out, ['Total (personnes distinctes)', '', $r['total'] ?? 0, $r['rillieux'] ?? 0, $r['exterieurs'] ?? 0, '', '', '', $r['femmes'] ?? 0, $r['hommes'] ?? 0], ';', '"', '');
+            fputcsv($out, csv_sur(['Total (personnes distinctes)', '', $r['total'] ?? 0, $r['rillieux'] ?? 0, $r['exterieurs'] ?? 0, '', '', '', $r['femmes'] ?? 0, $r['hommes'] ?? 0]), ';', '"', '');
             rewind($out);
             header('Content-Type: text/csv; charset=utf-8');
             header('Content-Disposition: attachment; filename="reporting-mairie-' . preg_replace('/[^0-9-]/', '', (string) ($r['saison']['titre'] ?? '')) . '.csv"');

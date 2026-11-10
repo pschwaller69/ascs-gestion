@@ -94,6 +94,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
                 'envoye' => '<span class="pastille pastille-ok">envoyé</span>',
                 'echec' => '<span class="pastille pastille-reste">échec</span> <small class="texte-erreur">' . e((string) $d['erreur']) . '</small>',
                 'retire' => '<span class="aide">retiré</span>',
+                'en_envoi' => '<span class="pastille pastille-reste">envoi interrompu</span> <small class="aide">parti ou non : à vérifier avant de renvoyer</small>',
                 default => '<span class="aide">à envoyer</span>',
             } ?></td>
             <td>

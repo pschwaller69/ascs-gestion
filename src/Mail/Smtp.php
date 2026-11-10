@@ -43,8 +43,15 @@ final class Smtp
             return null;
         } catch (\RuntimeException $e) {
             if ($this->flux) {
-                @fwrite($this->flux, "RSET\r\n");
-                @fgets($this->flux, 515);
+                // Connexion coupée ou muette : on la ferme pour que le mail suivant en ouvre une neuve.
+                $meta = stream_get_meta_data($this->flux);
+                if (!empty($meta['timed_out']) || !empty($meta['eof']) || str_contains($e->getMessage(), 'connexion perdue') || str_contains($e->getMessage(), 'pas de réponse')) {
+                    @fclose($this->flux);
+                    $this->flux = null;
+                } else {
+                    @fwrite($this->flux, "RSET\r\n");
+                    @fgets($this->flux, 515);
+                }
             }
             return 'SMTP : ' . $e->getMessage();
         }

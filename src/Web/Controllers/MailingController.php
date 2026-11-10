@@ -193,6 +193,9 @@ final class MailingController
 
     private function bilan(array $r, string $canal): string
     {
+        if (!empty($r['occupe'])) {
+            return 'Un envoi est déjà en cours (tâche automatique ou autre personne du bureau) : rien n\'a été envoyé en double. Rechargez la page dans une minute.';
+        }
         $mot = $canal === 'sms' ? 'SMS' : 'mail(s)';
         return sprintf('%d %s envoyé(s)', $r['envoyes'], $mot) . ($r['echecs'] ? sprintf(', %d en échec', $r['echecs']) : '')
             . ($r['restants'] ? sprintf('. %d restent à envoyer : ils partiront par lots (bouton « Envoyer le lot suivant » ou tâche automatique).', $r['restants']) : '. Envoi terminé.');
@@ -255,8 +258,8 @@ final class MailingController
         fwrite($out, "\xEF\xBB\xBF");
         fputcsv($out, ['First Name', 'Last Name', 'E-mail Address', 'Mobile Phone', 'Home Phone', 'Home Street', 'Home Postal Code', 'Home City', 'Categories'], ',', '"', '');
         foreach ($par as $r) {
-            fputcsv($out, [$r['prenom'], $r['nom'], $r['mail'], $r['telephone1'], $r['telephone2'], $r['adresse'], $r['code_postal'], $r['ville'],
-                'ASCS;' . implode(';', array_unique($r['sections']))], ',', '"', '');
+            fputcsv($out, csv_sur([$r['prenom'], $r['nom'], $r['mail'], $r['telephone1'], $r['telephone2'], $r['adresse'], $r['code_postal'], $r['ville'],
+                'ASCS;' . implode(';', array_unique($r['sections']))]), ',', '"', '');
         }
         rewind($out);
         header('Content-Type: text/csv; charset=utf-8');

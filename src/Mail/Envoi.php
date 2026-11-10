@@ -56,7 +56,7 @@ final class Envoi
         if ($erreur === null) {
             $limite = 'ascs-' . bin2hex(random_bytes(12));
             $entetes = [
-                'From: ' . self::entete($nomExpediteur) . ' <' . $expediteur . '>',
+                'From: ' . self::nom($nomExpediteur) . ' <' . $expediteur . '>',
                 'Reply-To: ' . (filter_var($reponse, FILTER_VALIDATE_EMAIL) ? $reponse : $expediteur),
                 'Date: ' . date('r'),
                 'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . substr(strrchr($expediteur, '@'), 1) . '>',
@@ -107,6 +107,16 @@ final class Envoi
     private function reponse(): string
     {
         return (string) (\Ascs\Parametres::get($this->pdo, 'doc_reponse') ?? '');
+    }
+
+    /** Nom affiché de l'expéditeur : entre guillemets s'il contient une virgule, un point, etc. (sinon l'adresse est mal lue). */
+    private static function nom(string $s): string
+    {
+        $s = trim(str_replace(["\r", "\n", '"', '\\', '<', '>'], ' ', $s));
+        if (preg_match('/[^\x20-\x7e]/', $s)) {
+            return self::entete($s);
+        }
+        return preg_match('/[^A-Za-z0-9 !#$%&\'*+\/=?^_`{|}~-]/', $s) ? '"' . $s . '"' : $s;
     }
 
     /** En-tête encodé (accents) selon la RFC 2047. */

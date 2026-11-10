@@ -85,6 +85,9 @@ final class Mailing
         $retenus = [];
         $vus = [];
         $exclus = ['refus' => 0, 'sans' => 0, 'invalide' => 0, 'doublon' => 0];
+        // Un refus vaut pour l'adresse ou le numéro, pas seulement pour la fiche : une famille qui partage un mail
+        // et se désinscrit depuis l'une des fiches ne doit plus rien recevoir par les autres.
+        $refuses = $this->refuses($canal);
         foreach ($st->fetchAll() as $a) {
             if ($canal === 'sms') {
                 if ((int) $a['refus_sms'] === 1) {
@@ -94,6 +97,10 @@ final class Mailing
                 $num = Sms::mobile((string) $a['telephone1']) ?? Sms::mobile((string) $a['telephone2']);
                 if ($num === null) {
                     $exclus['sans']++;
+                    continue;
+                }
+                if (isset($refuses[$num])) {
+                    $exclus['refus']++;
                     continue;
                 }
                 $cle = $num;
@@ -111,6 +118,10 @@ final class Mailing
                     $exclus['invalide']++;
                     continue;
                 }
+                if (isset($refuses[$m])) {
+                    $exclus['refus']++;
+                    continue;
+                }
                 $cle = $m;
             }
             if (isset($vus[$cle])) {
@@ -121,6 +132,26 @@ final class Mailing
             $retenus[] = ['adherent_id' => (int) $a['id'], 'nom' => $a['nom'], 'prenom' => $a['prenom'], 'adresse' => $cle];
         }
         return ['retenus' => $retenus, 'exclus' => array_filter($exclus)];
+    }
+
+    /** Adresses (ou numéros de portable) portées par au moins une fiche qui refuse ce canal. @return array<string,true> */
+    private function refuses(string $canal): array
+    {
+        $out = [];
+        if ($canal === 'sms') {
+            foreach ($this->pdo->query('SELECT telephone1, telephone2 FROM adherent WHERE refus_sms = 1')->fetchAll() as $a) {
+                foreach ([$a['telephone1'], $a['telephone2']] as $t) {
+                    if (($n = Sms::mobile((string) $t)) !== null) {
+                        $out[$n] = true;
+                    }
+                }
+            }
+            return $out;
+        }
+        foreach ($this->pdo->query("SELECT mail FROM adherent WHERE refus_mail = 1 AND mail IS NOT NULL AND mail <> ''")->fetchAll(PDO::FETCH_COLUMN) as $m) {
+            $out[mb_strtolower(trim((string) $m))] = true;
+        }
+        return $out;
     }
 
     /** @param list<int> $sections */
@@ -209,6 +240,12 @@ final class Mailing
     public function envoyerLot(?int $campagneId = null): array
     {
         $r = ['envoyes' => 0, 'echecs' => 0, 'restants' => 0];
+        // Un seul envoi à la fois : la tâche automatique et le bouton « Envoyer le lot » ne doivent pas servir deux fois le même destinataire.
+        $verrou = @fopen(dirname(__DIR__, 2) . '/storage/envois-lot.lock', 'c');
+        if ($verrou && !flock($verrou, LOCK_EX | LOCK_NB)) {
+            $r['occupe'] = true;
+            return $r;
+        }
         $where = "c.statut IN ('validee','en_cours')" . ($campagneId ? ' AND c.id = ' . (int) $campagneId : '');
         $reg = (new Reglages($this->pdo))->tous();
         $envoi = new Envoi($this->pdo, 'mailing');
@@ -221,7 +258,13 @@ final class Mailing
             $st = $this->pdo->prepare("SELECT * FROM campagne_destinataire WHERE campagne_id = ? AND statut = 'a_envoyer' ORDER BY id LIMIT $lot");
             $st->execute([$c['id']]);
             $this->pdo->prepare("UPDATE campagne SET statut = 'en_cours' WHERE id = ?")->execute([$c['id']]);
+            $prendre = $this->pdo->prepare("UPDATE campagne_destinataire SET statut = 'en_envoi' WHERE id = ? AND statut = 'a_envoyer'");
             foreach ($st->fetchAll() as $d) {
+                // Réservé avant l'envoi : si le traitement est coupé en route, le destinataire n'est pas servi une seconde fois.
+                $prendre->execute([$d['id']]);
+                if ($prendre->rowCount() !== 1) {
+                    continue;
+                }
                 $texte = self::personnaliser((string) $c['texte'], $d, (string) $c['canal']);
                 $erreur = $c['canal'] === 'sms'
                     ? ($sms ? $sms->envoyer((string) $d['adresse'], $texte) : 'Passerelle SMS non configurée.')

@@ -3,6 +3,15 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.4
+
+Corrections issues d'une relecture complète du code.
+
+- Mailings : un refus (désinscription) vaut pour l'adresse ou le numéro, plus seulement pour la fiche. Une famille qui partage un mail et se désinscrit ne reçoit plus rien par les autres fiches.
+- Mailings : un seul envoi de lot à la fois (tâche automatique et bouton ne peuvent plus servir deux fois le même destinataire) ; chaque destinataire est réservé avant l'envoi. Un envoi coupé en route apparaît « envoi interrompu ».
+- Mails : nom de l'expéditeur mis entre guillemets s'il contient une virgule ou un point ; connexion SMTP rouverte après une coupure au lieu de faire échouer tout le reste du lot.
+- Exports CSV : un texte commençant par = ou @ n'est plus lu comme une formule par Excel.
+
 ## 0.7.3
 
 - Compte bancaire : choix de la période (saison ou année civile, sur la date des opérations). Si le compte n'a aucune opération dans la saison choisie en haut de page, la dernière saison qui en a est affichée, avec un message. Sur téléphone, les onglets des comptes passent à la ligne.

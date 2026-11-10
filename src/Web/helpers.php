@@ -26,6 +26,23 @@ function date_reglement(?string $iso): string
     return $iso !== null && substr($iso, 0, 10) > date('Y-m-d') ? $d . ' <span class="pastille pastille-reste">à venir</span>' : $d;
 }
 
+/**
+ * Ligne d'un export CSV : un texte qui commence par = ou @ (ou + / - suivi d'autre chose qu'un nombre) serait lu comme
+ * une formule par Excel ; il est précédé d'une apostrophe. Les nombres et les numéros de téléphone ne sont pas touchés.
+ * @param list<mixed> $ligne
+ * @return list<mixed>
+ */
+function csv_sur(array $ligne): array
+{
+    return array_map(static function ($v) {
+        if (!is_string($v) || $v === '') {
+            return $v;
+        }
+        $danger = in_array($v[0], ['=', '@', "\t", "\r"], true) || (in_array($v[0], ['+', '-'], true) && !preg_match('/^[+-][\d\s.,()]*$/', $v));
+        return $danger ? "'" . $v : $v;
+    }, $ligne);
+}
+
 function dfr(?string $iso): string
 {
     if (!$iso || !preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $iso, $m)) {

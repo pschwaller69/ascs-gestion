@@ -40,6 +40,9 @@ final class Marques
     {
         $n = 0;
         foreach ($this->pdo->query('SELECT * FROM marque_adherent ORDER BY id')->fetchAll() as $m) {
+            if (!in_array($m['champ'], self::CHAMPS, true)) {
+                continue;
+            }
             $st = $this->pdo->prepare('SELECT mail, ' . $m['champ'] . ' AS v FROM adherent WHERE id = ?');
             $st->execute([$m['adherent_id']]);
             $a = $st->fetch();

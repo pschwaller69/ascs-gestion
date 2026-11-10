@@ -180,8 +180,8 @@ final class BanqueController
             $nb = static fn ($v) => $v === null ? '' : number_format((float) $v, 2, ',', '');
             fputcsv($out, ['Compte', 'Date', 'Libellé', 'Section principale', 'Catégorie', 'Recette', 'Dépense', 'Observation'], ';', '"', '');
             foreach ($d['ventilation'] as $r) {
-                fputcsv($out, [$r['compte'], date('d/m/Y', strtotime($r['date'])), $r['libelle'], $r['section'], $r['categorie'],
-                    $r['valeur'] > 0 ? $nb($r['valeur']) : '', $r['valeur'] < 0 ? $nb(-$r['valeur']) : '', $r['observation']], ';', '"', '');
+                fputcsv($out, csv_sur([$r['compte'], date('d/m/Y', strtotime($r['date'])), $r['libelle'], $r['section'], $r['categorie'],
+                    $r['valeur'] > 0 ? $nb($r['valeur']) : '', $r['valeur'] < 0 ? $nb(-$r['valeur']) : '', $r['observation']]), ';', '"', '');
             }
             rewind($out);
             header('Content-Type: text/csv; charset=utf-8');
