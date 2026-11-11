@@ -22,6 +22,7 @@ final class SectionController
     {
         return $this->app->render('sections/index', ['sections' => $this->pr->sections($this->app->saisonId()),
             'animateurs' => (new \Ascs\Domain\Animateurs($this->app->pdo))->liste((int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId())),
+            'controleurs' => (new \Ascs\Domain\Controleurs($this->app->pdo))->liste(),
             'changements' => (new \Ascs\Domain\Changements($this->app->pdo))->liste($this->app->saisonId()),
             'aRelancer' => (new \Ascs\Domain\Participants($this->app->pdo))->compter($this->app->saisonId())], 'Inscriptions par section');
     }
@@ -231,5 +232,27 @@ final class SectionController
         (new \Ascs\Domain\Cartes($this->app->pdo))->supprimerRecharge((int) $p['id']);
         $this->app->flash('ok', 'Carte supprimée.');
         $this->app->redirect('/sections/cartes');
+    }
+
+    /** Contrôleurs bénévoles : créer, changer le lien, supprimer. */
+    public function controleurs(array $p): void
+    {
+        $c = new \Ascs\Domain\Controleurs($this->app->pdo);
+        $id = (int) ($_POST['id'] ?? 0);
+        switch ($_POST['action'] ?? '') {
+            case 'creer':
+                $err = $c->creer((string) ($_POST['nom'] ?? ''));
+                $this->app->flash($err ? 'erreur' : 'ok', $err ?? 'Contrôleur ajouté : copiez son lien et envoyez-le-lui.');
+                break;
+            case 'lien':
+                $c->nouveauJeton($id);
+                $this->app->flash('ok', 'Nouveau lien créé : l\'ancien ne fonctionne plus.');
+                break;
+            case 'supprimer':
+                $c->supprimer($id);
+                $this->app->flash('ok', 'Contrôleur supprimé : son lien ne fonctionne plus.');
+                break;
+        }
+        $this->app->redirect('/sections#controleurs');
     }
 }

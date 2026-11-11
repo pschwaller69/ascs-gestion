@@ -271,6 +271,12 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['section_id', 'saison_id', 'date_seance', 'adherent_id']],
             ],
+            // Contrôleur bénévole : lien personnel pour voir la liste de tous les cours
+            'controleur' => [
+                'cols' => ['id' => 'auto', 'nom' => 'str:100', 'jeton' => 'uuid', 'cree_le' => 'datetime'],
+                'pk' => ['id'],
+                'unique' => [['jeton']],
+            ],
             // Lien personnel d'un animateur (repéré par son mail) : tous ses cours sur une page
             'animateur' => [
                 'cols' => ['id' => 'auto', 'mail' => 'str:150', 'jeton' => 'uuid', 'cree_le' => 'datetime'],

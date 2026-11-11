@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.7
+
+- Contrôleurs : bénévoles qui vérifient que tout le monde est inscrit. Chacun a un lien personnel sans mot de passe (Par section > Contrôleurs : ajouter, voir, copier, changer le lien, supprimer). Le lien ouvre la liste de tous les cours de la saison, rangés par jour en commençant par aujourd'hui, avec l'heure et une recherche ; chaque cours s'ouvre comme chez l'animateur (inscrits, cartes, non-inscrits). Le contrôleur peut noter une personne non inscrite (retrouvée par le bureau dans « Venus sans inscription », avec son nom) mais ne peut pas changer un adhérent de cours.
+
 ## 0.8.6
 
 - Plusieurs animateurs pour un cours : le mail d'animateur d'une section peut contenir plusieurs adresses séparées par un point-virgule (comme dans WinDev). Chacun a son propre lien avec ce cours, et « Envoyer » écrit à chaque adresse séparément (avant : « erreur de mail » avec deux adresses). Le Paramétrage des sections accepte et vérifie plusieurs adresses.

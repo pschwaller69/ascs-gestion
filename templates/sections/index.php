@@ -30,6 +30,30 @@
     </ul>
 </section>
 <?php endif; ?>
+<section id="controleurs" class="fiche">
+    <h2>Contrôleurs</h2>
+    <p class="aide">Bénévoles qui vérifient que tout le monde est inscrit : leur lien, sans mot de passe, ouvre la liste de n'importe quel cours, comme l'animateur. Ils peuvent noter une personne non inscrite (le bureau la retrouve dans « Venus sans inscription ») mais pas changer un adhérent de cours.</p>
+    <?php if ($controleurs): ?>
+    <ul class="liste-animateurs">
+    <?php foreach ($controleurs as $ct): $lienC = Ascs\Web\App::urlAbsolue('/controle/' . $ct['jeton']); ?>
+        <li>
+            <div class="an-tete"><strong class="an-mail"><?= e($ct['nom']) ?></strong><span class="aide">ajouté le <?= e(dfr((string) $ct['cree_le'])) ?></span></div>
+            <div class="an-actions">
+                <a class="btn btn-petit" href="<?= e($lienC) ?>" target="_blank" rel="noopener"><?= icon('eye') ?> Voir</a>
+                <button type="button" class="btn btn-petit" data-copier="<?= e($lienC) ?>">Copier le lien</button>
+                <form method="post" action="<?= e(url('/sections/controleurs')) ?>" data-confirmer="Créer un nouveau lien pour <?= e($ct['nom']) ?> ? L'ancien ne fonctionnera plus."><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $ct['id'] ?>"><button class="btn btn-petit" type="submit" name="action" value="lien">Changer le lien</button></form>
+                <form method="post" action="<?= e(url('/sections/controleurs')) ?>" data-confirmer="Supprimer <?= e($ct['nom']) ?> ? Son lien ne fonctionnera plus."><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $ct['id'] ?>"><button class="btn btn-petit" type="submit" name="action" value="supprimer">Supprimer</button></form>
+            </div>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+    <?php endif; ?>
+    <form method="post" action="<?= e(url('/sections/controleurs')) ?>" class="ligne-reglage">
+        <?= csrf_field() ?>
+        <label>Nouveau contrôleur <input type="text" name="nom" maxlength="100" placeholder="Prénom Nom" required></label>
+        <button class="btn btn-petit" type="submit" name="action" value="creer"><?= icon('user-plus') ?> Ajouter</button>
+    </form>
+</section>
 <?php $aVoir = array_filter($changements, static fn ($c) => !$c['vu'] && !$c['annule']); ?>
 <?php if ($changements): ?>
 <section id="changements" class="fiche">

@@ -10,6 +10,7 @@ foreach ($inscrits as $i) {
 $numeros = array_keys($numeros);
 $texteSms = 'Bonjour, information pour le cours ' . $s['titre'] . ' : ';
 ?>
+<?php if (isset($controleur)): ?><p><a href="<?= e(url($base)) ?>">‹ Tous les cours</a> <small class="aide">· contrôle des inscriptions : <?= e($controleur['nom']) ?></small></p><?php endif; ?>
 <?php if (count($onglets) > 1): ?>
 <nav class="onglets-cours" aria-label="Mes cours">
     <?php foreach ($onglets as $o): ?>

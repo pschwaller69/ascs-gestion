@@ -421,7 +421,9 @@
     var norm = function (t) { return (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
     champ.addEventListener('input', function () {
         var v = norm(champ.value.trim());
-        Array.prototype.forEach.call(liste.children, function (li) { li.hidden = v !== '' && norm(li.getAttribute('data-nom')).indexOf(v) === -1; });
+        // Liste simple (li) ou regroupée par jour (section > ul > li)
+        Array.prototype.forEach.call(liste.querySelectorAll('li[data-nom]'), function (li) { li.hidden = v !== '' && norm(li.getAttribute('data-nom')).indexOf(v) === -1; });
+        Array.prototype.forEach.call(liste.querySelectorAll('section[data-nom]'), function (sec) { sec.hidden = !sec.querySelector('li[data-nom]:not([hidden])'); });
     });
 }());
 

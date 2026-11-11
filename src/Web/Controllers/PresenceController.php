@@ -88,6 +88,28 @@ final class PresenceController
         $this->sauverAjout($this->resoudre($p, 'animateur'));
     }
 
+    /* ---------- Lien d'un contrôleur (tous les cours) ---------- */
+
+    public function controle(array $p): string
+    {
+        return $this->page($this->resoudre($p, 'controleur'));
+    }
+
+    public function controleEnregistrer(array $p): void
+    {
+        $this->sauver($this->resoudre($p, 'controleur'));
+    }
+
+    public function controleAjouter(array $p): string
+    {
+        return $this->pageAjout($this->resoudre($p, 'controleur'));
+    }
+
+    public function controleEnregistrerAjout(array $p): void
+    {
+        $this->sauverAjout($this->resoudre($p, 'controleur'));
+    }
+
     /* ---------- Commun ---------- */
 
     /**
@@ -103,6 +125,17 @@ final class PresenceController
         if ($type === 'section') {
             $s = $this->pr->parJeton((string) $p['jeton']);
             return $s ? ['s' => $s, 'saison' => $saison, 'base' => '/presence/' . $p['jeton'], 'q' => [], 'onglets' => [], 'par' => 'Animateur ' . $s['titre']] : null;
+        }
+        if ($type === 'controleur') {
+            $ctl = (new \Ascs\Domain\Controleurs($this->app->pdo))->parJeton((string) $p['jeton']);
+            if (!$ctl) {
+                return null;
+            }
+            $cours = (new \Ascs\Domain\Controleurs($this->app->pdo))->cours((int) $saison['id']);
+            $voulu = (int) ($_POST['s'] ?? $_GET['s'] ?? 0);
+            $ok = in_array($voulu, array_column($cours, 'id'), true);
+            return ['s' => $ok ? $this->pr->section($voulu) : null, 'saison' => $saison, 'base' => '/controle/' . $p['jeton'], 'q' => $ok ? ['s' => $voulu] : [],
+                'onglets' => [], 'par' => 'Contrôleur ' . $ctl['nom'], 'controleur' => $ctl, 'cours' => $cours];
         }
         $an = new Animateurs($this->app->pdo);
         $mail = $an->parJeton((string) $p['jeton']);
@@ -136,6 +169,9 @@ final class PresenceController
         if (!$c) {
             return $this->app->renderPublic('presence/inconnu', [], 'Lien inconnu', 404);
         }
+        if (!$c['s'] && isset($c['controleur'])) {
+            return $this->app->renderPublic('presence/cours', $c, 'Contrôle des inscriptions');
+        }
         if (!$c['s']) {
             return $this->app->renderPublic('presence/inconnu', ['aucunCours' => true], 'Aucun cours', 200);
         }
@@ -153,7 +189,7 @@ final class PresenceController
             'date' => $date, 'inscrits' => $inscrits, 'creneaux' => $this->pr->creneaux($sid),
             'cartes' => (new \Ascs\Domain\Cartes($this->app->pdo))->etats(array_column($inscrits, 'inscription_id')),
             'libres' => $pa->duCours($sid, $said), 'noteeLibres' => $pa->seance($sid, $said, $date), 'ajoutFait' => self::prendre('ajout_fait'),
-            'changeFait' => self::prendre('changement_fait'), 'peutChanger' => (bool) (new Changements($this->app->pdo))->cibles($sid, $said),
+            'changeFait' => self::prendre('changement_fait'), 'peutChanger' => !isset($c['controleur']) && (new Changements($this->app->pdo))->cibles($sid, $said),
             'notee' => $this->pr->seance($sid, $said, $date), 'seances' => array_slice($this->pr->seances($sid, $said), 0, 12),
             'enregistre' => isset($_GET['ok']),
         ], 'Présences ' . $s['titre']);
