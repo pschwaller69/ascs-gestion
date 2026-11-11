@@ -26,8 +26,8 @@ $auto = array_filter($nouvelles, static fn ($l) => $l['proposition']);
 <?php if ($nouvelles): ?>
 <form method="post" action="<?= e(url('/banque/import/confirmer')) ?>" class="actions">
     <?= csrf_field() ?>
-    <button type="submit" class="btn btn-principal"<?= $app->transition() ? ' disabled' : '' ?>><?= icon('check') ?> Importer les <?= count($nouvelles) ?> opération(s)</button>
-    <?php if ($app->transition()): ?><span class="aide">Mode transition : import désactivé (WinDev reste la référence pour les comptes). Cet aperçu permet de vérifier la lecture du fichier avant la bascule.</span><?php endif; ?>
+    <button type="submit" class="btn btn-principal"><?= icon('check') ?> Importer les <?= count($nouvelles) ?> opération(s)</button>
+    <?php if ($app->transition()): ?><span class="aide">Mode essai : les lignes importées servent à tester et disparaîtront au prochain import WinDev.</span><?php endif; ?>
 </form>
 <?php endif; ?>
 <div class="table-cadre"><table>

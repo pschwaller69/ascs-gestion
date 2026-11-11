@@ -12,7 +12,7 @@ foreach ($lignes as $l) { (float) $l['valeur'] > 0 ? $totC += (float) $l['valeur
         <a class="btn" href="<?= e(url('/banque/export')) ?>"><?= icon('download') ?> Export pour le comptable</a>
     </div>
 </div>
-<?php if ($app->transition()): ?><p class="contexte">Mode transition : les relevés et la ventilation restent dans WinDev ; cette page montre les comptes importés de WinDev. L'import d'un relevé peut être essayé ici (aperçu sans enregistrement).</p><?php endif; ?>
+<?php if ($app->transition()): ?><p class="contexte">Mode essai : vous pouvez importer des relevés et modifier la ventilation pour tester. WinDev reste la référence : le prochain import WinDev remet ses comptes et sa ventilation, et efface ce qui a été ajouté ici.</p><?php endif; ?>
 
 <nav class="sous-onglets" aria-label="Comptes">
     <?php foreach ($comptes as $c): ?>

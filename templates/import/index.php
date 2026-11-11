@@ -34,3 +34,23 @@
         <button type="submit" class="btn btn-danger">Basculer définitivement</button>
     </form>
 <?php endif; ?>
+
+<?php if (!$bascule): ?>
+<h2 id="effacer">Effacer toutes les données</h2>
+<form method="post" action="<?= e(url('/import/effacer')) ?>" class="fiche zone-danger">
+    <?= csrf_field() ?>
+    <p>Pour repartir de zéro avant la bascule : tout ce qui a été saisi ou testé ici disparaît, ainsi que les données venues de WinDev. Ensuite, importez les fichiers WinDev : l'application contiendra exactement WinDev, sans aucun essai.</p>
+    <?php $total = array_sum($aEffacer); ?>
+    <details><summary><?= number_format($total, 0, ',', ' ') ?> ligne(s) seront effacées</summary>
+        <ul class="liste-effacement"><?php foreach (array_filter($aEffacer) as $t => $n): ?><li><?= e(str_replace('_', ' ', $t)) ?> : <?= (int) $n ?></li><?php endforeach; ?></ul>
+    </details>
+    <p><strong>Conservés :</strong> les comptes du bureau, les réglages (facture, mails, HelloAsso, inscription en ligne), les sections ouvertes en ligne et les correspondances HelloAsso.</p>
+    <p class="aide">Une sauvegarde complète de la base est faite juste avant et reste téléchargeable ci-dessous.</p>
+    <?= champ('Tapez EFFACER pour confirmer', 'confirme', '', ['autocomplete' => 'off']) ?>
+    <button type="submit" class="btn btn-danger"><?= icon('x') ?> Effacer toutes les données</button>
+</form>
+<?php endif; ?>
+<?php if ($sauvegardes): ?>
+<h3>Sauvegardes avant effacement</h3>
+<ul><?php foreach (array_slice($sauvegardes, 0, 5) as $s): ?><li><a href="<?= e(url('/import/sauvegarde', ['nom' => $s['nom']])) ?>"><?= e($s['nom']) ?></a> <span class="aide">(<?= e(number_format($s['taille'] / 1024, 0, ',', ' ')) ?> Ko)</span></li><?php endforeach; ?></ul>
+<?php endif; ?>

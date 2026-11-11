@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.5
+
+- Mode transition = mode essai pour le financier : la ventilation d'une ligne bancaire et l'import d'un relevé sont permis pour tester. Le prochain import WinDev remet la ventilation de WinDev et efface les lignes ajoutées (bandeau « Mode essai » sur les pages concernées).
+- Ventilation sur téléphone : une carte par ligne (section, catégorie, montant, observation avec leurs étiquettes) au lieu d'un tableau tronqué.
+- Paramétrage > Import WinDev : bouton « Effacer toutes les données » (mode transition seulement, confirmation en tapant EFFACER). Efface adhérents, inscriptions, règlements, comptes, HelloAsso, demandes, mailings, présences, remises, fusions ; garde les comptes du bureau et les réglages. Sauvegarde complète de la base (SQL compressé, rechargeable dans phpMyAdmin) faite juste avant et téléchargeable depuis la même page.
+
 ## 0.7.4
 
 Corrections issues d'une relecture complète du code.

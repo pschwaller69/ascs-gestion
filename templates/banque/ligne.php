@@ -9,13 +9,13 @@ if (!$lignes && $proposition) {
     }
 }
 $lignes = array_pad($lignes, max(3, count($lignes) + 1), ['section_principale_id' => '', 'type_compte_id' => '', 'montant' => '', 'observation' => '']);
-$lecture = $app->transition();
+$lecture = false;
 ?>
 <div class="titre-page"><h1><?= $neg ? 'Dépense' : 'Recette' ?> du <?= e(dfr($l['date_operation'])) ?></h1><a class="btn" href="<?= e(url('/banque', ['compte' => $l['numero_compte']])) ?>">Compte <?= e($l['numero_compte']) ?></a></div>
 <p class="contexte"><strong><?= e(money($l['valeur'])) ?></strong> · <?= e($l['libelle']) ?></p>
 <?php if ($err): ?><p class="flash flash-erreur" role="alert"><?= e($err) ?></p><?php endif; ?>
 <?php if ($proposition && !$l['details']): ?><p class="flash flash-info">Ventilation proposée d'après les opérations précédentes au même libellé : vérifiez puis enregistrez.</p><?php endif; ?>
-<?php if ($lecture): ?><p class="contexte">Mode transition : la ventilation se modifie dans WinDev. Affichage seulement.</p><?php endif; ?>
+<?php if ($app->transition()): ?><p class="flash flash-info">Mode essai : vous pouvez modifier la ventilation pour tester. WinDev reste la référence : le prochain import WinDev remettra sa ventilation à la place.</p><?php endif; ?>
 <form class="fiche" method="post" action="<?= e(url('/banque/ligne/' . $l['id'])) ?>" id="form-ventilation" data-total="<?= e(number_format(abs((float) $l['valeur']), 2, '.', '')) ?>">
     <?= csrf_field() ?>
     <input type="hidden" name="retour_filtre" value="<?= e((string) ($_GET['filtre'] ?? '')) ?>">
@@ -24,10 +24,10 @@ $lecture = $app->transition();
         <tbody>
         <?php foreach ($lignes as $k => $v): ?>
             <tr>
-                <td><label class="visuellement-cache" for="v<?= $k ?>s">Section, ligne <?= $k + 1 ?></label><select id="v<?= $k ?>s" name="v[<?= $k ?>][section_principale_id]"<?= $lecture ? ' disabled' : '' ?>><option value="">—</option><?php foreach ($sections as $id => $t): ?><option value="<?= (int) $id ?>"<?= attr((string) $id === (string) $v['section_principale_id'], 'selected') ?>><?= e($t) ?></option><?php endforeach; ?></select></td>
-                <td><label class="visuellement-cache" for="v<?= $k ?>t">Catégorie, ligne <?= $k + 1 ?></label><select id="v<?= $k ?>t" name="v[<?= $k ?>][type_compte_id]"<?= $lecture ? ' disabled' : '' ?>><option value="">—</option><?php foreach ($types as $id => $t): ?><option value="<?= (int) $id ?>"<?= attr((string) $id === (string) $v['type_compte_id'], 'selected') ?>><?= e($t) ?></option><?php endforeach; ?></select></td>
-                <td class="num"><label class="visuellement-cache" for="v<?= $k ?>m">Montant, ligne <?= $k + 1 ?></label><input id="v<?= $k ?>m" name="v[<?= $k ?>][montant]" value="<?= e((string) $v['montant']) ?>" inputmode="decimal" size="9" data-montant-ventilation<?= $lecture ? ' disabled' : '' ?>></td>
-                <td><label class="visuellement-cache" for="v<?= $k ?>o">Observation, ligne <?= $k + 1 ?></label><input id="v<?= $k ?>o" name="v[<?= $k ?>][observation]" value="<?= e((string) $v['observation']) ?>" maxlength="255"<?= $lecture ? ' disabled' : '' ?>></td>
+                <td><label class="etiquette-mobile" for="v<?= $k ?>s">Section<span class="visuellement-cache">, ligne <?= $k + 1 ?></span></label><select id="v<?= $k ?>s" name="v[<?= $k ?>][section_principale_id]"<?= $lecture ? ' disabled' : '' ?>><option value="">—</option><?php foreach ($sections as $id => $t): ?><option value="<?= (int) $id ?>"<?= attr((string) $id === (string) $v['section_principale_id'], 'selected') ?>><?= e($t) ?></option><?php endforeach; ?></select></td>
+                <td><label class="etiquette-mobile" for="v<?= $k ?>t">Catégorie<span class="visuellement-cache">, ligne <?= $k + 1 ?></span></label><select id="v<?= $k ?>t" name="v[<?= $k ?>][type_compte_id]"<?= $lecture ? ' disabled' : '' ?>><option value="">—</option><?php foreach ($types as $id => $t): ?><option value="<?= (int) $id ?>"<?= attr((string) $id === (string) $v['type_compte_id'], 'selected') ?>><?= e($t) ?></option><?php endforeach; ?></select></td>
+                <td class="num"><label class="etiquette-mobile" for="v<?= $k ?>m">Montant<span class="visuellement-cache">, ligne <?= $k + 1 ?></span></label><input id="v<?= $k ?>m" name="v[<?= $k ?>][montant]" value="<?= e((string) $v['montant']) ?>" inputmode="decimal" size="9" data-montant-ventilation<?= $lecture ? ' disabled' : '' ?>></td>
+                <td><label class="etiquette-mobile" for="v<?= $k ?>o">Observation<span class="visuellement-cache">, ligne <?= $k + 1 ?></span></label><input id="v<?= $k ?>o" name="v[<?= $k ?>][observation]" value="<?= e((string) $v['observation']) ?>" maxlength="255"<?= $lecture ? ' disabled' : '' ?>></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

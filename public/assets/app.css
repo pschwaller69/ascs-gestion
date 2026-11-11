@@ -414,3 +414,17 @@ tr.retire td:last-child { text-decoration: none; }
 @media (max-width: 640px) {
     .sous-onglets a { padding: .4rem .6rem; flex: 1 1 45%; }
 }
+
+/* Ventilation d'une ligne bancaire : sur ordinateur, un tableau ; sur téléphone, une carte par ligne avec ses étiquettes */
+.table-ventilation .etiquette-mobile { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) {
+    .table-ventilation thead { display: none; }
+    .table-ventilation, .table-ventilation tbody { display: block; }
+    .table-ventilation tbody { counter-reset: ligne-v; }
+    .table-ventilation tr { counter-increment: ligne-v; display: grid; grid-template-columns: 8rem 1fr; gap: .4rem .6rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+    .table-ventilation tr::before { content: "Ligne " counter(ligne-v); grid-column: 1 / -1; font-weight: 600; color: var(--muted, #5b6b69); font-size: .9rem; }
+    .table-ventilation td { display: block; padding: 0; }
+    .table-ventilation td:nth-child(1), .table-ventilation td:nth-child(2) { grid-column: 1 / -1; }
+    .table-ventilation td.num { text-align: left; }
+    .table-ventilation .etiquette-mobile { position: static; width: auto; height: auto; overflow: visible; clip: auto; display: block; font-size: .85rem; margin-bottom: .15rem; }
+}

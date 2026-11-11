@@ -197,6 +197,8 @@ $router->post('/import', [ImportController::class, 'envoyer']);
 $router->post('/import/lancer', [ImportController::class, 'lancer']);
 $router->post('/import/annuler', [ImportController::class, 'annuler']);
 $router->post('/import/bascule', [ImportController::class, 'basculer']);
+$router->post('/import/effacer', [ImportController::class, 'effacer']);
+$router->get('/import/sauvegarde', [ImportController::class, 'sauvegarde']);
 
 $router->get('/utilisateurs', [UtilisateurController::class, 'index']);
 $router->post('/utilisateurs', [UtilisateurController::class, 'creer']);

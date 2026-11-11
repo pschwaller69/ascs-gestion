@@ -19,7 +19,7 @@ PHP 8.3 natif + PDO, **aucune dépendance** (pas de Composer à installer sur o2
 3. Copier `.env.example` en `.env` à la racine du projet et le remplir (DB_NAME, DB_USER, DB_PASS, et un `SETUP_CODE` d'au moins 12 caractères).
 4. Ouvrir `https://votre-sous-domaine/installation` : la page teste la connexion (et dit quoi corriger), crée les tables, puis le premier compte.
 5. Se connecter, puis Paramétrage > Import WinDev pour envoyer les 10 fichiers XML.
-6. Les autres comptes : Paramétrage > Comptes du bureau. Le jour de l'abandon de WinDev : bouton « Basculer définitivement » sur la page d'import.
+6. Les autres comptes : Paramétrage > Comptes du bureau. Le jour de l'abandon de WinDev, sur la page d'import : « Effacer toutes les données » (retire tous les essais, sauvegarde faite avant), dernier import WinDev, puis « Basculer définitivement ».
 
 Les commandes `bin/*.php` restent disponibles pour le Terminal.
 

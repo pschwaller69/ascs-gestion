@@ -78,17 +78,13 @@ final class BanqueController
     public function ventiler(array $p): ?string
     {
         $id = (int) $p['id'];
-        if ($this->app->transition()) {
-            $this->app->flash('erreur', 'Mode transition : la ventilation se fait dans WinDev (elle serait écrasée au prochain import).');
-            $this->app->redirect('/banque/ligne/' . $id);
-        }
         $lignes = array_values(array_filter((array) ($_POST['v'] ?? []), 'is_array'));
         $err = $this->b->ventiler($id, $lignes, !empty($_POST['virement_interne']), (string) ($_POST['observation'] ?? ''));
         if ($err) {
             $l = $this->b->ligne($id);
             return $this->app->render('banque/ligne', ['l' => $l, 'proposition' => null, 'err' => $err, 'saisie' => $lignes] + $this->options(), 'Ligne bancaire', 'financier', 422);
         }
-        $this->app->flash('ok', 'Ventilation enregistrée.');
+        $this->app->flash('ok', 'Ventilation enregistrée.' . ($this->app->transition() ? ' Mode essai : le prochain import WinDev remettra la ventilation de WinDev.' : ''));
         $l = $this->b->ligne($id);
         $this->app->redirect('/banque', ['compte' => $l['numero_compte'], 'filtre' => $_POST['retour_filtre'] ?? null]);
         return null;
@@ -124,13 +120,9 @@ final class BanqueController
             $this->app->flash('erreur', 'Import expiré : choisissez de nouveau le fichier.');
             $this->app->redirect('/banque/import');
         }
-        if ($this->app->transition()) {
-            $this->app->flash('erreur', 'Mode transition : les relevés s\'importent dans WinDev (des lignes ajoutées ici seraient supprimées au prochain import WinDev). L\'aperçu sert à vérifier l\'import avant la bascule.');
-            $this->app->redirect('/banque/import');
-        }
         $r = $this->b->importer((string) $i['numero'], (array) $i['lignes']);
         $this->app->flash('ok', sprintf('%d ligne(s) ajoutée(s), dont %d ventilée(s) automatiquement et %d remise(s) de chèques rapprochée(s) ; %d déjà présente(s).',
-            $r['ajoutees'], $r['auto'], $r['remises'], $r['deja']) . ($r['sans_saison'] ? sprintf(' %d ligne(s) hors saison ignorée(s) : créez la saison.', $r['sans_saison']) : ''));
+            $r['ajoutees'], $r['auto'], $r['remises'], $r['deja']) . ($this->app->transition() ? ' Mode essai : ces lignes disparaîtront au prochain import WinDev.' : '') . ($r['sans_saison'] ? sprintf(' %d ligne(s) hors saison ignorée(s) : créez la saison.', $r['sans_saison']) : ''));
         $this->app->redirect('/banque', ['compte' => $i['numero'], 'filtre' => 'a_ventiler']);
     }
 

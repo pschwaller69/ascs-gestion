@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Ascs\Web\Controllers;
 
+use Ascs\Domain\Effacement;
 use Ascs\Import\Importer;
 use Ascs\Parametres;
 use Ascs\Web\App;
@@ -69,6 +70,7 @@ final class ImportController
         return $this->app->render('import/index', [
             'bascule' => $this->bascule(), 'dernier' => $dernier, 'tables' => Importer::FILES,
             'uploadMax' => ini_get('upload_max_filesize'), 'postMax' => ini_get('post_max_size'),
+            'aEffacer' => $this->bascule() ? [] : (new Effacement($this->app->pdo))->comptes(), 'sauvegardes' => Effacement::sauvegardes(),
         ], 'Import WinDev', 'parametrage');
     }
 
@@ -185,5 +187,43 @@ final class ImportController
             $this->app->flash('ok', 'Retour au mode transition : l\'import WinDev est de nouveau possible.');
         }
         $this->app->redirect('/import');
+    }
+
+    /** Efface toutes les données (mode transition seulement), après une sauvegarde complète. */
+    public function effacer(array $p): void
+    {
+        if ($this->bascule()) {
+            $this->app->flash('erreur', 'Bascule effectuée : l\'effacement n\'est plus possible (ce sont maintenant les vraies données).');
+            $this->app->redirect('/import');
+        }
+        if (trim((string) ($_POST['confirme'] ?? '')) !== 'EFFACER') {
+            $this->app->flash('erreur', 'Rien n\'a été effacé : tapez EFFACER en majuscules pour confirmer.');
+            $this->app->redirect('/import#effacer');
+        }
+        $e = new Effacement($this->app->pdo);
+        try {
+            $nom = $e->sauvegarder();
+            $n = $e->effacer();
+        } catch (\Throwable $ex) {
+            $this->app->flash('erreur', 'Effacement annulé, rien n\'a été modifié : ' . $ex->getMessage());
+            $this->app->redirect('/import#effacer');
+        }
+        $this->app->flash('ok', sprintf('%d ligne(s) effacée(s) dans %d table(s). Sauvegarde faite avant : %s. Importez maintenant les fichiers WinDev pour repartir de données propres.',
+            array_sum($n), count($n), $nom));
+        $this->app->redirect('/import');
+    }
+
+    /** Téléchargement d'une sauvegarde. */
+    public function sauvegarde(array $p): ?string
+    {
+        $nom = basename((string) ($_GET['nom'] ?? ''));
+        $f = Effacement::dossier() . '/' . $nom;
+        if (!preg_match('/^[a-z0-9-]+\.sql\.gz$/', $nom) || !is_file($f)) {
+            $this->app->flash('erreur', 'Sauvegarde introuvable.');
+            $this->app->redirect('/import');
+        }
+        header('Content-Type: application/gzip');
+        header('Content-Disposition: attachment; filename="' . $nom . '"');
+        return (string) file_get_contents($f);
     }
 }
