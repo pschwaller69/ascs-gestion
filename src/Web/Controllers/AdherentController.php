@@ -119,6 +119,14 @@ final class AdherentController
         return $d;
     }
 
+    /** Cours où la personne est venue sans être inscrite cette saison (notée par un animateur ou un contrôleur). */
+    private function venues(int $id): array
+    {
+        $st = $this->app->pdo->prepare("SELECT s.titre AS cours FROM participant p JOIN section s ON s.id = p.section_id WHERE p.adherent_id = ? AND p.saison_id = ? AND p.statut IN ('a_relancer','relance')");
+        $st->execute([$id, $this->app->saisonId()]);
+        return $st->fetchAll();
+    }
+
     /** @param array<string,mixed> $a fiche en base @param array<string,mixed> $d valeurs du formulaire */
     private function afficher(array $a, array $d, array $err, int $status = 200): string
     {
@@ -128,6 +136,7 @@ final class AdherentController
         return $this->app->render('adherents/fiche', [
             'a' => $a, 'd' => $d, 'err' => $err, 'onglet_fiche' => $onglet, 'proches' => $proches,
             'inscriptions' => (new Inscriptions($this->app->pdo))->deAdherent($id),
+            'venues' => $this->venues($id),
             'reglements' => (new Reglements($this->app->pdo))->deAdherent($id),
         ], trim(($a['nom'] ?? '') . ' ' . ($a['prenom'] ?? '')) ?: 'Fiche sans nom', 'accueil', $status);
     }

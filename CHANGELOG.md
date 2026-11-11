@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.9
+
+- Fiche adhérent : un encadré « parcours » en haut de la fiche, visible quel que soit l'onglet. Inscriptions de la saison (payé ou reste dû, présences notées, séances restantes de la carte), cours où la personne est venue sans être inscrite, et ses saisons précédentes (dépliables, une ligne par saison avec ses sections). L'onglet Inscriptions est regroupé par saison, avec le total, le reste dû et les présences de chaque inscription.
+
 ## 0.8.8
 
 - Activités arrêtées (Paramétrage > Section > Activités arrêtées) : arrêter une activité entière (section principale, par exemple Atelier Batterie / musique) ou une seule section. Elle n'est plus proposée : nouvelle inscription (refusée même si on force la saisie), inscription en ligne (fermée automatiquement), HelloAsso, changement de cours. L'historique reste : inscriptions et règlements passés (modifiables, la section reste dans leur choix), filtre de la liste des inscriptions, résultats, reporting, mailings aux anciens. La page signale les activités qui n'ont plus personne cette saison ; « Reprendre » les propose de nouveau.

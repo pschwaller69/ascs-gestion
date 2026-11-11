@@ -130,13 +130,26 @@ final class Inscriptions
     public function deAdherent(int $adherentId): array
     {
         $st = $this->pdo->prepare(
-            'SELECT i.id, i.date_inscription, i.montant, s.titre AS section, sa.titre AS saison, sa.date_debut,
+            'SELECT i.id, i.date_inscription, i.montant, i.section_id, i.saison_id, s.titre AS section, s.essai, sa.titre AS saison, sa.date_debut,
                     (SELECT COALESCE(SUM(r.montant),0) FROM reglement r WHERE r.inscription_id = i.id) AS regle
              FROM inscription i JOIN section s ON s.id = i.section_id JOIN saison sa ON sa.id = i.saison_id
              WHERE i.adherent_id = ? ORDER BY sa.date_debut DESC, sa.id DESC, s.titre'
         );
         $st->execute([$adherentId]);
-        return $st->fetchAll();
+        $l = $st->fetchAll();
+        // Présences notées (dans la section, ou dans le cours où s'utilise la carte) et état de la carte de séances
+        $cartes = new Cartes($this->pdo);
+        $reg = $cartes->reglages();
+        $etats = $cartes->etats(array_column($l, 'id'));
+        $pr = $this->pdo->prepare('SELECT COUNT(*) FROM presence WHERE adherent_id = ? AND saison_id = ? AND present = 1 AND section_id IN (?, ?)');
+        foreach ($l as &$i) {
+            $cours = $reg[(int) $i['section_id']]['cours_id'] ?? (int) $i['section_id'];
+            $pr->execute([$adherentId, $i['saison_id'], $i['section_id'], $cours]);
+            $i['presences'] = (int) $pr->fetchColumn();
+            $i['carte'] = $etats[(int) $i['id']] ?? null;
+        }
+        unset($i);
+        return $l;
     }
 
     /**
