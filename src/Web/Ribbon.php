@@ -35,8 +35,11 @@ final class Ribbon
                     ['Inscriptions', 'file', '/inscriptions', null],
                     ['Nouvelle inscription', 'file-plus', '/inscriptions/nouveau', null],
                     ['Non payées', 'alert', '/inscriptions?statut=impayees', null],
+                ],
+                'Cours' => [
                     ['Par section', 'layers', '/sections', null],
-                    ['Émargement', 'list', '/sections', null],
+                    ['Cartes de séances', 'wallet', '/sections/cartes', null],
+                    ['Venus sans inscription', 'user-plus', '/sections/a-relancer', null],
                 ],
                 'Règlement' => [
                     ['Règlements', 'wallet', '/reglements', null],
@@ -62,9 +65,6 @@ final class Ribbon
                 ],
                 'Contrôle' => [
                     ['Validation des mails', 'mail', '/mails/verification', null],
-                    ['Liste de présence', 'list', '/sections', null],
-                    ['Venus sans inscription', 'user-plus', '/sections/a-relancer', null],
-                    ['Cartes de séances', 'wallet', '/sections/cartes', null],
                 ],
                 'Contact' => [
                     ['Ajout Outlook', 'download', '/contacts/outlook', null],

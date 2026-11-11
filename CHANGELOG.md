@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.5
+
+- Ruban : nouveau groupe « Cours » dans l'onglet Accueil (Par section, Cartes de séances, Venus sans inscription), au lieu de l'onglet Mail. Liens vers les cartes et les non-inscrits en haut de la page Par section.
+
 ## 0.8.4
 
 - Correction : après le déploiement de la 0.8.2, les tables des cartes de séances n'avaient pas été créées (« Table section_carte doesn't exist » sur la page de l'animateur). Pendant le déploiement, le serveur pouvait encore utiliser l'ancien programme en cache tout en lisant le nouveau numéro de version : la mise à jour était marquée faite sans les nouvelles tables. La mise à jour se repère maintenant à l'empreinte du schéma connu par le programme, et une table manquante déclenche la mise à jour puis recharge la page.

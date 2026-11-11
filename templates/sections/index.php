@@ -6,6 +6,7 @@
     </form>
 </div>
 <?php if ($aRelancer): ?><p class="flash flash-info"><a href="<?= e(url('/sections/a-relancer')) ?>"><?= (int) $aRelancer ?> personne(s) venue(s) aux cours sans être inscrite(s)</a> : ajoutées par les animateurs, à relancer.</p><?php endif; ?>
+<p class="filtres"><a class="btn btn-petit" href="<?= e(url('/sections/cartes')) ?>"><?= icon('wallet') ?> Cartes de séances</a> <a class="btn btn-petit" href="<?= e(url('/sections/a-relancer')) ?>"><?= icon('user-plus') ?> Venus sans inscription</a></p>
 <p class="contexte">Saison choisie en haut de page. Chaque section a une liste de présence que l'animateur ouvre sur son téléphone, sans mot de passe, et une feuille d'émargement à imprimer.</p>
 <?php if ($animateurs): ?>
 <section id="animateurs" class="fiche">
