@@ -176,4 +176,53 @@ final class SectionController
         (new \Ascs\Domain\Participants($this->app->pdo))->changerStatut((int) $p['id'], (string) ($_POST['statut'] ?? ''));
         $this->app->redirect('/sections/a-relancer', isset($_POST['tous']) ? ['tous' => 1] : []);
     }
+
+    /* ---------- Cartes de séances ---------- */
+
+    public function cartes(array $p): string
+    {
+        $c = new \Ascs\Domain\Cartes($this->app->pdo);
+        $c->detecter();
+        $sections = $this->app->pdo->query('SELECT s.id, s.titre, s.montant, s.section_principale_id, s.essai FROM section s ORDER BY s.titre')->fetchAll();
+        $porteurs = $c->porteurs($this->app->saisonId());
+        $recharges = [];
+        foreach ($porteurs as $po) {
+            $recharges[(int) $po['inscription_id']] = $c->recharges((int) $po['inscription_id']);
+        }
+        return $this->app->render('sections/cartes', [
+            'reglages' => $c->reglages(), 'sections' => $sections, 'porteurs' => $porteurs, 'recharges' => $recharges,
+            'filtre' => (string) ($_GET['filtre'] ?? ''),
+        ], 'Cartes de séances');
+    }
+
+    public function cartesReglage(array $p): void
+    {
+        $c = new \Ascs\Domain\Cartes($this->app->pdo);
+        $sid = (int) ($_POST['section_id'] ?? 0);
+        if (($_POST['action'] ?? '') === 'retirer') {
+            $c->retirer($sid);
+            $this->app->flash('ok', 'La section n\'est plus gérée à la carte.');
+        } elseif ($sid > 0) {
+            $c->enregistrer($sid, (int) ($_POST['seances'] ?? 10), (int) ($_POST['cours_id'] ?? 0) ?: null);
+            $this->app->flash('ok', 'Réglage de la carte enregistré.');
+        }
+        $this->app->redirect('/sections/cartes#reglages');
+    }
+
+    public function cartesRecharger(array $p): void
+    {
+        $montant = trim((string) ($_POST['montant'] ?? ''));
+        $date = \Ascs\Domain\Input::date($_POST, 'date') ?? date('Y-m-d');
+        $err = (new \Ascs\Domain\Cartes($this->app->pdo))->recharger((int) $p['inscription'], (int) ($_POST['seances'] ?? 0),
+            $montant === '' ? null : (float) str_replace([' ', ','], ['', '.'], $montant), $date, (string) ($_POST['note'] ?? ''), (string) ($this->app->user['email'] ?? ''));
+        $this->app->flash($err ? 'erreur' : 'ok', $err ?? 'Carte ajoutée. Pensez à enregistrer son règlement sur l\'inscription.');
+        $this->app->redirect('/sections/cartes#i' . (int) $p['inscription']);
+    }
+
+    public function cartesSupprimerRecharge(array $p): void
+    {
+        (new \Ascs\Domain\Cartes($this->app->pdo))->supprimerRecharge((int) $p['id']);
+        $this->app->flash('ok', 'Carte supprimée.');
+        $this->app->redirect('/sections/cartes');
+    }
 }

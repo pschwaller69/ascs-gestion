@@ -285,6 +285,20 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['participant_id', 'date_seance']],
             ],
+            // Abonnement à la carte : nombre de séances par carte, cours où elle s'utilise (null = la section elle-même)
+            'section_carte' => [
+                'cols' => ['section_id' => 'int', 'seances' => 'int', 'cours_id' => 'int?'],
+                'pk' => ['section_id'],
+            ],
+            // Carte rachetée en cours de saison (la première carte est l'inscription elle-même)
+            'carte_recharge' => [
+                'cols' => [
+                    'id' => 'auto', 'inscription_id' => 'int', 'seances' => 'int', 'montant' => 'dec:8,2?', 'date_achat' => 'date',
+                    'note' => 'str:255?', 'par' => 'str:150?', 'cree_le' => 'datetime',
+                ],
+                'pk' => ['id'],
+                'index' => [['inscription_id']],
+            ],
             // Changement de cours fait par un animateur (ou le bureau) depuis la liste de présence
             'changement_cours' => [
                 'cols' => [

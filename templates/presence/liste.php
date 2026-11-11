@@ -1,4 +1,4 @@
-<?php /** @var array $s @var array $saison @var string $date @var string $base @var array $q @var array $onglets @var array $inscrits @var array $creneaux @var array $notee @var array $seances @var bool $enregistre @var ?string $changeFait @var bool $peutChanger @var array $libres @var array $noteeLibres @var ?string $ajoutFait */
+<?php /** @var array $s @var array $saison @var string $date @var string $base @var array $q @var array $onglets @var array $inscrits @var array $creneaux @var array $notee @var array $seances @var bool $enregistre @var ?string $changeFait @var bool $peutChanger @var array $libres @var array $noteeLibres @var ?string $ajoutFait @var array $cartes */
 $deja = $notee !== [];
 $numeros = [];
 foreach ($inscrits as $i) {
@@ -51,13 +51,15 @@ $texteSms = 'Bonjour, information pour le cours ' . $s['titre'] . ' : ';
         <li data-nom="<?= e(mb_strtolower($i['nom'] . ' ' . $i['prenom'])) ?>">
             <label for="p<?= $id ?>">
                 <input type="checkbox" id="p<?= $id ?>" name="present[]" value="<?= $id ?>"<?= attr($notee[$id] ?? false, 'checked') ?>>
+                <?php $ca = $cartes[(int) $i['inscription_id']] ?? null; ?>
                 <span class="p-nom"><?= e(mb_strtoupper((string) $i['nom'])) ?> <?= e($i['prenom']) ?><?php if ($age !== null && $age < 18): ?> <small class="aide"><?= e($age . ' ans') ?></small><?php endif; ?>
+                    <?php if ($ca): ?><br><span class="pastille <?= $ca['restantes'] <= 0 ? 'pastille-erreur' : ($ca['restantes'] <= 2 ? 'pastille-reste' : 'pastille-ok') ?>"><?= $ca['restantes'] > 0 ? 'Carte : ' . (int) $ca['restantes'] . ' séance' . ($ca['restantes'] > 1 ? 's' : '') . ' restante' . ($ca['restantes'] > 1 ? 's' : '') : ($ca['restantes'] === 0 ? 'Carte terminée' : 'Carte dépassée de ' . (int) -$ca['restantes']) ?></span><?php endif; ?>
                     <?php if ($tel !== ''): ?><br><small class="p-tel"><?= e($tel) ?></small><?php endif; ?></span>
             </label>
             <span class="p-actions">
                 <?php if ($mob): ?><a class="p-rond" href="sms:<?= e($mob) ?>" aria-label="SMS à <?= e($i['prenom'] . ' ' . $i['nom']) ?>"><?= icon('sms') ?></a><?php endif; ?>
                 <?php if ($num !== ''): ?><a class="p-rond" href="tel:<?= e($num) ?>" aria-label="Appeler <?= e($i['prenom'] . ' ' . $i['nom']) ?>"><?= icon('phone') ?></a><?php endif; ?>
-                <?php if ($peutChanger): ?><a class="p-changer" href="<?= e(url($base . '/changer/' . (int) $i['inscription_id'], $q)) ?>" aria-label="Changer <?= e($i['prenom'] . ' ' . $i['nom']) ?> de cours">Changer<br>de cours</a><?php endif; ?>
+                <?php if ($peutChanger && !$ca): ?><a class="p-changer" href="<?= e(url($base . '/changer/' . (int) $i['inscription_id'], $q)) ?>" aria-label="Changer <?= e($i['prenom'] . ' ' . $i['nom']) ?> de cours">Changer<br>de cours</a><?php endif; ?>
             </span>
         </li>
     <?php endforeach; ?>

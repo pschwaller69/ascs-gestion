@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.2
+
+- Cartes de séances (Par section > Cartes de séances) : une section « à la carte » donne un nombre de séances par carte (10 par défaut), utilisables dans un cours. Détection automatique au premier affichage (« À LA CARTE », « 10 COURS ») avec le cours du même jour : Pilates à la carte mercredi → Pilates mercredi, etc. ; Modelage ou toute autre section s'ajoute à la main.
+- Chez l'animateur : les porteurs de carte apparaissent dans la liste du cours normal avec les séances restantes (verte, orange à 2 ou moins, rouge si terminée ou dépassée) ; l'onglet de la section à la carte disparaît. Chaque présence cochée consomme une séance.
+- Bureau : séances utilisées / achetées / restantes, dernière venue, filtres « terminées » et « 2 ou moins », SMS groupé aux cartes terminées, « Ajouter une carte » quand l'adhérent en rachète une (séances, montant, date, note).
+- Toute la batterie de tests repasse (19 suites).
+
 ## 0.8.1
 
 - L'animateur peut ajouter une personne qui vient au cours sans être inscrite : un ancien adhérent de l'activité (recherche par nom, seulement parmi les anciens de cette activité) ou une nouvelle personne (nom, prénom, téléphone). Elle est notée présente, apparaît ensuite dans la liste « Pas encore inscrits » avec SMS et appel, et ses présences sont suivies.

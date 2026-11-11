@@ -64,6 +64,7 @@ final class Ribbon
                     ['Validation des mails', 'mail', '/mails/verification', null],
                     ['Liste de présence', 'list', '/sections', null],
                     ['Venus sans inscription', 'user-plus', '/sections/a-relancer', null],
+                    ['Cartes de séances', 'wallet', '/sections/cartes', null],
                 ],
                 'Contact' => [
                     ['Ajout Outlook', 'download', '/contacts/outlook', null],

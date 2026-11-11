@@ -93,6 +93,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
 .pastille { display: inline-block; padding: .05rem .5rem; border-radius: 999px; font-size: .8rem; border: 1px solid; }
 .pastille-ok { background: var(--green-l); color: var(--green); border-color: #9bd1ae; }
 .pastille-reste { background: var(--amber-l); color: var(--amber); border-color: #e6c98a; }
+.pastille-erreur { background: var(--red-l); color: #7d1a14; border-color: #e4a5a1; }
 .pastille-excedent { background: var(--red-l); color: var(--red); border-color: #e4a5a1; }
 
 @media (max-width: 640px) {
@@ -489,3 +490,20 @@ tr.ligne-annulee td:last-child { text-decoration: none; }
     .liste-animateurs li { grid-template-columns: minmax(0, 1fr); }
     .an-actions { justify-content: flex-start; }
 }
+
+/* Cartes de séances */
+.ligne-reglage { display: flex; flex-wrap: wrap; align-items: end; gap: .5rem 1rem; padding: .6rem 0; border-top: 1px solid var(--line); }
+.ligne-reglage strong { flex: 1 1 100%; }
+.ligne-reglage label, .form-recharge label { display: flex; flex-direction: column; font-size: .85rem; gap: .15rem; }
+.ligne-reglage input[type="number"], .form-recharge input[type="number"] { width: 5rem; }
+.form-recharge { display: flex; flex-wrap: wrap; align-items: end; gap: .4rem .7rem; margin-top: .4rem; }
+.form-recharge input[type="text"] { width: 8rem; }
+details.recharge summary { cursor: pointer; color: var(--teal); font-size: .85rem; margin-top: .3rem; }
+form.suppr-carte { display: inline; }
+.lien-bouton { background: none; border: 0; padding: 0; color: var(--teal); text-decoration: underline; cursor: pointer; font-size: .8rem; }
+
+.liste-cartes { list-style: none; margin: 0 0 1rem; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.liste-cartes li { padding: .7rem .9rem; border-top: 1px solid var(--line); }
+.liste-cartes li:first-child { border-top: 0; }
+.ca-tete { display: flex; justify-content: space-between; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.liste-cartes p { margin: .25rem 0; }

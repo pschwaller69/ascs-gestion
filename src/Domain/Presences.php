@@ -54,12 +54,22 @@ final class Presences
     /** @return list<array<string,mixed>> inscrits de la section pour la saison, avec contact et état du paiement */
     public function inscrits(int $sectionId, int $saisonId): array
     {
-        $st = $this->pdo->prepare('SELECT i.id AS inscription_id, i.montant, a.id, a.nom, a.prenom, a.date_naissance, a.genre, a.telephone1, a.telephone2, a.mail,
+        // Avec les porteurs d'une carte de séances qui s'utilise dans ce cours (section « à la carte » rattachée)
+        $ids = array_values(array_unique(array_merge([$sectionId], (new Cartes($this->pdo))->sectionsDuCours($sectionId))));
+        $st = $this->pdo->prepare('SELECT i.id AS inscription_id, i.montant, i.section_id AS section_inscription, a.id, a.nom, a.prenom, a.date_naissance, a.genre, a.telephone1, a.telephone2, a.mail,
                 a.nom_parent, a.prenom_parent,
                 (SELECT COALESCE(SUM(r.montant),0) FROM reglement r WHERE r.inscription_id = i.id) AS regle
-            FROM inscription i JOIN adherent a ON a.id = i.adherent_id WHERE i.section_id = ? AND i.saison_id = ? ORDER BY a.nom, a.prenom');
-        $st->execute([$sectionId, $saisonId]);
-        return $st->fetchAll();
+            FROM inscription i JOIN adherent a ON a.id = i.adherent_id WHERE i.section_id IN (' . implode(',', array_map('intval', $ids)) . ') AND i.saison_id = ? ORDER BY a.nom, a.prenom, i.id');
+        $st->execute([$saisonId]);
+        $vus = [];
+        $out = [];
+        foreach ($st->fetchAll() as $r) {
+            if (!isset($vus[(int) $r['id']])) {
+                $vus[(int) $r['id']] = true;
+                $out[] = $r;
+            }
+        }
+        return $out;
     }
 
     /** @return list<string> libellés des créneaux (« Mardi 18:30 ») */

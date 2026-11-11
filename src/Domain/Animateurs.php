@@ -81,6 +81,18 @@ final class Animateurs
                 (SELECT COUNT(*) FROM creneau c WHERE c.section_id = s.id) AS nb_creneaux
             FROM section s WHERE s.mail_animateur1 IS NOT NULL AND s.mail_animateur1 <> '' ORDER BY s.essai, s.titre");
         $st->execute([$saisonId]);
-        return array_values(array_filter($st->fetchAll(), static fn ($s) => (int) $s['inscrits'] > 0 || ((int) $s['nb_creneaux'] > 0 && !$s['essai'])));
+        $c = new Cartes($this->pdo);
+        $cachees = $c->rattachees();
+        $out = [];
+        foreach ($st->fetchAll() as $s) {
+            if (in_array((int) $s['id'], $cachees, true)) {
+                continue;
+            }
+            $s['inscrits'] = count((new Presences($this->pdo))->inscrits((int) $s['id'], $saisonId));
+            if ((int) $s['inscrits'] > 0 || ((int) $s['nb_creneaux'] > 0 && !$s['essai'])) {
+                $out[] = $s;
+            }
+        }
+        return $out;
     }
 }

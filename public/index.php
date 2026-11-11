@@ -164,6 +164,10 @@ $router->post('/animateur/{jeton}/ajouter', [PresenceController::class, 'animate
 $router->get('/presence/{jeton}/ajouter', [PresenceController::class, 'ajouter'], true);
 $router->post('/presence/{jeton}/ajouter', [PresenceController::class, 'enregistrerAjout'], true);
 $router->get('/sections/a-relancer', [SectionController::class, 'aRelancer']);
+$router->get('/sections/cartes', [SectionController::class, 'cartes']);
+$router->post('/sections/cartes/reglage', [SectionController::class, 'cartesReglage']);
+$router->post('/sections/cartes/{inscription}/recharger', [SectionController::class, 'cartesRecharger']);
+$router->post('/sections/cartes/recharge/{id}/supprimer', [SectionController::class, 'cartesSupprimerRecharge']);
 $router->post('/sections/a-relancer/{id}', [SectionController::class, 'statutParticipant']);
 $router->post('/animateur/{jeton}', [PresenceController::class, 'animateurEnregistrer'], true);
 $router->get('/animateur/{jeton}/changer/{inscription}', [PresenceController::class, 'animateurChanger'], true);
