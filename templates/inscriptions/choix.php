@@ -7,13 +7,13 @@
 </form>
 <?php if ($q !== '' && !$lignes): ?><p class="vide">Aucun adhérent trouvé pour « <?= e($q) ?> ».</p><?php elseif ($lignes): ?>
 <div class="table-cadre"><table>
-    <thead><tr><th>Adhérent</th><th>Naissance</th><th>Mail</th><th></th></tr></thead>
+    <thead><tr><th>Adhérent</th><th>Naissance</th><th>Dernières inscriptions</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($lignes as $l): ?>
         <tr>
             <td><?= e(trim(($l['nom'] ?? '') . ' ' . ($l['prenom'] ?? ''))) ?></td>
             <td><?= e(dfr($l['date_naissance'])) ?></td>
-            <td><?= e($l['mail']) ?></td>
+            <td><small><?= e($l['derniers'] ?: 'jamais inscrit') ?></small></td>
             <td><a class="btn btn-petit" href="<?= e(url('/inscriptions/nouveau', ['adherent' => $l['id']])) ?>">Inscrire</a></td>
         </tr>
     <?php endforeach; ?>

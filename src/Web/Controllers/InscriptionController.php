@@ -45,13 +45,22 @@ final class InscriptionController
         if (!$a) {
             $q = trim((string) ($_GET['q'] ?? ''));
             $r = $q === '' ? ['lignes' => []] : $this->adh->lister($q, false, $this->app->saisonId(), 1);
+            // Pour chaque résultat : ses cours de la dernière saison où il était inscrit
+            $st = $this->app->pdo->prepare('SELECT sa.titre AS saison, s.titre FROM inscription i JOIN section s ON s.id = i.section_id JOIN saison sa ON sa.id = i.saison_id
+                WHERE i.adherent_id = ? AND i.saison_id = (SELECT j.saison_id FROM inscription j JOIN saison x ON x.id = j.saison_id WHERE j.adherent_id = ? ORDER BY x.date_debut DESC LIMIT 1) ORDER BY s.titre');
+            foreach ($r['lignes'] as &$l) {
+                $st->execute([$l['id'], $l['id']]);
+                $c = $st->fetchAll();
+                $l['derniers'] = $c ? $c[0]['saison'] . ' : ' . implode(', ', array_column($c, 'titre')) : '';
+            }
+            unset($l);
             return $this->app->render('inscriptions/choix', ['q' => $q, 'lignes' => $r['lignes']], 'Nouvelle inscription');
         }
         $d = [
             'section_id' => (string) ($_GET['section'] ?? ''), 'saison_id' => (string) $this->app->saisonId(),
             'date_inscription' => date('Y-m-d'), 'fait_a' => 'Rillieux-la-Pape', 'montant' => '', 'remarques' => '',
         ];
-        return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $d, 'err' => [], 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)], 'Nouvelle inscription');
+        return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $d, 'err' => [], 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)] + $this->parcours((int) $a['id']), 'Nouvelle inscription');
     }
 
     public function creer(array $p): string
@@ -63,7 +72,7 @@ final class InscriptionController
         }
         [$d, $err] = $this->insc->nettoyer($_POST, $aid);
         if ($err) {
-            return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $this->brut($_POST), 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)], 'Nouvelle inscription', 'accueil', 422);
+            return $this->app->render('inscriptions/nouvelle', ['a' => $a, 'd' => $this->brut($_POST), 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(), 'rillieux' => self::rillieux($a)] + $this->parcours((int) $a['id']), 'Nouvelle inscription', 'accueil', 422);
         }
         $id = $this->insc->creer($d);
         $this->app->flash('ok', 'Inscription créée.');
@@ -139,6 +148,12 @@ final class InscriptionController
     private static function rillieux(array $a): bool
     {
         return \Ascs\Domain\Tarifs::habitantRillieux($a['ville'] ?? null, $a['code_postal'] ?? null);
+    }
+
+    /** Inscriptions de l'adhérent (saison et saisons passées), pour reprendre un cours sans chercher le jour. */
+    private function parcours(int $adherentId): array
+    {
+        return ['inscriptions' => $this->insc->deAdherent($adherentId), 'venues' => (new \Ascs\Domain\Participants($this->app->pdo))->venuesDe($adherentId, $this->app->saisonId())];
     }
 
     private function afficher(array $i, array $d, array $err, int $status = 200): string

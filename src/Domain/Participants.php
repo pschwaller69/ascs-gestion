@@ -110,6 +110,14 @@ final class Participants
         return (int) $this->pdo->lastInsertId();
     }
 
+    /** Cours où l'adhérent est venu sans être inscrit cette saison (noté par un animateur ou un contrôleur). @return list<array{cours:string}> */
+    public function venuesDe(int $adherentId, int $saisonId): array
+    {
+        $st = $this->pdo->prepare("SELECT s.titre AS cours FROM participant p JOIN section s ON s.id = p.section_id WHERE p.adherent_id = ? AND p.saison_id = ? AND p.statut IN ('a_relancer','relance')");
+        $st->execute([$adherentId, $saisonId]);
+        return $st->fetchAll();
+    }
+
     /** @return array<int,bool> présence des non-inscrits du cours à une séance */
     public function seance(int $sectionId, int $saisonId, string $date): array
     {

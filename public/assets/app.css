@@ -527,3 +527,7 @@ tr.ligne-arretee td { color: var(--muted); }
 .parcours-passe .puce-insc { background: none; border-color: var(--line); }
 .parcours-passe .puce-insc.puce-due { border-color: #e6c98a; }
 .titre-saison { font-size: 1.05rem; margin: 1rem 0 .4rem; }
+
+.puce-insc.puce-reprendre { background: var(--surface); border-color: var(--teal); }
+.puce-insc.puce-reprendre.choisi { background: var(--teal); color: #fff; }
+.puce-insc.puce-reprendre.choisi small { color: #e3f2f1; }

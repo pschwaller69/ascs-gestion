@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.10
+
+- Nouvelle inscription : le parcours de l'adhérent s'affiche au-dessus du formulaire, avec une ligne « Reprendre » qui propose les cours des saisons passées (sans les cours d'essai, les activités arrêtées et ceux déjà pris cette saison). Un clic choisit la section et met le tarif à jour : plus besoin de chercher le jour (Pilates samedi ou mercredi…).
+- Recherche de l'adhérent à inscrire : chaque résultat indique ses cours de la dernière saison où il était inscrit.
+
 ## 0.8.9
 
 - Fiche adhérent : un encadré « parcours » en haut de la fiche, visible quel que soit l'onglet. Inscriptions de la saison (payé ou reste dû, présences notées, séances restantes de la carte), cours où la personne est venue sans être inscrite, et ses saisons précédentes (dépliables, une ligne par saison avec ses sections). L'onglet Inscriptions est regroupé par saison, avec le total, le reste dû et les présences de chaque inscription.

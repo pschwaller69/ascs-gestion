@@ -438,3 +438,21 @@
         });
     });
 }());
+
+// Nouvelle inscription : « Reprendre » un cours d'une saison passée choisit la section sans recharger la page
+(function () {
+    'use strict';
+    var sel = document.getElementById('f_section_id');
+    if (!sel) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-choisir-section]'), function (a) {
+        a.addEventListener('click', function (ev) {
+            var v = a.getAttribute('data-choisir-section');
+            if (!sel.querySelector('option[value="' + v + '"]')) { return; }
+            ev.preventDefault();
+            sel.value = v;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            Array.prototype.forEach.call(document.querySelectorAll('[data-choisir-section]'), function (b) { b.classList.toggle('choisi', b === a); });
+            sel.focus();
+        });
+    });
+}());
