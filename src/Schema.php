@@ -15,6 +15,12 @@ namespace Ascs;
 final class Schema
 {
     /** @return array<string,array<string,mixed>> */
+    /** Empreinte du schéma connu par le programme : change dès qu'une table ou une colonne est ajoutée. */
+    public static function empreinte(): string
+    {
+        return substr(md5((string) json_encode(self::tables())), 0, 16);
+    }
+
     public static function tables(): array
     {
         $dates = ['date_creation' => 'datetime?', 'date_modification' => 'datetime?'];

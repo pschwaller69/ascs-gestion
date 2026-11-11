@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.4
+
+- Correction : après le déploiement de la 0.8.2, les tables des cartes de séances n'avaient pas été créées (« Table section_carte doesn't exist » sur la page de l'animateur). Pendant le déploiement, le serveur pouvait encore utiliser l'ancien programme en cache tout en lisant le nouveau numéro de version : la mise à jour était marquée faite sans les nouvelles tables. La mise à jour se repère maintenant à l'empreinte du schéma connu par le programme, et une table manquante déclenche la mise à jour puis recharge la page.
+
 ## 0.8.3
 
 - Cartes de séances : Modelage est réglé d'office à la carte (10 séances, sa propre liste de présence), même si la détection des cartes a déjà eu lieu. Pilates et Arts martiaux artistiques et acrobatiques gardent les deux formules : à l'année et à la carte (porteurs de carte affichés dans le cours à l'année du même jour).

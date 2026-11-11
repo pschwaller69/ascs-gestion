@@ -65,9 +65,13 @@ if ($app->user === null) {
 }
 
 // Nouvelle version déposée : création des tables qui manquent (sans passer par le Terminal ni la page d'installation).
+// Repère : l'empreinte du schéma tel que le programme le connaît (et non le numéro de version), pour qu'un fichier
+// encore en cache côté serveur pendant le déploiement ne marque pas la mise à jour comme faite avec l'ancien schéma.
 try {
-    if (Ascs\Parametres::get($app->pdo, 'schema_version') !== Ascs\Web\Ribbon::version()) {
+    $empreinte = Ascs\Schema::empreinte();
+    if (Ascs\Parametres::get($app->pdo, 'schema_empreinte') !== $empreinte) {
         Ascs\Migrator::run($app->pdo);
+        Ascs\Parametres::set($app->pdo, 'schema_empreinte', $empreinte);
         Ascs\Parametres::set($app->pdo, 'schema_version', Ascs\Web\Ribbon::version());
     }
 } catch (Throwable $e) {
@@ -238,6 +242,17 @@ $path = rtrim($path, '/') ?: '/';
 try {
     $router->dispatch($app, $_SERVER['REQUEST_METHOD'] ?? 'GET', $path);
 } catch (Throwable $e) {
+    if ($e instanceof PDOException && str_contains($e->getMessage(), '42S02') && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !isset($_GET['_maj'])) {
+        try {
+            Ascs\Migrator::run($app->pdo);
+            Ascs\Parametres::set($app->pdo, 'schema_empreinte', Ascs\Schema::empreinte());
+            $u = $_SERVER['REQUEST_URI'] ?? '/';
+            header('Location: ' . $u . (str_contains($u, '?') ? '&' : '?') . '_maj=1', true, 303);
+            exit;
+        } catch (Throwable) {
+            // on affiche l'erreur d'origine
+        }
+    }
     $f = \Ascs\Web\Erreurs::consigner($e);
     http_response_code(500);
     // Détail technique pour le bureau (connecté) ; une page publique n'affiche que l'explication et la référence.
