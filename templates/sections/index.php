@@ -5,28 +5,28 @@
         <button type="submit" class="btn"><?= icon('mail') ?> Envoyer leur lien aux animateurs</button>
     </form>
 </div>
+<?php if ($aRelancer): ?><p class="flash flash-info"><a href="<?= e(url('/sections/a-relancer')) ?>"><?= (int) $aRelancer ?> personne(s) venue(s) aux cours sans être inscrite(s)</a> : ajoutées par les animateurs, à relancer.</p><?php endif; ?>
 <p class="contexte">Saison choisie en haut de page. Chaque section a une liste de présence que l'animateur ouvre sur son téléphone, sans mot de passe, et une feuille d'émargement à imprimer.</p>
 <?php if ($animateurs): ?>
 <section id="animateurs" class="fiche">
     <h2>Liens des animateurs</h2>
     <p class="aide">Un lien par animateur (d'après le mail d'animateur des sections), avec tous ses cours en onglets, sans mot de passe. « Voir » ouvre exactement sa page. Le lien ne change pas aux imports WinDev.</p>
-    <div class="table-cadre"><table>
-        <thead><tr><th>Animateur</th><th>Cours</th><th><span class="visuellement-cache">Actions</span></th></tr></thead>
-        <tbody>
-        <?php foreach ($animateurs as $a): $lienA = Ascs\Web\App::urlAbsolue('/animateur/' . $a['jeton']); ?>
-            <tr>
-                <td><?= e($a['mail']) ?></td>
-                <td><?= e(implode(', ', array_map(static fn ($x) => $x['titre'], $a['sections']))) ?></td>
-                <td class="actions-ligne">
-                    <a class="btn btn-petit" href="<?= e($lienA) ?>" target="_blank" rel="noopener"><?= icon('eye') ?> Voir</a>
-                    <button type="button" class="btn btn-petit" data-copier="<?= e($lienA) ?>">Copier le lien</button>
-                    <form method="post" action="<?= e(url('/sections/animateur/envoyer')) ?>"><?= csrf_field() ?><input type="hidden" name="mail" value="<?= e($a['mail']) ?>"><button class="btn btn-petit" type="submit"><?= icon('mail') ?> Envoyer</button></form>
-                    <form method="post" action="<?= e(url('/sections/animateur/nouveau-lien')) ?>" data-confirmer="Créer un nouveau lien pour <?= e($a['mail']) ?> ? L'ancien ne fonctionnera plus."><?= csrf_field() ?><input type="hidden" name="mail" value="<?= e($a['mail']) ?>"><button class="btn btn-petit" type="submit">Changer le lien</button></form>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table></div>
+    <ul class="liste-animateurs">
+    <?php foreach ($animateurs as $a): $lienA = Ascs\Web\App::urlAbsolue('/animateur/' . $a['jeton']); ?>
+        <li>
+            <div class="an-tete">
+                <strong class="an-mail"><?= e($a['mail']) ?></strong>
+                <span class="aide"><?= e(implode(' · ', array_map(static fn ($x) => $x['titre'], $a['sections']))) ?></span>
+            </div>
+            <div class="an-actions">
+                <a class="btn btn-petit" href="<?= e($lienA) ?>" target="_blank" rel="noopener"><?= icon('eye') ?> Voir</a>
+                <button type="button" class="btn btn-petit" data-copier="<?= e($lienA) ?>">Copier le lien</button>
+                <form method="post" action="<?= e(url('/sections/animateur/envoyer')) ?>"><?= csrf_field() ?><input type="hidden" name="mail" value="<?= e($a['mail']) ?>"><button class="btn btn-petit" type="submit"><?= icon('mail') ?> Envoyer</button></form>
+                <form method="post" action="<?= e(url('/sections/animateur/nouveau-lien')) ?>" data-confirmer="Créer un nouveau lien pour <?= e($a['mail']) ?> ? L'ancien ne fonctionnera plus."><?= csrf_field() ?><input type="hidden" name="mail" value="<?= e($a['mail']) ?>"><button class="btn btn-petit" type="submit">Changer le lien</button></form>
+            </div>
+        </li>
+    <?php endforeach; ?>
+    </ul>
 </section>
 <?php endif; ?>
 <?php $aVoir = array_filter($changements, static fn ($c) => !$c['vu'] && !$c['annule']); ?>

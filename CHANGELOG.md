@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.1
+
+- L'animateur peut ajouter une personne qui vient au cours sans être inscrite : un ancien adhérent de l'activité (recherche par nom, seulement parmi les anciens de cette activité) ou une nouvelle personne (nom, prénom, téléphone). Elle est notée présente, apparaît ensuite dans la liste « Pas encore inscrits » avec SMS et appel, et ses présences sont suivies.
+- Bureau : Par section > Venus sans inscription. Coordonnées, cours, nombre de venues et dates, qui l'a ajoutée ; « Relancé » (daté), « Inscrit », « Retirer » ; SMS groupé aux personnes à relancer ; « créer la fiche » préremplie pour une nouvelle personne. Une personne passe en « Inscrit » toute seule dès qu'une inscription existe pour sa fiche (ou une fiche à son nom).
+- Correction d'affichage : la liste des liens des animateurs débordait sur téléphone (mail coupé). Elle s'affiche maintenant en une ligne par animateur, boutons côte à côte. Plus de défilement horizontal parasite de la page Par section.
+
 ## 0.8.0
 
 - Page de l'animateur : un lien unique par animateur (repéré par le mail d'animateur des sections), sans mot de passe, avec tous ses cours en onglets ; le cours du jour s'ouvre en premier. Recherche par nom, bouton SMS et bouton d'appel pour chaque adhérent, « SMS à tout le cours » pour prévenir d'un retard ou d'une annulation (messagerie du téléphone, numéros préremplis).

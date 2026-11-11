@@ -6,6 +6,7 @@ namespace Ascs\Web\Controllers;
 use Ascs\Domain\Animateurs;
 use Ascs\Domain\Changements;
 use Ascs\Domain\Input;
+use Ascs\Domain\Participants;
 use Ascs\Domain\Presences;
 use Ascs\Web\App;
 
@@ -67,6 +68,26 @@ final class PresenceController
         $this->sauverChangement($this->resoudre($p, 'animateur'), (int) $p['inscription']);
     }
 
+    public function ajouter(array $p): string
+    {
+        return $this->pageAjout($this->resoudre($p, 'section'));
+    }
+
+    public function enregistrerAjout(array $p): void
+    {
+        $this->sauverAjout($this->resoudre($p, 'section'));
+    }
+
+    public function animateurAjouter(array $p): string
+    {
+        return $this->pageAjout($this->resoudre($p, 'animateur'));
+    }
+
+    public function animateurEnregistrerAjout(array $p): void
+    {
+        $this->sauverAjout($this->resoudre($p, 'animateur'));
+    }
+
     /* ---------- Commun ---------- */
 
     /**
@@ -126,8 +147,10 @@ final class PresenceController
         }
         $sid = (int) $s['id'];
         $said = (int) $saison['id'];
+        $pa = new Participants($this->app->pdo);
         return $this->app->renderPublic('presence/liste', $c + [
             'date' => $date, 'inscrits' => $this->pr->inscrits($sid, $said), 'creneaux' => $this->pr->creneaux($sid),
+            'libres' => $pa->duCours($sid, $said), 'noteeLibres' => $pa->seance($sid, $said, $date), 'ajoutFait' => self::prendre('ajout_fait'),
             'changeFait' => self::prendre('changement_fait'), 'peutChanger' => (bool) (new Changements($this->app->pdo))->cibles($sid, $said),
             'notee' => $this->pr->seance($sid, $said, $date), 'seances' => array_slice($this->pr->seances($sid, $said), 0, 12),
             'enregistre' => isset($_GET['ok']),
@@ -146,6 +169,7 @@ final class PresenceController
             $date = date('Y-m-d');
         }
         $this->pr->enregistrer((int) $c['s']['id'], (int) $saison['id'], $date, (array) ($_POST['present'] ?? []), 'animateur');
+        (new Participants($this->app->pdo))->enregistrer((int) $c['s']['id'], (int) $saison['id'], $date, (array) ($_POST['present_libre'] ?? []));
         $this->app->redirect($c['base'], $c['q'] + ['date' => $date, 'ok' => 1]);
     }
 
@@ -187,6 +211,53 @@ final class PresenceController
         $st->execute([$vers]);
         $_SESSION['changement_fait'] = mb_substr((string) ($_POST['nom'] ?? 'L\'adhérent'), 0, 120) . ' est passé(e) dans le cours ' . $st->fetchColumn() . '. Le bureau en est informé.';
         $this->app->redirect($c['base'], $c['q']);
+    }
+
+    /** Ajouter une personne non inscrite : recherche d'un ancien adhérent ou saisie libre. */
+    private function pageAjout(?array $c): string
+    {
+        self::entetes();
+        if (!$c || !$c['s']) {
+            return $this->app->renderPublic('presence/inconnu', [], 'Lien inconnu', 404);
+        }
+        $q = trim((string) ($_GET['q'] ?? ''));
+        $date = $this->dateSeance($c, $_GET);
+        return $this->app->renderPublic('presence/ajouter', $c + [
+            'recherche' => $q, 'date' => $date, 'erreur' => self::prendre('erreur_ajout'),
+            'anciens' => (new Participants($this->app->pdo))->anciens((int) $c['s']['id'], (int) $c['saison']['id'], $q),
+        ], 'Ajouter une personne');
+    }
+
+    private function sauverAjout(?array $c): void
+    {
+        if (!$c || !$c['s']) {
+            http_response_code(404);
+            exit;
+        }
+        $pa = new Participants($this->app->pdo);
+        $sid = (int) $c['s']['id'];
+        $said = (int) $c['saison']['id'];
+        $date = $this->dateSeance($c, $_POST);
+        $r = ($_POST['type'] ?? '') === 'ancien'
+            ? $pa->ajouterAncien($sid, $said, (int) ($_POST['adherent'] ?? 0), $c['par'])
+            : $pa->ajouterNouveau($sid, $said, (string) ($_POST['nom'] ?? ''), (string) ($_POST['prenom'] ?? ''), (string) ($_POST['telephone'] ?? ''), $c['par']);
+        if (is_string($r)) {
+            $_SESSION['erreur_ajout'] = $r;
+            $this->app->redirect($c['base'] . '/ajouter', $c['q'] + ['date' => $date]);
+        }
+        $pa->marquerPresent($r, $date);
+        $_SESSION['ajout_fait'] = 'Ajouté(e) et noté(e) présent(e) le ' . dfr($date) . '. Le bureau le verra dans les personnes à relancer pour l\'inscription.';
+        $this->app->redirect($c['base'], $c['q'] + ['date' => $date]);
+    }
+
+    private function dateSeance(array $c, array $src): string
+    {
+        $saison = $c['saison'];
+        $date = Input::date($src, 'date') ?? date('Y-m-d');
+        if ($date < (string) $saison['date_debut'] || ($saison['date_fin'] && $date > (string) $saison['date_fin']) || $date > date('Y-m-d', strtotime('+1 day'))) {
+            $date = date('Y-m-d');
+        }
+        return $date;
     }
 
     private static function prendre(string $k): ?string

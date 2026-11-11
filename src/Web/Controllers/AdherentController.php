@@ -34,7 +34,7 @@ final class AdherentController
     public function nouveau(array $p): string
     {
         $d = Adherents::vide();
-        foreach (['nom', 'prenom'] as $k) {
+        foreach (['nom', 'prenom', 'telephone1'] as $k) {
             if (isset($_GET[$k]) && is_string($_GET[$k])) {
                 $d[$k] = mb_substr($_GET[$k], 0, 100);
             }

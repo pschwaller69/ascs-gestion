@@ -267,7 +267,7 @@
     var form = document.getElementById('form-presence');
     var compte = document.getElementById('compte-presents');
     if (!form || !compte) { return; }
-    var cases = form.querySelectorAll('input[name="present[]"]');
+    var cases = form.querySelectorAll('input[name="present[]"], input[name="present_libre[]"]');
     var maj = function () {
         var n = 0;
         Array.prototype.forEach.call(cases, function (c) { if (c.checked) { n++; } });

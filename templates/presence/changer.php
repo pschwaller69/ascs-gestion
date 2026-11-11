@@ -26,7 +26,7 @@ $nom = $ins['prenom'] . ' ' . mb_strtoupper((string) $ins['nom']);
         <?php foreach (Ascs\Domain\Changements::MOTIFS as $k => $lib): ?>
             <label class="choix-case" for="motif-<?= e($k) ?>"><input type="radio" id="motif-<?= e($k) ?>" name="motif" value="<?= e($k) ?>" required> <?= e($lib) ?></label>
         <?php endforeach; ?>
-        <div class="champ"><label for="precision">Précision pour le bureau (facultatif)</label><input id="precision" name="precision" maxlength="255"></div>
+        <div class="champ"><label for="precision">Précision pour le bureau (facultatif)</label><input type="text" id="precision" name="precision" maxlength="255"></div>
     </fieldset>
     <p class="aide">Le changement est immédiat et le bureau en est informé. Le tarif payé ne change pas.</p>
     <button type="submit" class="btn btn-principal">Changer de cours</button>

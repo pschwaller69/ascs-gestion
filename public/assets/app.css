@@ -84,7 +84,7 @@ input[readonly] { background: var(--bg); }
 .btn-danger:hover { background: var(--red-l); color: var(--red); }
 
 /* Tableaux */
-.table-cadre { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.table-cadre { position: relative; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: .45rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { background: var(--teal-l); font-weight: 600; font-size: .85rem; white-space: nowrap; }
@@ -469,4 +469,23 @@ tr.ligne-annulee td:last-child { text-decoration: none; }
     .table-emargement .e-tel { width: auto; white-space: nowrap; }
     .table-emargement th.e-date { min-width: 2.6rem; white-space: nowrap; font-size: .75rem; padding: .15rem .25rem; }
     .table-emargement td { min-width: 2.6rem; }
+}
+
+/* Non-inscrits dans la liste de présence, recherche d'un ancien adhérent */
+.titre-libres { font-size: 1.05rem; margin: 1rem 0 .4rem; }
+.presence-libres { border-style: dashed; }
+.presence-liste li .p-ancien { flex: 1; padding: .6rem .9rem; }
+.presence-liste li form { display: flex; align-items: center; padding-right: .7rem; }
+.btn.actif { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* Liens des animateurs : une ligne par animateur, boutons qui passent à la ligne sur téléphone */
+.liste-animateurs { list-style: none; margin: 0; padding: 0; }
+.liste-animateurs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem 1rem; align-items: center; padding: .7rem 0; border-top: 1px solid var(--line); }
+.an-tete { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.an-mail { overflow-wrap: anywhere; }
+.an-actions { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
+.an-actions form { display: inline; margin: 0; }
+@media (max-width: 760px) {
+    .liste-animateurs li { grid-template-columns: minmax(0, 1fr); }
+    .an-actions { justify-content: flex-start; }
 }

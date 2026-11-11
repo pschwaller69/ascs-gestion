@@ -271,6 +271,20 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['mail'], ['jeton']],
             ],
+            // Personne venue au cours sans être inscrite cette saison, ajoutée par l'animateur (à relancer par le bureau)
+            'participant' => [
+                'cols' => [
+                    'id' => 'auto', 'section_id' => 'int', 'saison_id' => 'int', 'adherent_id' => 'int?', 'nom' => 'str:100', 'prenom' => 'str:100',
+                    'telephone' => 'str:30?', 'ajoute_le' => 'datetime', 'ajoute_par' => 'str:150?', 'statut' => 'str:20', 'relance_le' => 'datetime?',
+                ],
+                'pk' => ['id'],
+                'index' => [['saison_id'], ['section_id']],
+            ],
+            'presence_participant' => [
+                'cols' => ['id' => 'auto', 'participant_id' => 'int', 'date_seance' => 'date', 'present' => 'bool', 'saisi_le' => 'datetime'],
+                'pk' => ['id'],
+                'unique' => [['participant_id', 'date_seance']],
+            ],
             // Changement de cours fait par un animateur (ou le bureau) depuis la liste de présence
             'changement_cours' => [
                 'cols' => [

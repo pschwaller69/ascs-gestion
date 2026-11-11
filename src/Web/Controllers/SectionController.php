@@ -22,7 +22,8 @@ final class SectionController
     {
         return $this->app->render('sections/index', ['sections' => $this->pr->sections($this->app->saisonId()),
             'animateurs' => (new \Ascs\Domain\Animateurs($this->app->pdo))->liste((int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId())),
-            'changements' => (new \Ascs\Domain\Changements($this->app->pdo))->liste($this->app->saisonId())], 'Inscriptions par section');
+            'changements' => (new \Ascs\Domain\Changements($this->app->pdo))->liste($this->app->saisonId()),
+            'aRelancer' => (new \Ascs\Domain\Participants($this->app->pdo))->compter($this->app->saisonId())], 'Inscriptions par section');
     }
 
     private function section(array $p): array
@@ -159,5 +160,20 @@ final class SectionController
         $err = (new \Ascs\Domain\Changements($this->app->pdo))->annuler((int) $p['id']);
         $this->app->flash($err ? 'erreur' : 'ok', $err ?? 'Changement annulé : l\'adhérent est revenu dans son cours d\'origine.');
         $this->app->redirect('/sections#changements');
+    }
+
+    /** Personnes venues aux cours sans être inscrites (ajoutées par les animateurs) : à relancer. */
+    public function aRelancer(array $p): string
+    {
+        $tous = isset($_GET['tous']);
+        return $this->app->render('sections/a_relancer', [
+            'participants' => (new \Ascs\Domain\Participants($this->app->pdo))->aRelancer($this->app->saisonId(), $tous), 'tous' => $tous,
+        ], 'Venus sans inscription');
+    }
+
+    public function statutParticipant(array $p): void
+    {
+        (new \Ascs\Domain\Participants($this->app->pdo))->changerStatut((int) $p['id'], (string) ($_POST['statut'] ?? ''));
+        $this->app->redirect('/sections/a-relancer', isset($_POST['tous']) ? ['tous' => 1] : []);
     }
 }
