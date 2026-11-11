@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.3
+
+- Cartes de séances : Modelage est réglé d'office à la carte (10 séances, sa propre liste de présence), même si la détection des cartes a déjà eu lieu. Pilates et Arts martiaux artistiques et acrobatiques gardent les deux formules : à l'année et à la carte (porteurs de carte affichés dans le cours à l'année du même jour).
+
 ## 0.8.2
 
 - Cartes de séances (Par section > Cartes de séances) : une section « à la carte » donne un nombre de séances par carte (10 par défaut), utilisables dans un cours. Détection automatique au premier affichage (« À LA CARTE », « 10 COURS ») avec le cours du même jour : Pilates à la carte mercredi → Pilates mercredi, etc. ; Modelage ou toute autre section s'ajoute à la main.

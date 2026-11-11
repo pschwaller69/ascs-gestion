@@ -32,8 +32,17 @@ final class Cartes
      */
     public function detecter(): int
     {
+        // Modelage : toujours à la carte (sa propre liste de présence), ajouté une fois même si la détection a déjà eu lieu
+        if (\Ascs\Parametres::get($this->pdo, 'cartes_modelage') === null) {
+            \Ascs\Parametres::set($this->pdo, 'cartes_modelage', date('Y-m-d'));
+            foreach ($this->pdo->query("SELECT id FROM section WHERE essai = 0 AND UPPER(titre) LIKE 'MODELAGE%'")->fetchAll(PDO::FETCH_COLUMN) as $id) {
+                if (!isset($this->reglages()[(int) $id])) {
+                    $this->enregistrer((int) $id, 10, null);
+                }
+            }
+        }
         // Une seule fois : ensuite le bureau règle lui-même la liste (même s'il la vide)
-        if (\Ascs\Parametres::get($this->pdo, 'cartes_detectees') !== null || (int) $this->pdo->query('SELECT COUNT(*) FROM section_carte')->fetchColumn() > 0) {
+        if (\Ascs\Parametres::get($this->pdo, 'cartes_detectees') !== null || (int) $this->pdo->query('SELECT COUNT(*) FROM section_carte WHERE cours_id IS NOT NULL')->fetchColumn() > 0) {
             return 0;
         }
         \Ascs\Parametres::set($this->pdo, 'cartes_detectees', date('Y-m-d'));
