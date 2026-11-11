@@ -265,6 +265,22 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['section_id', 'saison_id', 'date_seance', 'adherent_id']],
             ],
+            // Lien personnel d'un animateur (repéré par son mail) : tous ses cours sur une page
+            'animateur' => [
+                'cols' => ['id' => 'auto', 'mail' => 'str:150', 'jeton' => 'uuid', 'cree_le' => 'datetime'],
+                'pk' => ['id'],
+                'unique' => [['mail'], ['jeton']],
+            ],
+            // Changement de cours fait par un animateur (ou le bureau) depuis la liste de présence
+            'changement_cours' => [
+                'cols' => [
+                    'id' => 'auto', 'date_changement' => 'datetime', 'inscription_id' => 'int', 'adherent_id' => 'int', 'saison_id' => 'int',
+                    'de_section_id' => 'int', 'vers_section_id' => 'int', 'motif' => 'str:20', 'precision_motif' => 'str:255?',
+                    'par' => 'str:150?', 'vu' => 'bool', 'annule' => 'bool',
+                ],
+                'pk' => ['id'],
+                'index' => [['saison_id']],
+            ],
             'fusion' => [
                 'cols' => [
                     'id' => 'auto', 'date_fusion' => 'datetime', 'garde_id' => 'int', 'fusionne_id' => 'int',

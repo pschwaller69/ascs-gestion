@@ -411,3 +411,28 @@
         if (ev.target.name === 'cible' || ev.target.name === 'sections[]') { clearTimeout(minuteur); minuteur = setTimeout(maj, 150); }
     });
 }());
+
+// Liste de présence : recherche par nom
+(function () {
+    'use strict';
+    var champ = document.querySelector('[data-filtre-liste]');
+    if (!champ) { return; }
+    var liste = document.getElementById(champ.getAttribute('data-filtre-liste'));
+    var norm = function (t) { return (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); };
+    champ.addEventListener('input', function () {
+        var v = norm(champ.value.trim());
+        Array.prototype.forEach.call(liste.children, function (li) { li.hidden = v !== '' && norm(li.getAttribute('data-nom')).indexOf(v) === -1; });
+    });
+}());
+
+// Bouton « Copier le lien »
+(function () {
+    'use strict';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-copier]'), function (b) {
+        b.addEventListener('click', function () {
+            var t = b.getAttribute('data-copier');
+            var fini = function () { var l = b.textContent; b.textContent = 'Copié'; setTimeout(function () { b.textContent = l; }, 1500); };
+            if (navigator.clipboard) { navigator.clipboard.writeText(t).then(fini); }
+        });
+    });
+}());

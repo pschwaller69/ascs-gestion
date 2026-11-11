@@ -3,6 +3,14 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.0
+
+- Page de l'animateur : un lien unique par animateur (repéré par le mail d'animateur des sections), sans mot de passe, avec tous ses cours en onglets ; le cours du jour s'ouvre en premier. Recherche par nom, bouton SMS et bouton d'appel pour chaque adhérent, « SMS à tout le cours » pour prévenir d'un retard ou d'une annulation (messagerie du téléphone, numéros préremplis).
+- Changement de cours par l'animateur (erreur d'inscription, changement de niveau ou d'horaire) vers un autre cours de la même activité ; le tarif ne change pas. Le bureau voit chaque changement dans Par section (« à voir », tarif différent signalé) et peut l'annuler. En mode transition, les changements sont refaits après chaque import WinDev.
+- Bureau : Par section > Liens des animateurs (voir exactement leur page, copier, envoyer, changer le lien) ; bouton « Voir » sur chaque cours et « Voir la page de l'animateur » sur la fiche d'un cours. « Envoyer leur lien aux animateurs » envoie un seul mail par animateur.
+- Feuille d'émargement lisible sur téléphone (défilement horizontal, dates lisibles, noms figés à gauche).
+- Effacement des données : saisons, sections et liens des animateurs sont gardés, pour que les liens restent valables après la bascule.
+
 ## 0.7.6
 
 - Correction : la synchronisation HelloAsso échouait (« SQLSTATE[22007] … datetime value: '' ») et la validation d'une réinscription donnait « Une erreur est survenue », dès qu'une fiche existante était complétée avec la date de naissance. MariaDB (o2switch, mode strict) refuse de comparer une date à un texte vide ; SQLite, utilisé pour les tests, l'acceptait. Même correction pour les demandes en ligne.

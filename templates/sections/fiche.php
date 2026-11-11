@@ -1,7 +1,8 @@
-<?php /** @var array $s @var array $inscrits @var array $creneaux @var array $seances @var array $assiduite @var string $lien @var bool $saisonCourante */ ?>
+<?php /** @var array $s @var array $inscrits @var array $creneaux @var array $seances @var array $assiduite @var string $lien @var ?string $lienAnimateur @var bool $saisonCourante */ ?>
 <div class="titre-page">
     <h1><?= e($s['titre']) ?></h1>
     <div class="actions-titre">
+        <a class="btn btn-principal" href="<?= e($lienAnimateur ?? $lien) ?>" target="_blank" rel="noopener"><?= icon('eye') ?> Voir la page de l'animateur</a>
         <a class="btn" href="<?= e(url('/sections/' . $s['id'] . '/emargement')) ?>" target="_blank" rel="noopener"><?= icon('list') ?> Feuille d'émargement</a>
         <a class="btn" href="<?= e(url('/parametrage/sections/' . $s['id'])) ?>">Paramétrage</a>
     </div>
@@ -9,7 +10,8 @@
 <p class="contexte"><?= e($s['principale'] ?? '') ?><?= $creneaux ? ' · ' . e(implode(', ', $creneaux)) : '' ?> · <?= count($inscrits) ?> inscrit<?= count($inscrits) > 1 ? 's' : '' ?><?= $seances ? ' · ' . count($seances) . ' séance(s) notée(s)' : '' ?></p>
 
 <details class="fiche lien-animateur">
-    <summary>Liste de présence de l'animateur</summary>
+    <summary>Lien de ce cours seul</summary>
+    <?php if ($lienAnimateur): ?><p class="aide">L'animateur (<?= e($s['mail_animateur1']) ?>) a de préférence <strong>un lien unique pour tous ses cours</strong>, dans Par section &gt; Liens des animateurs. Ce lien-ci n'ouvre que ce cours (utile pour un remplaçant).</p><?php endif; ?>
     <div class="lien-qr">
         <div class="qr" data-qr="<?= e($lien) ?>" role="img" aria-label="QR code de la liste de présence"></div>
         <div>

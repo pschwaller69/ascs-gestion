@@ -20,7 +20,9 @@ final class SectionController
 
     public function index(array $p): string
     {
-        return $this->app->render('sections/index', ['sections' => $this->pr->sections($this->app->saisonId())], 'Inscriptions par section');
+        return $this->app->render('sections/index', ['sections' => $this->pr->sections($this->app->saisonId()),
+            'animateurs' => (new \Ascs\Domain\Animateurs($this->app->pdo))->liste((int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId())),
+            'changements' => (new \Ascs\Domain\Changements($this->app->pdo))->liste($this->app->saisonId())], 'Inscriptions par section');
     }
 
     private function section(array $p): array
@@ -41,6 +43,7 @@ final class SectionController
             's' => $s, 'inscrits' => $this->pr->inscrits((int) $s['id'], $sid), 'creneaux' => $this->pr->creneaux((int) $s['id']),
             'seances' => $this->pr->seances((int) $s['id'], $sid), 'assiduite' => $this->pr->assiduite((int) $s['id'], $sid),
             'lien' => App::urlAbsolue('/presence/' . $s['presence_token']),
+            'lienAnimateur' => $s['mail_animateur1'] ? App::urlAbsolue('/animateur/' . (new \Ascs\Domain\Animateurs($this->app->pdo))->jeton((string) $s['mail_animateur1']), ['s' => $s['id']]) : null,
             'saisonCourante' => $sid === (int) ($this->pr->saisonCourante()['id'] ?? 0),
         ], $s['titre']);
     }
@@ -75,20 +78,59 @@ final class SectionController
         $this->app->redirect('/sections/' . $s['id']);
     }
 
-    /** Envoie le lien à l'animateur de chaque section qui a des inscrits et un mail d'animateur. */
+    /** Envoie à chaque animateur son lien personnel (tous ses cours sur une page). */
     public function envoyerTous(array $p): void
     {
         $ok = 0;
         $ko = [];
-        foreach ($this->pr->sections($this->app->saisonId()) as $l) {
-            if (!$l['mail_animateur1'] || $l['essai']) {
-                continue;
-            }
-            [$type, $msg] = $this->envoyer($this->pr->section((int) $l['id']));
-            $type === 'ok' ? $ok++ : $ko[] = $l['titre'] . ' (' . $msg . ')';
+        foreach ((new \Ascs\Domain\Animateurs($this->app->pdo))->liste((int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId())) as $a) {
+            [$type, $msg] = $this->envoyerAnimateur($a);
+            $type === 'ok' ? $ok++ : $ko[] = $a['mail'] . ' (' . $msg . ')';
         }
-        $this->app->flash($ko ? 'erreur' : 'ok', sprintf('%d lien(s) envoyé(s).', $ok) . ($ko ? ' Échecs : ' . implode(' ; ', $ko) : ''));
+        $this->app->flash($ko ? 'erreur' : 'ok', sprintf('%d lien(s) envoyé(s) aux animateurs.', $ok) . ($ko ? ' Échecs : ' . implode(' ; ', $ko) : ''));
         $this->app->redirect('/sections');
+    }
+
+    public function envoyerLienAnimateur(array $p): void
+    {
+        $a = $this->animateurPoste();
+        $this->app->flash(...$this->envoyerAnimateur($a));
+        $this->app->redirect('/sections#animateurs');
+    }
+
+    public function nouveauLienAnimateur(array $p): void
+    {
+        $a = $this->animateurPoste();
+        (new \Ascs\Domain\Animateurs($this->app->pdo))->nouveauJeton($a['mail']);
+        $this->app->flash('ok', 'Nouveau lien créé pour ' . $a['mail'] . ' : l\'ancien ne fonctionne plus. Envoyez-lui le nouveau.');
+        $this->app->redirect('/sections#animateurs');
+    }
+
+    private function animateurPoste(): array
+    {
+        $mail = mb_strtolower(trim((string) ($_POST['mail'] ?? '')));
+        foreach ((new \Ascs\Domain\Animateurs($this->app->pdo))->liste((int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId())) as $a) {
+            if ($a['mail'] === $mail) {
+                return $a;
+            }
+        }
+        $this->app->flash('erreur', 'Animateur introuvable.');
+        $this->app->redirect('/sections#animateurs');
+    }
+
+    /** @return array{0:string,1:string} */
+    private function envoyerAnimateur(array $a): array
+    {
+        $r = (new Reglages($this->app->pdo))->tous();
+        $lien = App::urlAbsolue('/animateur/' . $a['jeton']);
+        $cours = implode("\n", array_map(static fn ($s) => '  - ' . $s['titre'], $a['sections']));
+        $texte = "Bonjour,\n\nVoici votre lien pour la liste de présence de vos cours :\n" . $cours . "\n\n" . $lien
+            . "\n\nIl s'ouvre sur téléphone, sans mot de passe. Un onglet par cours : cochez les présents à chaque séance puis enregistrez."
+            . " Vous pouvez aussi appeler ou envoyer un SMS à un adhérent, prévenir tout le cours par SMS (un retard, une annulation) et changer un adhérent de cours."
+            . "\nCe lien est personnel, merci de ne pas le transmettre.\n\nMerci,\n" . ($r['association'] ?: 'ASCS');
+        $e = (new Envoi($this->app->pdo))->envoyer($r['expediteur'], $r['association'] ?: 'ASCS', $a['mail'],
+            'Vos listes de présence', $texte, [], null, (string) ($this->app->user['email'] ?? ''));
+        return $e ? ['erreur', $e] : ['ok', 'Lien envoyé à ' . $a['mail'] . '.'];
     }
 
     /** @return array{0:string,1:string} type et message */
@@ -104,5 +146,18 @@ final class SectionController
         $e = (new Envoi($this->app->pdo))->envoyer($r['expediteur'], $r['association'] ?: 'ASCS', (string) $s['mail_animateur1'],
             'Liste de présence – ' . $s['titre'], $texte, [], null, (string) ($this->app->user['email'] ?? ''));
         return $e ? ['erreur', $e] : ['ok', 'Lien envoyé à ' . $s['mail_animateur1'] . '.'];
+    }
+
+    public function changementVu(array $p): void
+    {
+        (new \Ascs\Domain\Changements($this->app->pdo))->marquerVu((int) $p['id']);
+        $this->app->redirect('/sections#changements');
+    }
+
+    public function changementAnnuler(array $p): void
+    {
+        $err = (new \Ascs\Domain\Changements($this->app->pdo))->annuler((int) $p['id']);
+        $this->app->flash($err ? 'erreur' : 'ok', $err ?? 'Changement annulé : l\'adhérent est revenu dans son cours d\'origine.');
+        $this->app->redirect('/sections#changements');
     }
 }

@@ -58,6 +58,14 @@ final class Transition
             $lignes[] = 'Fiches fusionnées : fusion impossible à refaire (' . $e->getMessage() . ').';
         }
         try {
+            $r = (new \Ascs\Domain\Changements($pdo))->rejouerApresImport();
+            if ($r['refaits'] || $r['deja'] || $r['perdus']) {
+                $lignes[] = sprintf('Changements de cours : %d refait(s), %d déjà reporté(s) dans WinDev, %d impossible(s) (inscription disparue de WinDev).', $r['refaits'], $r['deja'], $r['perdus']);
+            }
+        } catch (\Throwable $e) {
+            $lignes[] = 'Changements de cours : impossible de les refaire (' . $e->getMessage() . ').';
+        }
+        try {
             $r = (new \Ascs\Domain\Remises($pdo))->rapprocher();
             if ($r['ventilees'] || $r['ecarts']) {
                 $lignes[] = sprintf('Remises de chèques : %d ventilation(s) écrite(s) dans les comptes, %d remise(s) avec un montant différent de la banque.', $r['ventilees'], $r['ecarts']);

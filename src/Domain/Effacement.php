@@ -16,7 +16,9 @@ use PDO;
 final class Effacement
 {
     /** Tables conservées : comptes du bureau, réglages, listes fixes, historique des imports. */
-    public const GARDEES = ['utilisateur', 'tentative_connexion', 'parametre', 'canal', 'mode_reglement', 'import_run', 'section_en_ligne', 'helloasso_section'];
+    public const GARDEES = ['utilisateur', 'tentative_connexion', 'parametre', 'canal', 'mode_reglement', 'import_run', 'section_en_ligne', 'helloasso_section',
+        // Référentiel (saisons, sections, créneaux…) : remplacé par l'import WinDev, gardé pour que les liens des animateurs restent les mêmes
+        'saison', 'famille_section', 'section_principale', 'section', 'creneau', 'type_compte', 'animateur'];
 
     public function __construct(private readonly PDO $pdo)
     {

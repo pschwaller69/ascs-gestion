@@ -19,7 +19,7 @@ final class Presences
     /** @return list<array<string,mixed>> sections ayant des inscrits cette saison (ou des créneaux), avec leurs effectifs */
     public function sections(int $saisonId): array
     {
-        $st = $this->pdo->prepare('SELECT s.id, s.titre, s.essai, s.mail_animateur1, sp.titre AS principale,
+        $st = $this->pdo->prepare('SELECT s.id, s.titre, s.essai, s.mail_animateur1, s.presence_token, sp.titre AS principale,
                 (SELECT COUNT(*) FROM inscription i WHERE i.section_id = s.id AND i.saison_id = ?) AS inscrits,
                 (SELECT COUNT(DISTINCT p.date_seance) FROM presence p WHERE p.section_id = s.id AND p.saison_id = ?) AS seances
             FROM section s LEFT JOIN section_principale sp ON sp.id = s.section_principale_id ORDER BY s.essai, s.titre');
