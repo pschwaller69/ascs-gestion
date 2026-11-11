@@ -27,7 +27,7 @@ final class Changements
             AND s.id <> src.id AND s.essai = 0 AND src.essai = 0 ORDER BY s.titre');
         $st->execute([$saisonId, $sectionId]);
         $pr = new Presences($this->pdo);
-        $cartes = array_keys((new Cartes($this->pdo))->reglages());
+        $cartes = array_merge(array_keys((new Cartes($this->pdo))->reglages()), (new Arrets($this->pdo))->sections());
         return array_values(array_map(static fn ($s) => $s + ['creneaux' => $pr->creneaux((int) $s['id'])],
             array_filter($st->fetchAll(), static fn ($s) => !in_array((int) $s['id'], $cartes, true))));
     }

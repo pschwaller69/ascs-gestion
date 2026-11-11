@@ -271,6 +271,12 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['section_id', 'saison_id', 'date_seance', 'adherent_id']],
             ],
+            // Activité arrêtée (section principale ou section) : plus proposée, gardée dans l'historique
+            'section_arret' => [
+                'cols' => ['id' => 'auto', 'type' => 'str:12', 'cible_id' => 'int', 'depuis_saison_id' => 'int?', 'arrete_le' => 'datetime'],
+                'pk' => ['id'],
+                'unique' => [['type', 'cible_id']],
+            ],
             // Contrôleur bénévole : lien personnel pour voir la liste de tous les cours
             'controleur' => [
                 'cols' => ['id' => 'auto', 'nom' => 'str:100', 'jeton' => 'uuid', 'cree_le' => 'datetime'],

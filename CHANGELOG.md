@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.8
+
+- Activités arrêtées (Paramétrage > Section > Activités arrêtées) : arrêter une activité entière (section principale, par exemple Atelier Batterie / musique) ou une seule section. Elle n'est plus proposée : nouvelle inscription (refusée même si on force la saisie), inscription en ligne (fermée automatiquement), HelloAsso, changement de cours. L'historique reste : inscriptions et règlements passés (modifiables, la section reste dans leur choix), filtre de la liste des inscriptions, résultats, reporting, mailings aux anciens. La page signale les activités qui n'ont plus personne cette saison ; « Reprendre » les propose de nouveau.
+
 ## 0.8.7
 
 - Contrôleurs : bénévoles qui vérifient que tout le monde est inscrit. Chacun a un lien personnel sans mot de passe (Par section > Contrôleurs : ajouter, voir, copier, changer le lien, supprimer). Le lien ouvre la liste de tous les cours de la saison, rangés par jour en commençant par aujourd'hui, avec l'heure et une recherche ; chaque cours s'ouvre comme chez l'animateur (inscrits, cartes, non-inscrits). Le contrôleur peut noter une personne non inscrite (retrouvée par le bureau dans « Venus sans inscription », avec son nom) mais ne peut pas changer un adhérent de cours.

@@ -58,7 +58,8 @@ final class EnLigne
              WHERE e.ouvert = 1 AND s.essai = ? ORDER BY s.titre'
         );
         $st->execute([$essai ? 1 : 0]);
-        return $st->fetchAll();
+        $arretees = (new Arrets($this->pdo))->sections();
+        return array_values(array_filter($st->fetchAll(), static fn ($s) => !in_array((int) $s['id'], $arretees, true)));
     }
 
     /** Toutes les sections avec leurs réglages, pour la page du bureau. @return list<array<string,mixed>> */

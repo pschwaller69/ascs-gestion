@@ -72,7 +72,7 @@ final class Ribbon
             ]],
             'parametrage' => ['titre' => 'Paramétrage', 'groupes' => [
                 'Saison' => [['Saisons', 'calendar', '/parametrage/saisons', null]],
-                'Section' => [['Sections', 'layers', '/parametrage/sections', null], ['Résultat section', 'chart', '/resultats/sections', null]],
+                'Section' => [['Sections', 'layers', '/parametrage/sections', null], ['Résultat section', 'chart', '/resultats/sections', null], ['Activités arrêtées', 'x', '/activites-arretees', null]],
                 'Section principale' => [['Sections principales', 'layers', '/parametrage/sections-principales', null], ['Résultat', 'chart', '/resultats/sections-principales', null]],
                 'Famille' => [['Familles', 'layers', '/parametrage/familles', null]],
                 'Documents' => [

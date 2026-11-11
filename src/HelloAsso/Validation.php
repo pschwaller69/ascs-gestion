@@ -51,7 +51,11 @@ final class Validation
         }
         $texte = DuplicateFinder::norm($it['formulaire'] . ' ' . $it['tarif']);
         $trouves = [];
+        $arretees = (new \Ascs\Domain\Arrets($this->pdo))->sections();
         foreach ($this->pdo->query('SELECT id, titre FROM section') as $s) {
+            if (in_array((int) $s['id'], $arretees, true)) {
+                continue;
+            }
             $t = DuplicateFinder::norm($s['titre']);
             if (strlen($t) >= 4 && str_contains($texte, $t)) {
                 $trouves[(int) $s['id']] = strlen($t);

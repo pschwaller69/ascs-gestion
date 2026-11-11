@@ -33,7 +33,7 @@ final class InscriptionController
         $r = $this->insc->lister($this->app->saisonId(), $statut, $section, $q, $page);
         return $this->app->render('inscriptions/index', [
             'statut' => $statut, 'section' => $section, 'q' => $q, 'page' => $page, 'parPage' => Inscriptions::PAR_PAGE,
-            'lignes' => $r['lignes'], 'total' => $r['total'], 'reste' => $r['reste'], 'sections' => $this->insc->sections(),
+            'lignes' => $r['lignes'], 'total' => $r['total'], 'reste' => $r['reste'], 'sections' => $this->insc->sections(null, true),
         ], $statut === 'impayees' ? 'Inscriptions non payées' : 'Inscriptions');
     }
 
@@ -145,7 +145,7 @@ final class InscriptionController
     {
         $r = new Reglements($this->app->pdo);
         return $this->app->render('inscriptions/fiche', [
-            'i' => $i, 'd' => $d, 'err' => $err, 'sections' => $this->insc->sections(), 'saisons' => $this->saisons(),
+            'i' => $i, 'd' => $d, 'err' => $err, 'sections' => $this->insc->sections((int) $i['section_id']), 'saisons' => $this->saisons(),
             'reglements' => $r->deInscription((int) $i['id']),
             'rillieux' => self::rillieux($this->adh->trouver((int) $i['adherent_id']) ?? []),
             'envois' => (new \Ascs\Mail\Envoi($this->app->pdo))->historique((int) $i['id']),

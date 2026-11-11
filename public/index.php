@@ -168,6 +168,8 @@ $router->post('/controle/{jeton}', [PresenceController::class, 'controleEnregist
 $router->get('/controle/{jeton}/ajouter', [PresenceController::class, 'controleAjouter'], true);
 $router->post('/controle/{jeton}/ajouter', [PresenceController::class, 'controleEnregistrerAjout'], true);
 $router->post('/sections/controleurs', [SectionController::class, 'controleurs']);
+$router->get('/activites-arretees', [SectionController::class, 'arrets']);
+$router->post('/activites-arretees', [SectionController::class, 'arretsEnregistrer']);
 $router->get('/animateur/{jeton}/ajouter', [PresenceController::class, 'animateurAjouter'], true);
 $router->post('/animateur/{jeton}/ajouter', [PresenceController::class, 'animateurEnregistrerAjout'], true);
 $router->get('/presence/{jeton}/ajouter', [PresenceController::class, 'ajouter'], true);

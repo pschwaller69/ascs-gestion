@@ -513,3 +513,5 @@ form.suppr-carte { display: inline; }
 .liste-cours section[hidden] { display: none; }
 .lien-cours { display: flex; justify-content: space-between; align-items: center; gap: .6rem; padding: .75rem .9rem; color: inherit; text-decoration: none; flex: 1; }
 .lien-cours .heure { display: inline-block; min-width: 3rem; color: var(--teal); font-variant-numeric: tabular-nums; }
+
+tr.ligne-arretee td { color: var(--muted); }

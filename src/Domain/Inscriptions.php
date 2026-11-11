@@ -13,10 +13,19 @@ final class Inscriptions
     {
     }
 
-    /** @return list<array<string,mixed>> */
-    public function sections(): array
+    /**
+     * Sections proposées au choix : sans les activités arrêtées, sauf $garder (la section actuelle d'une inscription qu'on modifie).
+     * $toutes = true pour un filtre de recherche dans l'historique.
+     * @return list<array<string,mixed>>
+     */
+    public function sections(?int $garder = null, bool $toutes = false): array
     {
-        return $this->pdo->query('SELECT id, titre, montant FROM section ORDER BY titre')->fetchAll();
+        $l = $this->pdo->query('SELECT id, titre, montant FROM section ORDER BY titre')->fetchAll();
+        if ($toutes) {
+            return $l;
+        }
+        $arretees = (new Arrets($this->pdo))->sections();
+        return array_values(array_filter($l, static fn ($s) => (int) $s['id'] === $garder || !in_array((int) $s['id'], $arretees, true)));
     }
 
     public function trouver(int $id): ?array
@@ -68,6 +77,17 @@ final class Inscriptions
             $err['montant'] = 'Montant invalide (exemple : 120 ou 120,50).';
         } elseif ((float) $d['montant'] < 0) {
             $err['montant'] = 'Le montant ne peut pas être négatif.';
+        }
+        if (!isset($err['section_id']) && $d['section_id'] !== null && (new Arrets($this->pdo))->estArretee((int) $d['section_id'])) {
+            $avant = null;
+            if ($idCourant !== null) {
+                $st = $this->pdo->prepare('SELECT section_id FROM inscription WHERE id = ?');
+                $st->execute([$idCourant]);
+                $avant = (int) $st->fetchColumn();
+            }
+            if ($avant !== (int) $d['section_id']) {
+                $err['section_id'] = 'Cette activité est arrêtée : elle n\'est plus proposée (Paramétrage > Activités arrêtées).';
+            }
         }
         if (!$err && ($autre = $this->existante($adherentId, (int) $d['section_id'], (int) $d['saison_id'], $idCourant))) {
             $err['section_id'] = 'Cet adhérent est déjà inscrit à cette section pour cette saison (inscription n° ' . $autre . ').';

@@ -255,4 +255,32 @@ final class SectionController
         }
         $this->app->redirect('/sections#controleurs');
     }
+
+    /* ---------- Activités arrêtées ---------- */
+
+    public function arrets(array $p): string
+    {
+        $a = new \Ascs\Domain\Arrets($this->app->pdo);
+        $saison = (int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId());
+        return $this->app->render('sections/arrets', [
+            'arrets' => $a->tous(), 'principales' => $a->principales($saison),
+            'sections' => $this->app->pdo->query('SELECT s.id, s.titre, s.section_principale_id, s.essai FROM section s ORDER BY s.titre')->fetchAll(),
+            'saisonId' => $saison,
+        ], 'Activités arrêtées', 'parametrage');
+    }
+
+    public function arretsEnregistrer(array $p): void
+    {
+        $a = new \Ascs\Domain\Arrets($this->app->pdo);
+        $type = (string) ($_POST['type'] ?? '');
+        $id = (int) ($_POST['id'] ?? 0);
+        if (($_POST['action'] ?? '') === 'reprendre') {
+            $a->reprendre($type, $id);
+            $this->app->flash('ok', 'Activité de nouveau proposée.');
+        } elseif ($id > 0) {
+            $a->arreter($type, $id, (int) ($this->pr->saisonCourante()['id'] ?? $this->app->saisonId()));
+            $this->app->flash('ok', 'Activité arrêtée : elle n\'est plus proposée, son historique est gardé.');
+        }
+        $this->app->redirect('/activites-arretees');
+    }
 }
