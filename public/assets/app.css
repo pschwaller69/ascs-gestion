@@ -428,3 +428,11 @@ tr.retire td:last-child { text-decoration: none; }
     .table-ventilation td.num { text-align: left; }
     .table-ventilation .etiquette-mobile { position: static; width: auto; height: auto; overflow: visible; clip: auto; display: block; font-size: .85rem; margin-bottom: .15rem; }
 }
+
+/* Page d'erreur : détail technique lisible et copiable */
+.carte-erreur { max-width: 44rem; }
+.detail-erreur { display: grid; grid-template-columns: max-content 1fr; gap: .3rem .8rem; margin: 1rem 0; font-size: .92rem; }
+.detail-erreur dt { font-weight: 600; }
+.detail-erreur dd { margin: 0; overflow-wrap: anywhere; }
+.detail-erreur code, pre.pile { user-select: all; }
+pre.pile { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; background: #f3f6f5; padding: .5rem; border-radius: 4px; }

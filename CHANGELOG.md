@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.7.6
+
+- Correction : la synchronisation HelloAsso échouait (« SQLSTATE[22007] … datetime value: '' ») et la validation d'une réinscription donnait « Une erreur est survenue », dès qu'une fiche existante était complétée avec la date de naissance. MariaDB (o2switch, mode strict) refuse de comparer une date à un texte vide ; SQLite, utilisé pour les tests, l'acceptait. Même correction pour les demandes en ligne.
+- Messages d'erreur détaillés : explication en clair (date refusée, doublon, base inaccessible, service extérieur muet…), puis pour le bureau la référence, la page, le message technique et l'emplacement dans le programme. Chaque erreur est enregistrée dans Paramétrage > Journal des erreurs. L'échec d'une synchronisation HelloAsso est expliqué de la même façon.
+- Tests : l'application est désormais aussi testée sur MariaDB en mode strict, comme chez o2switch.
+
 ## 0.7.5
 
 - Mode transition = mode essai pour le financier : la ventilation d'une ligne bancaire et l'import d'un relevé sont permis pour tester. Le prochain import WinDev remet la ventilation de WinDev et efface les lignes ajoutées (bandeau « Mode essai » sur les pages concernées).

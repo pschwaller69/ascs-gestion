@@ -200,6 +200,7 @@ $router->post('/import/bascule', [ImportController::class, 'basculer']);
 $router->post('/import/effacer', [ImportController::class, 'effacer']);
 $router->get('/import/sauvegarde', [ImportController::class, 'sauvegarde']);
 
+$router->get('/journal-erreurs', [UtilisateurController::class, 'journal']);
 $router->get('/utilisateurs', [UtilisateurController::class, 'index']);
 $router->post('/utilisateurs', [UtilisateurController::class, 'creer']);
 $router->post('/utilisateurs/{id}/mot-de-passe', [UtilisateurController::class, 'motDePasse']);
@@ -217,7 +218,9 @@ $path = rtrim($path, '/') ?: '/';
 try {
     $router->dispatch($app, $_SERVER['REQUEST_METHOD'] ?? 'GET', $path);
 } catch (Throwable $e) {
-    error_log('ASCS erreur : ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    $f = \Ascs\Web\Erreurs::consigner($e);
     http_response_code(500);
-    echo $app->render('erreur', ['titre' => 'Erreur', 'message' => 'Une erreur est survenue. Rien n\'a été perdu : revenez en arrière et recommencez. Si cela persiste, contactez l\'administrateur.'], 'Erreur', 'accueil', 500);
+    // Détail technique pour le bureau (connecté) ; une page publique n'affiche que l'explication et la référence.
+    echo $app->render('erreur', ['titre' => 'Erreur', 'fiche' => $f, 'detail' => isset($_SESSION['uid']),
+        'message' => 'L\'opération n\'a pas abouti. Revenez en arrière et recommencez ; si cela persiste, transmettez le détail ci-dessous.'], 'Erreur', 'accueil', 500);
 }

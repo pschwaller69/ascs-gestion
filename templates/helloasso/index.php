@@ -26,7 +26,7 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
         Association « <?= e($organisation) ?> ».
         <?php if ($derniere): ?>
             Dernière synchronisation : <?= e(dfr($derniere['debut'])) ?> à <?= e(substr((string) $derniere['debut'], 11, 5)) ?> (<?= e($derniere['origine']) ?>)
-            <?= $derniere['ok'] ? '— ' . e($derniere['resume']) : '— <strong class="texte-erreur">échec : ' . e($derniere['resume']) . '</strong>' ?>
+            <?= $derniere['ok'] ? '— ' . e($derniere['resume']) : '— <strong class="texte-erreur">échec : ' . e(\Ascs\Web\Erreurs::expliquer((string) $derniere['resume'])) . '</strong> <small class="aide">(détail : ' . e($derniere['resume']) . ')</small>' ?>
         <?php else: ?>Aucune synchronisation pour l'instant.<?php endif; ?>
         <?= $webhook ? '' : '<br>Notifications instantanées non activées : les adhésions arrivent à chaque passage de la tâche planifiée.' ?>
     </p>

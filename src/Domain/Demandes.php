@@ -178,7 +178,7 @@ final class Demandes
                 // Fiche existante complétée : téléphone domicile et autre canal si vides, attestation CE si demandée
                 foreach (['telephone2' => $comp['telephone2'] ?? null, 'canal_autre' => $comp['canal_autre'] ?? null] as $col => $val) {
                     if ($val) {
-                        $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND ($col IS NULL OR $col = '')")->execute([$val, $adherentId]);
+                        $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND " . self::vide($col))->execute([$val, $adherentId]);
                     }
                 }
                 if (!empty($comp['attestation_ce'])) {
@@ -228,7 +228,7 @@ final class Demandes
             'code_postal' => $d['code_postal'], 'ville' => $d['ville'], 'nom_parent' => $d['nom_parent'], 'prenom_parent' => $d['prenom_parent']];
         foreach ($map as $col => $val) {
             if ($val !== null && $val !== '') {
-                $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND ($col IS NULL OR $col = '')")->execute([$val, $adherentId]);
+                $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND " . self::vide($col))->execute([$val, $adherentId]);
             }
         }
     }
@@ -270,5 +270,11 @@ final class Demandes
             $res['ok'] ? $r['rejouees']++ : $r['a_revoir']++;
         }
         return $r;
+    }
+
+    /** Condition « champ vide » : une date ne se compare pas à '' (MariaDB strict refuse : erreur 1292). */
+    private static function vide(string $col): string
+    {
+        return str_starts_with($col, 'date_') ? "$col IS NULL" : "($col IS NULL OR $col = '')";
     }
 }

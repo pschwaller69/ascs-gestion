@@ -76,4 +76,9 @@ final class UtilisateurController
         }
         $this->app->redirect('/utilisateurs');
     }
+
+    public function journal(array $p): string
+    {
+        return $this->app->render('utilisateurs/journal', ['erreurs' => \Ascs\Web\Erreurs::recentes()], 'Journal des erreurs', 'parametrage');
+    }
 }

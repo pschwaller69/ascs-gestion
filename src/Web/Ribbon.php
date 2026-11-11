@@ -79,6 +79,7 @@ final class Ribbon
                 'Données' => [
                     ['Import WinDev', 'upload', '/import', null],
                     ['Comptes du bureau', 'users', '/utilisateurs', null],
+                    ['Journal des erreurs', 'alert', '/journal-erreurs', null],
                 ],
             ]],
             'financier' => ['titre' => 'Financier', 'groupes' => [

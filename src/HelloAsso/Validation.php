@@ -278,7 +278,7 @@ final class Validation
             if ($val === null || $val === '') {
                 continue;
             }
-            $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND ($col IS NULL OR $col = '')")->execute([$val, $adherentId]);
+            $this->pdo->prepare("UPDATE adherent SET $col = ? WHERE id = ? AND " . self::vide($col))->execute([$val, $adherentId]);
         }
     }
 
@@ -311,5 +311,11 @@ final class Validation
         );
         $st->execute($statuts);
         return $st->fetchAll();
+    }
+
+    /** Condition « champ vide » : une date ne se compare pas à '' (MariaDB strict refuse : erreur 1292). */
+    private static function vide(string $col): string
+    {
+        return str_starts_with($col, 'date_') ? "$col IS NULL" : "($col IS NULL OR $col = '')";
     }
 }
