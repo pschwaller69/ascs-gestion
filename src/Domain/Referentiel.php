@@ -52,7 +52,7 @@ final class Referentiel
                     'section_principale_id' => ['libelle' => 'Section principale', 'type' => 'select', 'requis' => true, 'source' => ['section_principale', 'titre']],
                     'montant' => ['libelle' => 'Tarif extérieurs (€)', 'type' => 'number', 'requis' => true, 'aide' => 'Les habitants de Rillieux ont 10 € de réduction, sauf jogging et marche.'],
                     'essai' => ['libelle' => 'Section de cours d\'essai (gratuite)', 'court' => 'Essai', 'type' => 'bool'],
-                    'mail_animateur1' => ['libelle' => 'Mail de l\'animateur', 'type' => 'email', 'max' => 150, 'aide' => 'Pour lui envoyer le lien de sa liste de présence.'],
+                    'mail_animateur1' => ['libelle' => 'Mail de l\'animateur', 'type' => 'emails', 'max' => 150, 'aide' => 'Pour lui envoyer le lien de sa liste de présence. Plusieurs animateurs : séparez les mails par un point-virgule.'],
                     'nom_campagne_helloasso' => ['libelle' => 'Campagne HelloAsso', 'type' => 'text', 'max' => 120],
                     'montant_rentabilite_annuel' => ['libelle' => 'Seuil de rentabilité annuel (€)', 'type' => 'number'],
                 ],
@@ -141,6 +141,15 @@ final class Referentiel
                     break;
                 case 'select':
                     $v[$c] = ctype_digit($brut) && isset($this->options($f['source'])[(int) $brut]) ? (int) $brut : null;
+                    break;
+                case 'emails':
+                    $liste = array_values(array_filter(array_map('trim', preg_split('/[;,\s]+/', $brut) ?: [])));
+                    $v[$c] = $liste ? mb_substr(implode(';', $liste), 0, (int) ($f['max'] ?? 255)) : null;
+                    foreach ($liste as $m) {
+                        if (!filter_var($m, FILTER_VALIDATE_EMAIL)) {
+                            $err[$c] = 'Adresse mail invalide : ' . $m . '.';
+                        }
+                    }
                     break;
                 case 'email':
                     $v[$c] = $brut === '' ? null : $brut;

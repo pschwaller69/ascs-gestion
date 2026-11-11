@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.6
+
+- Plusieurs animateurs pour un cours : le mail d'animateur d'une section peut contenir plusieurs adresses séparées par un point-virgule (comme dans WinDev). Chacun a son propre lien avec ce cours, et « Envoyer » écrit à chaque adresse séparément (avant : « erreur de mail » avec deux adresses). Le Paramétrage des sections accepte et vérifie plusieurs adresses.
+
 ## 0.8.5
 
 - Ruban : nouveau groupe « Cours » dans l'onglet Accueil (Par section, Cartes de séances, Venus sans inscription), au lieu de l'onglet Mail. Liens vers les cartes et les non-inscrits en haut de la page Par section.

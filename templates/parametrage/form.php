@@ -26,7 +26,7 @@ $val = static fn (string $c) => $v[$c] ?? '';
             </div>
         <?php else: ?>
             <?php $vv = $val($c); if ($f['type'] === 'number' && is_numeric($vv)) { $vv = number_format((float) $vv, 2, ',', ''); } ?>
-            <?= champ($f['libelle'], $c, $vv, $o + ['type' => $f['type'] === 'number' ? 'text' : $f['type'], 'maxlength' => $f['max'] ?? null] + ($f['type'] === 'number' ? ['inputmode' => 'decimal'] : [])) ?>
+            <?= champ($f['libelle'], $c, $vv, $o + ['type' => in_array($f['type'], ['number', 'emails'], true) ? 'text' : $f['type'], 'maxlength' => $f['max'] ?? null] + ($f['type'] === 'number' ? ['inputmode' => 'decimal'] : [])) ?>
         <?php endif; ?>
     <?php endforeach; ?>
     </div>

@@ -23,7 +23,9 @@ final class Animateurs
     {
         $par = [];
         foreach ($this->sectionsAvecMail($saisonId) as $s) {
-            $par[mb_strtolower(trim((string) $s['mail_animateur1']))][] = $s;
+            foreach (self::mails((string) $s['mail_animateur1']) as $m) {
+                $par[$m][] = $s;
+            }
         }
         ksort($par);
         $out = [];
@@ -31,6 +33,21 @@ final class Animateurs
             $out[] = ['mail' => $mail, 'jeton' => $this->jeton($mail), 'sections' => $sections];
         }
         return $out;
+    }
+
+    /**
+     * Mails d'animateur d'une section : le champ peut en contenir plusieurs (séparés par ; , ou espace),
+     * chacun a alors son propre lien avec ce cours. @return list<string>
+     */
+    public static function mails(string $champ): array
+    {
+        $out = [];
+        foreach (preg_split('/[;,\s]+/', mb_strtolower($champ)) ?: [] as $m) {
+            if ($m !== '' && filter_var($m, FILTER_VALIDATE_EMAIL)) {
+                $out[$m] = true;
+            }
+        }
+        return array_keys($out);
     }
 
     public function parJeton(string $jeton): ?string
@@ -47,7 +64,8 @@ final class Animateurs
     /** Cours de l'animateur pour la saison (ceux qui ont des inscrits ou des créneaux), cours d'essai en dernier. */
     public function sections(string $mail, int $saisonId): array
     {
-        return array_values(array_filter($this->sectionsAvecMail($saisonId), static fn ($s) => mb_strtolower(trim((string) $s['mail_animateur1'])) === mb_strtolower(trim($mail))));
+        $mail = mb_strtolower(trim($mail));
+        return array_values(array_filter($this->sectionsAvecMail($saisonId), static fn ($s) => in_array($mail, self::mails((string) $s['mail_animateur1']), true)));
     }
 
     /** Lien de l'animateur (créé à la première demande). */

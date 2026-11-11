@@ -44,7 +44,7 @@ final class SectionController
             's' => $s, 'inscrits' => $this->pr->inscrits((int) $s['id'], $sid), 'creneaux' => $this->pr->creneaux((int) $s['id']),
             'seances' => $this->pr->seances((int) $s['id'], $sid), 'assiduite' => $this->pr->assiduite((int) $s['id'], $sid),
             'lien' => App::urlAbsolue('/presence/' . $s['presence_token']),
-            'lienAnimateur' => $s['mail_animateur1'] ? App::urlAbsolue('/animateur/' . (new \Ascs\Domain\Animateurs($this->app->pdo))->jeton((string) $s['mail_animateur1']), ['s' => $s['id']]) : null,
+            'lienAnimateur' => ($m = \Ascs\Domain\Animateurs::mails((string) $s['mail_animateur1'])) ? App::urlAbsolue('/animateur/' . (new \Ascs\Domain\Animateurs($this->app->pdo))->jeton($m[0]), ['s' => $s['id']]) : null,
             'saisonCourante' => $sid === (int) ($this->pr->saisonCourante()['id'] ?? 0),
         ], $s['titre']);
     }
@@ -137,16 +137,23 @@ final class SectionController
     /** @return array{0:string,1:string} type et message */
     private function envoyer(array $s): array
     {
-        if (!$s['mail_animateur1']) {
-            return ['erreur', 'Pas de mail d\'animateur pour cette section (Paramétrage > Sections).'];
+        $mails = \Ascs\Domain\Animateurs::mails((string) $s['mail_animateur1']);
+        if (!$mails) {
+            return ['erreur', 'Pas de mail d\'animateur valide pour cette section (Paramétrage > Sections).'];
         }
         $r = (new Reglages($this->app->pdo))->tous();
         $lien = App::urlAbsolue('/presence/' . $s['presence_token']);
         $texte = "Bonjour,\n\nVoici le lien de la liste de présence de la section " . $s['titre'] . " :\n" . $lien
             . "\n\nIl s'ouvre sur téléphone, sans mot de passe : cochez les présents à chaque séance puis enregistrez.\nCe lien est personnel, merci de ne pas le transmettre.\n\nMerci,\n" . ($r['association'] ?: 'ASCS');
-        $e = (new Envoi($this->app->pdo))->envoyer($r['expediteur'], $r['association'] ?: 'ASCS', (string) $s['mail_animateur1'],
-            'Liste de présence – ' . $s['titre'], $texte, [], null, (string) ($this->app->user['email'] ?? ''));
-        return $e ? ['erreur', $e] : ['ok', 'Lien envoyé à ' . $s['mail_animateur1'] . '.'];
+        $erreurs = [];
+        foreach ($mails as $m) {
+            $e = (new Envoi($this->app->pdo))->envoyer($r['expediteur'], $r['association'] ?: 'ASCS', $m,
+                'Liste de présence – ' . $s['titre'], $texte, [], null, (string) ($this->app->user['email'] ?? ''));
+            if ($e) {
+                $erreurs[] = $m . ' : ' . $e;
+            }
+        }
+        return $erreurs ? ['erreur', implode(' ; ', $erreurs)] : ['ok', 'Lien envoyé à ' . implode(' et ', $mails) . '.'];
     }
 
     public function changementVu(array $p): void
