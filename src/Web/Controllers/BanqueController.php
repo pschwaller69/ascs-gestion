@@ -25,6 +25,54 @@ final class BanqueController
         ];
     }
 
+    /** Règles d'affectation automatique (traitement automatique de WinDev). */
+    public function regles(array $p, ?string $err = null, ?array $saisie = null): string
+    {
+        $r = new \Ascs\Domain\RegleBanque($this->app->pdo);
+        $sid = $this->app->saisonId();
+        $edit = isset($_GET['modifier']) ? $r->trouverParId((int) $_GET['modifier']) : null;
+        return $this->app->render('banque/regles', ['regles' => $r->liste(), 'comptes' => $r->compter($sid), 'nonVentilees' => $r->nonVentilees($sid),
+            'edit' => $edit, 'err' => $err, 'saisie' => $saisie] + $this->options(), 'Règles d\'affectation', 'financier', $err ? 422 : 200);
+    }
+
+    public function regleEnregistrer(array $p): string
+    {
+        $r = new \Ascs\Domain\RegleBanque($this->app->pdo);
+        $id = (int) ($_POST['id'] ?? 0) ?: null;
+        $mt = trim((string) ($_POST['montant'] ?? ''));
+        $montant = $mt === '' ? null : abs((float) str_replace([',', ' ', '€'], ['.', '', ''], $mt));
+        $err = $r->enregistrer($id, (string) ($_POST['motif'] ?? ''), (string) ($_POST['mode'] ?? ''), $montant ?: null, (string) ($_POST['libelle'] ?? ''),
+            array_values((array) ($_POST['l'] ?? [])), !empty($_POST['actif']));
+        if ($err) {
+            if ($id) {
+                $_GET['modifier'] = (string) $id;
+            }
+            return $this->regles($p, $err, $_POST);
+        }
+        $this->app->flash('ok', 'Règle enregistrée.');
+        $this->app->redirect('/banque/regles');
+    }
+
+    public function regleAction(array $p): void
+    {
+        $r = new \Ascs\Domain\RegleBanque($this->app->pdo);
+        $id = (int) $p['id'];
+        match ((string) ($_POST['action'] ?? '')) {
+            'monter' => $r->deplacer($id, -1),
+            'descendre' => $r->deplacer($id, 1),
+            'supprimer' => $r->supprimer($id),
+            default => null,
+        };
+        $this->app->redirect('/banque/regles#r' . $id);
+    }
+
+    public function reglesAppliquer(array $p): void
+    {
+        $n = (new \Ascs\Domain\RegleBanque($this->app->pdo))->appliquer($this->app->saisonId());
+        $this->app->flash('ok', $n ? $n . ' opération(s) ventilée(s) par les règles.' : 'Aucune opération non ventilée ne correspond aux règles.');
+        $this->app->redirect('/banque/regles');
+    }
+
     public function index(array $p): string
     {
         $comptes = $this->b->comptes();

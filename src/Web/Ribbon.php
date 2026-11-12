@@ -90,6 +90,7 @@ final class Ribbon
                     ['Compte bancaire', 'bank', '/banque', null],
                     ['Import relevé', 'upload', '/banque/import', null],
                     ['À ventiler', 'list', '/banque?filtre=a_ventiler', null],
+                    ['Règles d\'affectation', 'gear', '/banque/regles', null],
                     ['Contrôle', 'bank', '/banque/controle', null],
                     ['Export comptable', 'download', '/banque/export', null],
                 ],

@@ -5,7 +5,7 @@ $lignes = $saisie ?? array_map(static fn ($d) => ['section_principale_id' => $d[
 if (!$lignes && $proposition) {
     foreach (Ascs\Domain\Banque::repartir($proposition, (float) $l['valeur']) as $k => $m) {
         $pl = $proposition['lignes'][$k];
-        $lignes[] = ['section_principale_id' => $pl['section_principale_id'], 'type_compte_id' => $pl['type_compte_id'], 'montant' => number_format(abs($m), 2, ',', ''), 'observation' => $pl['observation']];
+        $lignes[] = ['section_principale_id' => $pl['section_principale_id'], 'type_compte_id' => $pl['type_compte_id'], 'montant' => number_format(abs($m), 2, ',', ''), 'observation' => count($proposition['lignes']) > 1 && !empty($pl['libelle']) ? $pl['libelle'] : $pl['observation']];
     }
 }
 $lignes = array_pad($lignes, max(3, count($lignes) + 1), ['section_principale_id' => '', 'type_compte_id' => '', 'montant' => '', 'observation' => '']);
@@ -14,7 +14,7 @@ $lecture = false;
 <div class="titre-page"><h1><?= $neg ? 'Dépense' : 'Recette' ?> du <?= e(dfr($l['date_operation'])) ?></h1><a class="btn" href="<?= e(url('/banque', ['compte' => $l['numero_compte']])) ?>">Compte <?= e($l['numero_compte']) ?></a></div>
 <p class="contexte"><strong><?= e(money($l['valeur'])) ?></strong> · <?= e($l['libelle']) ?></p>
 <?php if ($err): ?><p class="flash flash-erreur" role="alert"><?= e($err) ?></p><?php endif; ?>
-<?php if ($proposition && !$l['details']): ?><p class="flash flash-info">Ventilation proposée d'après les opérations précédentes au même libellé : vérifiez puis enregistrez.</p><?php endif; ?>
+<?php if ($proposition && !$l['details']): ?><p class="flash flash-info"><?= isset($proposition['regle']) ? 'Ventilation proposée par la règle d\'affectation « ' . e($proposition['observation']) . ' »' : 'Ventilation proposée d\'après les opérations précédentes au même libellé' ?> : vérifiez puis enregistrez.</p><?php endif; ?>
 <?php if ($app->transition()): ?><p class="flash flash-info">Mode essai : vous pouvez modifier la ventilation pour tester. WinDev reste la référence : le prochain import WinDev remettra sa ventilation à la place.</p><?php endif; ?>
 <form class="fiche" method="post" action="<?= e(url('/banque/ligne/' . $l['id'])) ?>" id="form-ventilation" data-total="<?= e(number_format(abs((float) $l['valeur']), 2, '.', '')) ?>">
     <?= csrf_field() ?>

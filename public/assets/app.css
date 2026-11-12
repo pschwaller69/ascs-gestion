@@ -552,3 +552,5 @@ tr.ligne-arretee td { color: var(--muted); }
 .table-presences tr.attenue td { color: var(--muted, #777); }
 .table-emargement td.e-oui { text-align: center; font-weight: 700; }
 .table-emargement td.e-non { text-align: center; font-size: .75rem; color: #777; }
+td.actions-ligne { white-space: nowrap; }
+td.actions-ligne form { display: inline; }

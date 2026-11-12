@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.4
+
+- Règles d'affectation (Financier > Banque) : le traitement automatique de WinDev repris tel quel (31 règles : URSSAF, LCT Paie, APICIL et prévoyance partagés 50/50 batterie / taekwondo, factures des intervenants, abonnements, intérêts, subventions…). À l'import d'un relevé, une opération dont le libellé commence par (ou contient) le texte d'une règle, avec un montant exact si besoin, est ventilée toute seule sur une ou plusieurs sections, avec l'observation « Traitement Automatique fait le … ».
+- Les règles passent avant la ventilation apprise de l'historique ; création, modification, ordre et désactivation depuis la page, nombre d'opérations concernées cette saison, et bouton pour ventiler d'un coup les opérations déjà importées qu'une règle sait traiter.
+- Page d'une ligne bancaire : la proposition indique la règle utilisée.
+
 ## 0.9.3
 
 - Export pour le comptable : nouveau classeur « Résultat par section (comme WinDev) ». Une feuille par section principale (opérations de banque ventilées, règlements des inscriptions avec le mode, adhésion et frais de dossier de chaque inscription), totaux en formules, et une feuille Synthèse avec le résultat de chaque section, celui de la saison précédente, les opérations sans section et le résultat de la saison.

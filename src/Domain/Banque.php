@@ -12,6 +12,8 @@ use PDO;
  */
 final class Banque
 {
+    private ?RegleBanque $regles = null;
+
     public function __construct(private readonly PDO $pdo)
     {
     }
@@ -203,7 +205,7 @@ final class Banque
         return null;
     }
 
-    private function insererDetail(int $compteId, int $sp, int $tc, float $m, string $libelle, string $obs, bool $auto): void
+    public function insererDetail(int $compteId, int $sp, int $tc, float $m, string $libelle, string $obs, bool $auto): void
     {
         $id = (int) $this->pdo->query('SELECT COALESCE(MAX(id),0) + 1 FROM detail_compte')->fetchColumn();
         $this->pdo->prepare('INSERT INTO detail_compte (id, compte_id, section_principale_id, type_compte_id, debit, credit, valeur, libelle, observation, traite_auto, date_creation)
@@ -355,6 +357,10 @@ final class Banque
      */
     public function proposition(string $libelle, float $valeur): ?array
     {
+        $this->regles ??= new RegleBanque($this->pdo);
+        if ($r = $this->regles->proposition($libelle, $valeur)) {
+            return $r;
+        }
         $cle = self::cle($libelle);
         if (mb_strlen($cle) < 6 || str_starts_with($cle, 'REM CHQ') || $cle === 'VIR' || $cle === 'CHEQUE') {
             return null;
@@ -465,7 +471,7 @@ final class Banque
             if ($l['proposition']) {
                 foreach (self::repartir($l['proposition'], $v) as $k => $m) {
                     $pl = $l['proposition']['lignes'][$k];
-                    $this->insererDetail($id, $pl['section_principale_id'], $pl['type_compte_id'], $m, $l['libelle'], trim($pl['observation'] . $auto, ' -'), true);
+                    $this->insererDetail($id, $pl['section_principale_id'], $pl['type_compte_id'], $m, $pl['libelle'] ?? $l['libelle'], trim($pl['observation'] . $auto, ' -'), true);
                 }
                 $r['auto']++;
             }

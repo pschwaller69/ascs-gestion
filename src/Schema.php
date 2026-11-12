@@ -276,6 +276,12 @@ final class Schema
                 'cols' => ['adherent_id' => 'int', 'graph_id' => 'str:255', 'empreinte' => 'str:32', 'maj_le' => 'datetime'],
                 'pk' => ['adherent_id'],
             ],
+            // Règle d'affectation automatique des opérations de banque (comme le traitement automatique de WinDev)
+            'regle_banque' => [
+                'cols' => ['id' => 'auto', 'ordre' => 'int', 'motif' => 'str:150', 'mode' => 'str:10', 'montant' => 'dec:10,2?', 'libelle' => 'str:255',
+                    'lignes' => 'text', 'actif' => 'bool', 'cree_le' => 'datetime'],
+                'pk' => ['id'],
+            ],
             // Activité arrêtée (section principale ou section) : plus proposée, gardée dans l'historique
             'section_arret' => [
                 'cols' => ['id' => 'auto', 'type' => 'str:12', 'cible_id' => 'int', 'depuis_saison_id' => 'int?', 'arrete_le' => 'datetime'],
