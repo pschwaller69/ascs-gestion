@@ -6,7 +6,8 @@ namespace Ascs\Documents;
 /**
  * Classeur Excel (.xlsx) minimal, sans bibliothèque : plusieurs feuilles, en-tête en gras figé avec filtre,
  * dates et montants en vrais nombres (les totaux et tableaux croisés marchent dans Excel).
- * Une cellule est une valeur simple, ou ['v' => valeur, 't' => 'date'|'euro'|'gras'|'euro_gras'].
+ * Une cellule est une valeur simple, ou ['v' => valeur, 't' => 'date'|'euro'|'gras'|'euro_gras'], avec 'f' => formule (sans « = ») :
+ * la valeur 'v' sert alors de résultat déjà calculé, Excel recalcule à l'ouverture.
  */
 final class Xlsx
 {
@@ -46,7 +47,7 @@ final class Xlsx
         $z->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
         $z->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-            . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' . $wb . '</sheets></workbook>');
+            . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' . $wb . '</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>');
         $z->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             . $rels . '<Relationship Id="rId' . ($n + 1) . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>');
         // Styles : 0 normal, 1 gras, 2 date, 3 euro, 4 euro gras
@@ -105,9 +106,16 @@ final class Xlsx
     private function cellule(string $ref, mixed $cel, bool $entete): string
     {
         $t = $entete ? 'gras' : null;
+        $f = null;
         if (is_array($cel)) {
             $t = $cel['t'] ?? $t;
+            $f = $cel['f'] ?? null;
             $cel = $cel['v'] ?? null;
+        }
+        if ($f !== null) {
+            $s = ['gras' => 1, 'date' => 2, 'euro' => 3, 'euro_gras' => 4][$t ?? ''] ?? 0;
+            return '<c r="' . $ref . '"' . ($s ? ' s="' . $s . '"' : '') . '><f>' . self::x(ltrim((string) $f, '=')) . '</f>'
+                . (is_int($cel) || is_float($cel) ? '<v>' . round((float) $cel, 2) . '</v>' : '') . '</c>';
         }
         if ($cel === null || $cel === '') {
             return '';

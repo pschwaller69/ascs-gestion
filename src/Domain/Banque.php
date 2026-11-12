@@ -281,7 +281,7 @@ final class Banque
         $c = ['libelle' => []];
         foreach ($f as $i => $nom) {
             $n = DuplicateFinder::norm($nom);
-            if (str_contains($n, 'datevaleur') || $n === 'valeur') {
+            if (str_contains($n, 'datevaleur') || str_contains($n, 'datedevaleur') || $n === 'valeur') {
                 $c['date_valeur'] = $i;
             } elseif (str_contains($n, 'date') && !isset($c['date'])) {
                 $c['date'] = $i;

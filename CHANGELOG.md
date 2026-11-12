@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.3
+
+- Export pour le comptable : nouveau classeur « Résultat par section (comme WinDev) ». Une feuille par section principale (opérations de banque ventilées, règlements des inscriptions avec le mode, adhésion et frais de dossier de chaque inscription), totaux en formules, et une feuille Synthèse avec le résultat de chaque section, celui de la saison précédente, les opérations sans section et le résultat de la saison.
+- Frais ASCS réglables par saison sur la page d'export : 10 € d'adhésion + 20 € (Rillieux) / 30 € (extérieurs) à partir de 2026-2027, 15 € / 25 € avant. Pas de frais sur les cours d'essai ni les inscriptions à 0 €.
+- Aperçu du résultat par section sur la page d'export.
+- Import des relevés : la colonne « Date de valeur » des CSV de la banque est maintenant lue.
+
 ## 0.9.2
 
 - Présences aux cours : nouvelle page (Accueil > Cours) avec, pour chaque cours, séances notées, dernière séance, présents en moyenne et taux.

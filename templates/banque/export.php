@@ -4,6 +4,7 @@ $du = $du ?? '';
 $au = $au ?? '';
 ?>
 <div class="titre-page"><h1>Export pour le comptable</h1></div>
+<p class="contexte"><strong>Résultat par section</strong> : le classeur que générait WinDev (une feuille par section : banque, règlements des inscriptions, adhésion et frais de dossier de chaque inscription), avec une synthèse et la comparaison avec la saison précédente.</p>
 <p class="contexte">Un classeur Excel par période, prêt à transmettre : synthèse avec les soldes d'ouverture et de clôture de chaque compte, journal de banque, ventilation détaillée, totaux par catégorie et par section, et la liste des opérations encore à justifier. Les périodes se calculent sur la date des opérations.</p>
 
 <form method="get" action="<?= e(url('/banque/export')) ?>" class="export-compta">
@@ -25,7 +26,8 @@ $au = $au ?? '';
         <?php endforeach; ?>
     </fieldset>
     <div class="actions">
-        <?php if ($xlsx): ?><button class="btn btn-principal" type="submit" name="format" value="xlsx"><?= icon('download') ?> Télécharger le classeur Excel</button><?php endif; ?>
+        <?php if ($xlsx): ?><button class="btn btn-principal" type="submit" name="format" value="xlsx"><?= icon('download') ?> Télécharger le classeur Excel</button>
+        <button class="btn btn-principal" type="submit" name="format" value="sections"><?= icon('download') ?> Résultat par section (comme WinDev)</button><?php endif; ?>
         <button class="btn" type="submit" name="format" value="apercu"><?= icon('search') ?> Voir la synthèse</button>
         <button class="btn" type="submit" name="format" value="csv"><?= icon('download') ?> Ventilation seule (CSV)</button>
     </div>
@@ -58,4 +60,34 @@ $au = $au ?? '';
 <?php foreach ($d['a_justifier'] as $r): ?><tr><td><?= e(dfr($r['date'])) ?></td><td><a href="<?= e(url('/banque/ligne/' . $r['id'])) ?>"><?= e(mb_strimwidth($r['libelle'], 0, 70, '…')) ?></a></td><td class="num"><?= e(money($r['valeur'])) ?></td><td class="num"><?= e(money($r['reste'])) ?></td></tr><?php endforeach; ?>
 </tbody></table></div>
 <?php else: ?><p class="aide">Toutes les opérations de la période sont ventilées.</p><?php endif; ?>
+
+<?php if (!empty($sections)): [$rs, $saisonTitre] = $sections; $fr = $rs['frais']; ?>
+<section id="sections" class="fiche">
+<h2>Résultat par section · saison <?= e($saisonTitre) ?></h2>
+<form method="post" action="<?= e(url('/banque/export/frais')) ?>" class="filtres">
+    <?= csrf_field() ?>
+    <input type="hidden" name="saison_id" value="<?= (int) $rs['saison_id'] ?>"><input type="hidden" name="periode" value="<?= e($d['periode']['cle']) ?>">
+    <div class="champ"><label for="fa">Adhésion</label><input id="fa" name="adhesion" inputmode="decimal" value="<?= e(number_format($fr['adhesion'], 2, ',', '')) ?>"></div>
+    <div class="champ"><label for="fr">Frais de dossier Rillieux</label><input id="fr" name="rillieux" inputmode="decimal" value="<?= e(number_format($fr['rillieux'], 2, ',', '')) ?>"></div>
+    <div class="champ"><label for="fe">Frais de dossier extérieurs</label><input id="fe" name="exterieur" inputmode="decimal" value="<?= e(number_format($fr['exterieur'], 2, ',', '')) ?>"></div>
+    <button class="btn" type="submit">Enregistrer pour <?= e($saisonTitre) ?></button>
+</form>
+<p class="aide">Retenus sur chaque inscription payante (hors cours d'essai et inscriptions à 0 €) et reversés au fonctionnement<?= $fr['regle'] ? '' : ' — valeurs par défaut, enregistrez-les pour les confirmer' ?>.</p>
+<div class="table-cadre"><table>
+    <thead><tr><th>Section</th><th class="num">Inscriptions</th><th class="num">Dépenses</th><th class="num">Recettes</th><th class="num">dont espèces</th><th class="num">Adhésions + frais</th><th class="num">Résultat</th></tr></thead>
+    <tbody>
+    <?php foreach ($rs['sections'] as $s): ?>
+        <tr><td><?= e($s['titre']) ?></td><td class="num"><?= count($s['frais']) ?></td><td class="num"><?= e(money($s['depenses'])) ?></td><td class="num"><?= e(money($s['recettes'])) ?></td>
+            <td class="num"><?= $s['especes'] ? e(money($s['especes'])) : '' ?></td><td class="num"><?= e(money(($s['fonctionnement'] ? 1 : -1) * ($s['fonctionnement'] ? array_sum(array_column($rs['sections'], 'adhesion')) + array_sum(array_column($rs['sections'], 'dossier')) : $s['adhesion'] + $s['dossier']))) ?></td>
+            <td class="num"><strong class="<?= $s['resultat'] < 0 ? 'texte-erreur' : '' ?>"><?= e(money($s['resultat'])) ?></strong></td></tr>
+    <?php endforeach; ?>
+    </tbody>
+    <?php $na = $rs['non_affecte']; ?>
+    <tfoot>
+        <tr><td>Sans section (catégorie seule)</td><td></td><td class="num"><?= e(money($na['depenses'])) ?></td><td class="num"><?= e(money($na['recettes'])) ?></td><td></td><td></td><td class="num"><?= e(money($na['recettes'] - $na['depenses'])) ?></td></tr>
+        <tr><th>Résultat de la saison</th><th></th><th></th><th></th><th></th><th></th><th class="num"><?= e(money(array_sum(array_column($rs['sections'], 'resultat')) + $na['recettes'] - $na['depenses'])) ?></th></tr>
+    </tfoot>
+</table></div>
+</section>
+<?php endif; ?>
 <?php endif; ?>

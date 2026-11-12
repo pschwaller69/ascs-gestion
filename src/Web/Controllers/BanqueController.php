@@ -160,10 +160,16 @@ final class BanqueController
             $this->app->redirect('/banque/export');
         }
         $numeros = array_values(array_filter(array_map('strval', (array) ($_GET['comptes'] ?? [])), static fn ($n) => preg_match('/^\d+$/', $n)));
+        if (($_GET['format'] ?? '') === 'sections' && \Ascs\Documents\Xlsx::disponible()) {
+            [$rs, $saison, $prec, $saisonPrec] = $this->resultatSections($per, true);
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="resultat-sections-ascs-' . $saison . '.xlsx"');
+            return \Ascs\Documents\ClasseurSections::construire($rs, $saison, $per, $prec, $saisonPrec)->contenu();
+        }
         $d = $this->b->comptable($per, $numeros);
         if (($_GET['format'] ?? '') === 'apercu') {
             return $this->app->render('banque/export', ['periodes' => $periodes, 'comptes' => $comptes, 'defaut' => $per['cle'], 'xlsx' => \Ascs\Documents\Xlsx::disponible(), 'apercu' => $d,
-                'choisis' => $numeros, 'du' => $_GET['du'] ?? '', 'au' => $_GET['au'] ?? ''], 'Export pour le comptable', 'financier');
+                'sections' => $this->resultatSections($per, false), 'choisis' => $numeros, 'du' => $_GET['du'] ?? '', 'au' => $_GET['au'] ?? ''], 'Export pour le comptable', 'financier');
         }
         $nom = 'comptes-ascs-' . $per['du'] . '-au-' . $per['au'];
         if (($_GET['format'] ?? '') === 'csv' || !\Ascs\Documents\Xlsx::disponible()) {
@@ -183,6 +189,41 @@ final class BanqueController
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $nom . '.xlsx"');
         return self::classeur($d)->contenu();
+    }
+
+    /**
+     * Résultat par section de la saison de la période (et de la saison précédente pour comparer).
+     * @return array{0:array,1:string,2:?array,3:string}
+     */
+    private function resultatSections(array $per, bool $avecPrecedente): array
+    {
+        $rs = new \Ascs\Domain\ResultatSections($this->app->pdo);
+        $sid = preg_match('/^s(\d+)$/', $per['cle'], $m) ? (int) $m[1] : ($this->b->saisonDe($per['du']) ?? $this->app->saisonId());
+        $st = $this->app->pdo->prepare('SELECT id, titre FROM saison WHERE date_debut < (SELECT date_debut FROM saison WHERE id = ?) ORDER BY date_debut DESC LIMIT 1');
+        $st->execute([$sid]);
+        $p = $st->fetch();
+        $titre = $this->app->pdo->prepare('SELECT titre FROM saison WHERE id = ?');
+        $titre->execute([$sid]);
+        $prec = null;
+        if ($avecPrecedente && $p && ($pp = $this->b->periode('s' . $p['id']))) {
+            $prec = $rs->calculer((int) $p['id'], $pp);
+        }
+        return [$rs->calculer($sid, $per), (string) $titre->fetchColumn(), $prec, $p ? (string) $p['titre'] : ''];
+    }
+
+    /** Frais ASCS retenus par inscription (adhésion, frais de dossier Rillieux / extérieurs) pour une saison. */
+    public function fraisAscs(array $p): void
+    {
+        $sid = (int) ($_POST['saison_id'] ?? 0);
+        $n = static fn (string $k) => (float) str_replace([',', ' ', '€'], ['.', '', ''], (string) ($_POST[$k] ?? ''));
+        $v = [$n('adhesion'), $n('rillieux'), $n('exterieur')];
+        if ($sid <= 0 || min($v) < 0 || max($v) > 500) {
+            $this->app->flash('erreur', 'Montants invalides : indiquez des montants entre 0 et 500 €.');
+        } else {
+            (new \Ascs\Domain\ResultatSections($this->app->pdo))->reglerFrais($sid, ...$v);
+            $this->app->flash('ok', 'Frais ASCS enregistrés pour cette saison.');
+        }
+        $this->app->redirect('/banque/export?' . http_build_query(['periode' => (string) ($_POST['periode'] ?? 's' . $sid), 'format' => 'apercu']) . '#sections');
     }
 
     private static function classeur(array $d): \Ascs\Documents\Xlsx

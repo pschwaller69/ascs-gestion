@@ -142,6 +142,7 @@ $router->post('/banque/import', [BanqueController::class, 'lire']);
 $router->post('/banque/import/confirmer', [BanqueController::class, 'confirmer']);
 $router->get('/banque/controle', [BanqueController::class, 'controle']);
 $router->get('/banque/export', [BanqueController::class, 'export']);
+$router->post('/banque/export/frais', [BanqueController::class, 'fraisAscs']);
 $router->get('/reporting/adherents', [ReportingController::class, 'adherents']);
 $router->get('/reporting/sections', [ReportingController::class, 'sections']);
 $router->get('/reporting/courbe', [ReportingController::class, 'courbe']);
