@@ -13,7 +13,7 @@
     <p>Boîte : <strong><?= e($boite) ?></strong>, dossier de contacts « ASCS ».<br>
         <?= (int) $nbSynchro ?> contact(s) synchronisé(s) · <?= (int) $nbVoulus ?> adhérent(s) à avoir dans Outlook.<br>
         Dernière synchronisation : <?= $derniere['quand'] ? e(dfr((string) $derniere['quand'])) . ' à ' . e(substr((string) $derniere['quand'], 11, 5)) . ' — ' . ($derniere['ok'] ? '' : '<strong class="texte-erreur">') . e((string) $derniere['resume']) . ($derniere['ok'] ? '' : '</strong>') : 'jamais' ?></p>
-    <p class="aide">Une tâche planifiée la refait toutes les heures. Le premier passage peut demander deux ou trois clics (400 contacts par passage).</p>
+    <p class="aide">Une tâche planifiée la refait chaque soir à 19 h. Le premier passage peut demander deux ou trois clics (400 contacts par passage).</p>
     <form method="post" action="<?= e(url('/contacts')) ?>"><?= csrf_field() ?>
         <button class="btn btn-principal" type="submit" name="action" value="synchroniser"><?= icon('download') ?> Synchroniser maintenant</button>
     </form>

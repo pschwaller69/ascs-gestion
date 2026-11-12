@@ -114,6 +114,6 @@ Déclaration de l'application, une fois (centre d'administration Microsoft Entra
 4. Autorisations d'API > Ajouter une autorisation > Microsoft Graph > **Autorisations d'application** > `Contacts.ReadWrite` > Ajouter, puis « Accorder un consentement d'administrateur ».
 5. `M365_BOITE` = l'adresse de la boîte qui reçoit les contacts (ex. contact@ascs.fr).
 6. Recommandé : limiter l'application à cette seule boîte (Exchange Online, contrôle d'accès des applications / ApplicationAccessPolicy), sinon le droit vaut pour toutes les boîtes du tenant.
-7. Tâche cron toutes les heures : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/contacts.php` (n'affiche rien quand tout va bien).
+7. Tâche cron chaque jour à 19 h (`0 19 * * *`) : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/contacts.php` (n'affiche rien quand tout va bien).
 
 Sur le téléphone : application Outlook > Réglages > le compte > « Synchroniser les contacts ».
