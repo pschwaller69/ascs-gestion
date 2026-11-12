@@ -44,6 +44,8 @@ final class SectionController
         return $this->app->render('sections/fiche', [
             's' => $s, 'inscrits' => $this->pr->inscrits((int) $s['id'], $sid), 'creneaux' => $this->pr->creneaux((int) $s['id']),
             'seances' => $this->pr->seances((int) $s['id'], $sid), 'assiduite' => $this->pr->assiduite((int) $s['id'], $sid),
+            'grille' => $this->pr->grille((int) $s['id'], $sid),
+            'participants' => ($pa = new \Ascs\Domain\Participants($this->app->pdo))->duCours((int) $s['id'], $sid), 'grilleParticipants' => $pa->grille((int) $s['id'], $sid),
             'lien' => App::urlAbsolue('/presence/' . $s['presence_token']),
             'lienAnimateur' => ($m = \Ascs\Domain\Animateurs::mails((string) $s['mail_animateur1'])) ? App::urlAbsolue('/animateur/' . (new \Ascs\Domain\Animateurs($this->app->pdo))->jeton($m[0]), ['s' => $s['id']]) : null,
             'saisonCourante' => $sid === (int) ($this->pr->saisonCourante()['id'] ?? 0),
@@ -61,8 +63,15 @@ final class SectionController
         $saison->execute([$sid]);
         return $this->app->renderPublic('sections/emargement', [
             's' => $s, 'inscrits' => $this->pr->inscrits((int) $s['id'], $sid), 'creneaux' => $this->pr->creneaux((int) $s['id']),
-            'dates' => $dates, 'colonnes' => $nb, 'depuis' => $depuis, 'saison' => (string) $saison->fetchColumn(),
+            'dates' => $dates, 'colonnes' => $nb, 'grille' => $this->pr->grille((int) $s['id'], $sid), 'depuis' => $depuis, 'saison' => (string) $saison->fetchColumn(),
         ], 'Émargement ' . $s['titre']);
+    }
+
+    /** Présences de la saison, toutes sections : séances notées, dernière séance, moyenne de présents. */
+    public function presences(array $p): string
+    {
+        $sid = $this->app->saisonId();
+        return $this->app->render('sections/presences', ['sections' => $this->pr->sections($sid), 'resume' => $this->pr->resume($sid)], 'Présences aux cours');
     }
 
     public function nouveauLien(array $p): void

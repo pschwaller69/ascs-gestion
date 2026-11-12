@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.2
+
+- Présences aux cours : nouvelle page (Accueil > Cours) avec, pour chaque cours, séances notées, dernière séance, présents en moyenne et taux.
+- Fiche d'une section : grille des présences de la saison (adhérent × séance, ✓ présent / – absent, venues par adhérent, présents par séance), personnes non inscrites comprises ; sur téléphone, les séances récentes s'affichent d'abord.
+- Feuille d'émargement : les séances déjà pointées par l'animateur sont pré-remplies (✓ / abs).
+
 ## 0.9.1
 
 - Contacts Outlook : synchronisation automatique chaque soir à 19 h (texte de la page et README).

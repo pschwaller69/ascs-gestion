@@ -1,4 +1,4 @@
-<?php /** @var array $s @var array $inscrits @var array $creneaux @var list<string> $dates @var int $colonnes @var string $depuis @var string $saison */
+<?php /** @var array $s @var array $inscrits @var array $creneaux @var list<string> $dates @var int $colonnes @var string $depuis @var string $saison @var array $grille */
 $cols = $dates ?: array_fill(0, $colonnes, '');
 ?>
 <div class="feuille-emargement">
@@ -14,10 +14,10 @@ $cols = $dates ?: array_fill(0, $colonnes, '');
     <thead><tr><th class="e-nom">Nom</th><th class="e-tel">Téléphone</th><?php foreach ($cols as $d): ?><th class="e-date"><?= $d ? e(substr(dfr($d), 0, 5)) : '&nbsp;' ?></th><?php endforeach; ?></tr></thead>
     <tbody>
     <?php foreach ($inscrits as $i): ?>
-        <tr><td class="e-nom"><?= e(mb_strtoupper((string) $i['nom']) . ' ' . $i['prenom']) ?></td><td class="e-tel"><?= e($i['telephone1'] ?? '') ?></td><?php foreach ($cols as $_): ?><td></td><?php endforeach; ?></tr>
+        <tr><td class="e-nom"><?= e(mb_strtoupper((string) $i['nom']) . ' ' . $i['prenom']) ?></td><td class="e-tel"><?= e($i['telephone1'] ?? '') ?></td><?php foreach ($cols as $d): $v = $d ? ($grille['p'][(int) $i['id']][$d] ?? null) : null; ?><td class="e-date<?= $v === null ? '' : ($v ? ' e-oui' : ' e-non') ?>"><?= $v === null ? '' : ($v ? '✓' : 'abs') ?></td><?php endforeach; ?></tr>
     <?php endforeach; ?>
     <?php for ($k = 0; $k < 3; $k++): ?><tr class="e-libre"><td class="e-nom">&nbsp;</td><td></td><?php foreach ($cols as $_): ?><td></td><?php endforeach; ?></tr><?php endfor; ?>
     </tbody>
 </table>
-<p class="aide">Trois lignes libres pour les cours d'essai ou les nouveaux inscrits.</p>
+<p class="aide">Trois lignes libres pour les cours d'essai ou les nouveaux inscrits.<?= array_intersect($cols, $grille['dates']) ? ' Les séances déjà notées par l\'animateur sont pré-remplies (✓ présent, abs absent).' : '' ?></p>
 </div>

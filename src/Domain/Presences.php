@@ -129,6 +129,40 @@ final class Presences
     }
 
     /**
+     * Grille de la saison : séances notées (de la plus ancienne à la plus récente) et présence de chaque adhérent.
+     * @return array{dates:list<string>,p:array<int,array<string,bool>>}
+     */
+    public function grille(int $sectionId, int $saisonId): array
+    {
+        $st = $this->pdo->prepare('SELECT adherent_id, date_seance, present FROM presence WHERE section_id = ? AND saison_id = ? ORDER BY date_seance');
+        $st->execute([$sectionId, $saisonId]);
+        $dates = [];
+        $p = [];
+        foreach ($st->fetchAll() as $r) {
+            $d = (string) $r['date_seance'];
+            $dates[$d] = true;
+            $p[(int) $r['adherent_id']][$d] = (bool) (int) $r['present'];
+        }
+        return ['dates' => array_keys($dates), 'p' => $p];
+    }
+
+    /**
+     * Vue d'ensemble de la saison, par section : séances notées, dernière séance, moyenne de présents.
+     * @return array<int,array{seances:int,derniere:?string,presents:int,notes:int}>
+     */
+    public function resume(int $saisonId): array
+    {
+        $st = $this->pdo->prepare('SELECT section_id, COUNT(DISTINCT date_seance) AS seances, MAX(date_seance) AS derniere, SUM(present) AS presents, COUNT(*) AS notes
+            FROM presence WHERE saison_id = ? GROUP BY section_id');
+        $st->execute([$saisonId]);
+        $out = [];
+        foreach ($st->fetchAll() as $r) {
+            $out[(int) $r['section_id']] = ['seances' => (int) $r['seances'], 'derniere' => $r['derniere'], 'presents' => (int) $r['presents'], 'notes' => (int) $r['notes']];
+        }
+        return $out;
+    }
+
+    /**
      * Enregistre une séance : chaque inscrit est noté présent ou absent (les non-inscrits envoyés sont ignorés).
      * @param list<int|string> $presents identifiants des adhérents cochés
      */

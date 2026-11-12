@@ -537,3 +537,18 @@ tr.ligne-arretee td { color: var(--muted); }
 .aide-sms summary { cursor: pointer; color: var(--teal); }
 .aide-sms ul { margin: .4rem 0; padding-left: 1.2rem; }
 .aide-sms li { margin: .3rem 0; }
+
+/* Grille des présences (fiche section) */
+.grille-presence { border-collapse: separate; border-spacing: 0; font-size: .85rem; }
+.grille-presence th, .grille-presence td { padding: .3rem .4rem; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+.grille-presence .g-nom { position: sticky; left: 0; z-index: 1; background: var(--surface); text-align: left; font-weight: 500; min-width: 11rem; border-right: 1px solid var(--line); }
+.grille-presence thead th { font-size: .75rem; font-weight: 600; }
+.grille-presence .g-date { min-width: 2.6rem; }
+.grille-presence .g-total { border-right: 1px solid var(--line); }
+.grille-presence .g-oui { color: #0f7a5a; font-weight: 700; background: #e6f4ee; }
+.grille-presence .g-non { color: #9a6b6b; }
+.grille-presence .g-noninscrit .g-nom { font-style: italic; font-weight: 400; }
+.grille-presence tfoot th, .grille-presence tfoot td { font-weight: 600; border-bottom: 0; border-top: 2px solid var(--line); }
+.table-presences tr.attenue td { color: var(--muted, #777); }
+.table-emargement td.e-oui { text-align: center; font-weight: 700; }
+.table-emargement td.e-non { text-align: center; font-size: .75rem; color: #777; }

@@ -38,6 +38,7 @@ final class Ribbon
                 ],
                 'Cours' => [
                     ['Par section', 'layers', '/sections', null],
+                    ['Présences aux cours', 'check', '/sections/presences', null],
                     ['Cartes de séances', 'wallet', '/sections/cartes', null],
                     ['Venus sans inscription', 'user-plus', '/sections/a-relancer', null],
                 ],

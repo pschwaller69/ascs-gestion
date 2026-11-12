@@ -456,3 +456,9 @@
         });
     });
 }());
+
+// Grille des présences : afficher d'abord les séances les plus récentes (défilement à droite)
+(function () {
+    'use strict';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-defiler-fin]'), function (c) { c.scrollLeft = c.scrollWidth; });
+}());

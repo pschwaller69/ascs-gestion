@@ -131,6 +131,19 @@ final class Participants
         return $out;
     }
 
+    /** @return array<int,array<string,bool>> participant => date => présent, sur la saison */
+    public function grille(int $sectionId, int $saisonId): array
+    {
+        $st = $this->pdo->prepare('SELECT pp.participant_id, pp.date_seance, pp.present FROM presence_participant pp JOIN participant p ON p.id = pp.participant_id
+            WHERE p.section_id = ? AND p.saison_id = ?');
+        $st->execute([$sectionId, $saisonId]);
+        $out = [];
+        foreach ($st->fetchAll() as $r) {
+            $out[(int) $r['participant_id']][(string) $r['date_seance']] = (bool) (int) $r['present'];
+        }
+        return $out;
+    }
+
     /** Enregistre la séance pour les non-inscrits affichés (cochés = présents). @param list<mixed> $presents */
     public function enregistrer(int $sectionId, int $saisonId, string $date, array $presents): void
     {

@@ -1,4 +1,4 @@
-<?php /** @var array $s @var array $inscrits @var array $creneaux @var array $seances @var array $assiduite @var string $lien @var ?string $lienAnimateur @var bool $saisonCourante */ ?>
+<?php /** @var array $grille @var array $participants @var array $grilleParticipants @var array $s @var array $inscrits @var array $creneaux @var array $seances @var array $assiduite @var string $lien @var ?string $lienAnimateur @var bool $saisonCourante */ ?>
 <div class="titre-page">
     <h1><?= e($s['titre']) ?></h1>
     <div class="actions-titre">
@@ -7,7 +7,7 @@
         <a class="btn" href="<?= e(url('/parametrage/sections/' . $s['id'])) ?>">Paramétrage</a>
     </div>
 </div>
-<p class="contexte"><?= e($s['principale'] ?? '') ?><?= $creneaux ? ' · ' . e(implode(', ', $creneaux)) : '' ?> · <?= count($inscrits) ?> inscrit<?= count($inscrits) > 1 ? 's' : '' ?><?= $seances ? ' · ' . count($seances) . ' séance(s) notée(s)' : '' ?></p>
+<p class="contexte"><?= e($s['principale'] ?? '') ?><?= $creneaux ? ' · ' . e(implode(', ', $creneaux)) : '' ?> · <?= count($inscrits) ?> inscrit<?= count($inscrits) > 1 ? 's' : '' ?><?= $seances ? ' · <a href="#presences">' . count($seances) . ' séance(s) notée(s)</a>' : '' ?></p>
 
 <details class="fiche lien-animateur">
     <summary>Lien de ce cours seul</summary>
@@ -49,8 +49,5 @@
     </tbody>
 </table></div>
 <?php endif; ?>
-<?php if ($seances): ?>
-    <h2>Séances notées</h2>
-    <ul class="liste-simple"><?php foreach ($seances as $se): ?><li><?= e(dfr($se['date_seance'])) ?> : <?= (int) $se['presents'] ?> présent(s) sur <?= (int) $se['total'] ?></li><?php endforeach; ?></ul>
-<?php endif; ?>
+<?php if ($inscrits || $participants) { require __DIR__ . '/_grille.php'; } ?>
 <script src="<?= e(url('/assets/qrcode.js')) ?>?v=<?= e(Ascs\Web\Ribbon::version()) ?>"></script>
