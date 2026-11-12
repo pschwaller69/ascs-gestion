@@ -8,6 +8,10 @@ if (!$lignes && $proposition) {
         $lignes[] = ['section_principale_id' => $pl['section_principale_id'], 'type_compte_id' => $pl['type_compte_id'], 'montant' => number_format(abs($m), 2, ',', ''), 'observation' => count($proposition['lignes']) > 1 && !empty($pl['libelle']) ? $pl['libelle'] : $pl['observation']];
     }
 }
+// Rien de proposé : le montant entier sur la première ligne (le plus souvent une seule section)
+if (!$lignes && !$l['virement_interne']) {
+    $lignes[] = ['section_principale_id' => '', 'type_compte_id' => '', 'montant' => number_format(abs((float) $l['valeur']), 2, ',', ''), 'observation' => ''];
+}
 $lignes = array_pad($lignes, max(3, count($lignes) + 1), ['section_principale_id' => '', 'type_compte_id' => '', 'montant' => '', 'observation' => '']);
 $lecture = false;
 ?>

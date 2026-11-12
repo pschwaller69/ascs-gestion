@@ -462,3 +462,36 @@
     'use strict';
     Array.prototype.forEach.call(document.querySelectorAll('[data-defiler-fin]'), function (c) { c.scrollLeft = c.scrollWidth; });
 }());
+
+// Ventilation d'une ligne bancaire : le reste à répartir se met tout seul sur la ligne dont on choisit la section
+(function () {
+    'use strict';
+    var f = document.getElementById('form-ventilation');
+    if (!f) { return; }
+    var total = parseFloat(f.getAttribute('data-total')) || 0;
+    var info = document.getElementById('reste-ventilation');
+    var texte = info ? info.textContent : '';
+    var montants = Array.prototype.slice.call(f.querySelectorAll('[data-montant-ventilation]'));
+    var lire = function (i) { var v = parseFloat(String(i.value).replace(/\s/g, '').replace(',', '.')); return isNaN(v) ? 0 : Math.abs(v); };
+    var reste = function (sauf) { return Math.round((total - montants.reduce(function (s, i) { return i === sauf ? s : s + lire(i); }, 0)) * 100) / 100; };
+    var afficher = function () {
+        if (!info) { return; }
+        var r = reste(null);
+        info.textContent = Math.abs(r) < 0.005 ? texte.replace(/ à répartir\.$/, ' : tout est réparti.') : texte + ' Reste ' + r.toFixed(2).replace('.', ',') + ' €.';
+    };
+    montants.forEach(function (m) {
+        m.addEventListener('input', afficher);
+        var ligne = m.closest('tr');
+        var sel = ligne ? ligne.querySelector('select') : null;
+        if (sel) {
+            sel.addEventListener('change', function () {
+                var r = reste(m);
+                if (sel.value && m.value.trim() === '' && r > 0.005) {
+                    m.value = r.toFixed(2).replace('.', ',');
+                    afficher();
+                }
+            });
+        }
+    });
+    afficher();
+}());

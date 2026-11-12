@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.5
+
+- Ventilation à la main d'une ligne bancaire : sans proposition, le montant entier est déjà sur la première ligne (il suffit de choisir la section et la catégorie). Pour partager, en choisissant la section d'une autre ligne, le reste à répartir s'y met tout seul ; le reste est affiché en direct.
+
 ## 0.9.4
 
 - Règles d'affectation (Financier > Banque) : le traitement automatique de WinDev repris tel quel (31 règles : URSSAF, LCT Paie, APICIL et prévoyance partagés 50/50 batterie / taekwondo, factures des intervenants, abonnements, intérêts, subventions…). À l'import d'un relevé, une opération dont le libellé commence par (ou contient) le texte d'une règle, avec un montant exact si besoin, est ventilée toute seule sur une ou plusieurs sections, avec l'observation « Traitement Automatique fait le … ».
