@@ -29,6 +29,7 @@ $texteSms = 'Bonjour, information pour le cours ' . $s['titre'] . ' : ';
     <a class="btn" data-sms-numeros="<?= e(implode(',', $numeros)) ?>" data-sms-texte="<?= e($texteSms) ?>" href="sms:<?= e(implode(',', $numeros)) ?>?body=<?= e(rawurlencode($texteSms)) ?>"><?= icon('sms') ?> SMS à tout le cours (<?= count($numeros) ?>)</a>
     <small class="aide">Pour prévenir d'un retard ou d'une annulation : ouvre la messagerie du téléphone avec les numéros déjà remplis.</small>
 </p>
+<?php require __DIR__ . '/../_sms_groupe.php'; ?>
 <?php endif; ?>
 
 <form method="get" action="<?= e(url($base)) ?>" class="filtres">

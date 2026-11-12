@@ -66,6 +66,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
     <h2>Envoyer depuis le téléphone de l'association</h2>
     <p>Ouvrez cette page sur le téléphone. Chaque bouton ouvre l'application Messages avec les numéros et le texte ; appuyez sur Envoyer, revenez ici et cochez « envoyé ».
         <strong>Désactivez les messages de groupe (MMS / RCS) dans les réglages de Messages</strong> : sinon les destinataires d'un paquet verraient les numéros des autres. Dans le doute, envoyez un par un.</p>
+    <?php require __DIR__ . '/../_sms_groupe.php'; ?>
     <?php foreach (array_chunk($aEnvoyer, 10) as $k => $paquet): $nums = array_map(static fn ($d) => $d['adresse'], $paquet); ?>
         <form method="post" action="<?= e(url('/mailing/' . $c['id'] . '/marquer')) ?>" class="paquet-sms">
             <?= csrf_field() ?>

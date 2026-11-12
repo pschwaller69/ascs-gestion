@@ -531,3 +531,9 @@ tr.ligne-arretee td { color: var(--muted); }
 .puce-insc.puce-reprendre { background: var(--surface); border-color: var(--teal); }
 .puce-insc.puce-reprendre.choisi { background: var(--teal); color: #fff; }
 .puce-insc.puce-reprendre.choisi small { color: #e3f2f1; }
+
+/* Rappel du réglage « SMS individuels » */
+.aide-sms { margin: .2rem 0 1rem; font-size: .88rem; }
+.aide-sms summary { cursor: pointer; color: var(--teal); }
+.aide-sms ul { margin: .4rem 0; padding-left: 1.2rem; }
+.aide-sms li { margin: .3rem 0; }

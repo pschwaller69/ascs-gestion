@@ -15,6 +15,7 @@ $numeros = array_keys($numeros);
     <a class="btn btn-petit<?= $tous ? ' actif' : '' ?>" href="<?= e(url('/sections/a-relancer', ['tous' => 1])) ?>">Tous, y compris inscrits et retirés</a>
     <?php if ($numeros): ?><a class="btn btn-petit" data-sms-numeros="<?= e(implode(',', $numeros)) ?>" data-sms-texte="Bonjour, " href="sms:<?= e(implode(',', $numeros)) ?>?body=<?= e(rawurlencode('Bonjour, ')) ?>"><?= icon('sms') ?> SMS aux <?= count($numeros) ?> à relancer</a><?php endif; ?>
 </p>
+<?php if ($numeros) { require __DIR__ . '/../_sms_groupe.php'; } ?>
 <?php if (!$participants): ?>
 <p class="vide">Personne à relancer.</p>
 <?php else: ?>

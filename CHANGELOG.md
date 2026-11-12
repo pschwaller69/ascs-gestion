@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.12
+
+- Rappel du réglage « SMS individuels » sous chaque bouton d'SMS groupé (SMS à tout le cours, relances des non-inscrits, cartes terminées, envoi depuis le téléphone de l'association) : comment désactiver les messages de groupe sur Android (Messages de Google), Samsung et iPhone, pour que chacun reçoive un SMS séparé sans voir les numéros des autres.
+
 ## 0.8.11
 
 - Communauté WhatsApp (Mail > Mailings et SMS) : le lien d'invitation s'enregistre une fois (vérifié : https://chat.whatsapp.com/…), puis « Inviter par mail » ou « Inviter par SMS » prépare l'envoi à tous les adhérents de la saison avec un message prêt, personnalisé au prénom. Il suit le circuit habituel : nombre de destinataires, envoi de test, validation ; les personnes qui ont refusé les mails ou les SMS sont exclues. Le lien n'est pas écrit dans le programme (dépôt public), seulement dans les réglages.

@@ -20,6 +20,7 @@ $nbBientot = count(array_filter($porteurs, static fn ($p) => $p['restantes'] > 0
     <a class="btn btn-petit<?= $filtre === 'bientot' ? ' actif' : '' ?>" href="<?= e(url('/sections/cartes', ['filtre' => 'bientot'])) ?>">2 séances ou moins (<?= $nbFin + $nbBientot ?>)</a>
     <?php if ($numeros): ?><a class="btn btn-petit" data-sms-numeros="<?= e(implode(',', $numeros)) ?>" data-sms-texte="Bonjour, votre carte de séances est terminée. " href="sms:<?= e(implode(',', $numeros)) ?>?body=<?= e(rawurlencode('Bonjour, votre carte de séances est terminée. ')) ?>"><?= icon('sms') ?> SMS aux <?= count($numeros) ?> cartes terminées</a><?php endif; ?>
 </p>
+<?php if ($numeros) { require __DIR__ . '/../_sms_groupe.php'; } ?>
 
 <?php if (!$reglages): ?>
     <p class="vide">Aucune section n'est gérée à la carte : choisissez-les ci-dessous.</p>
