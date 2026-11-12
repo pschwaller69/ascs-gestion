@@ -27,7 +27,8 @@ final class MailingController
 
     public function index(array $p): string
     {
-        return $this->app->render('mailing/index', ['campagnes' => $this->m->campagnes()], 'Mailings et SMS', 'mail');
+        return $this->app->render('mailing/index', ['campagnes' => $this->m->campagnes(),
+            'whatsapp' => (string) \Ascs\Parametres::get($this->app->pdo, 'whatsapp_communaute')], 'Mailings et SMS', 'mail');
     }
 
     private function sections(): array
@@ -42,6 +43,17 @@ final class MailingController
         $canal = ($_GET['canal'] ?? '') === 'sms' ? 'sms' : 'mail';
         $cible = isset(Mailing::CIBLES[$_GET['cible'] ?? '']) ? $_GET['cible'] : 'saison';
         $d = ['canal' => $canal, 'cible' => $cible, 'sections' => array_map('intval', (array) ($_GET['sections'] ?? [])), 'objet' => '', 'texte' => $canal === 'sms' ? '' : "Bonjour {prenom},\n\n"];
+        // Modèle : invitation à la communauté WhatsApp de l'association (tous les adhérents de la saison)
+        $wa = (string) \Ascs\Parametres::get($this->app->pdo, 'whatsapp_communaute');
+        if (($_GET['modele'] ?? '') === 'whatsapp' && $wa !== '') {
+            $asso = (new Reglages($this->app->pdo))->tous()['association'] ?: 'l\'ASCS';
+            $d['cible'] = 'saison';
+            $d['objet'] = 'Rejoignez la communauté WhatsApp de ' . $asso;
+            $d['texte'] = $canal === 'sms'
+                ? 'Bonjour {prenom}, rejoignez la communauté WhatsApp de ' . $asso . ' : infos des sections, annulations de cours, événements. ' . $wa
+                : "Bonjour {prenom},\n\nL'association a une communauté WhatsApp qui réunit toutes les sections : informations de votre section, annulations ou changements de cours, événements de l'association.\n\nPour la rejoindre, ouvrez ce lien depuis votre téléphone :\n" . $wa
+                  . "\n\nVous pouvez ensuite choisir les groupes de vos sections. Votre numéro n'est visible que des administrateurs de la communauté.\n\nÀ bientôt,\n" . $asso;
+        }
         return $this->form($d, []);
     }
 
@@ -281,5 +293,18 @@ final class MailingController
         $id = Mailing::verifierJeton((string) $p['jeton']);
         $fait = $id !== null && $this->m->desinscrire($id);
         return $this->app->renderPublic('mailing/desinscription', ['ok' => $id !== null, 'fait' => $fait, 'jeton' => $p['jeton']], 'Désinscription', $id ? 200 : 404);
+    }
+
+    /** Lien d'invitation de la communauté WhatsApp (gardé dans les réglages). */
+    public function whatsapp(array $p): void
+    {
+        $lien = trim((string) ($_POST['lien'] ?? ''));
+        if ($lien !== '' && !preg_match('#^https://chat\.whatsapp\.com/[A-Za-z0-9]+$#', $lien)) {
+            $this->app->flash('erreur', 'Lien non reconnu : il doit ressembler à https://chat.whatsapp.com/… (Communauté > Inviter > Copier le lien).');
+        } else {
+            \Ascs\Parametres::set($this->app->pdo, 'whatsapp_communaute', $lien);
+            $this->app->flash('ok', $lien === '' ? 'Lien retiré.' : 'Lien de la communauté WhatsApp enregistré.');
+        }
+        $this->app->redirect('/mailing');
     }
 }

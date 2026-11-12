@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.8.11
+
+- Communauté WhatsApp (Mail > Mailings et SMS) : le lien d'invitation s'enregistre une fois (vérifié : https://chat.whatsapp.com/…), puis « Inviter par mail » ou « Inviter par SMS » prépare l'envoi à tous les adhérents de la saison avec un message prêt, personnalisé au prénom. Il suit le circuit habituel : nombre de destinataires, envoi de test, validation ; les personnes qui ont refusé les mails ou les SMS sont exclues. Le lien n'est pas écrit dans le programme (dépôt public), seulement dans les réglages.
+
 ## 0.8.10
 
 - Nouvelle inscription : le parcours de l'adhérent s'affiche au-dessus du formulaire, avec une ligne « Reprendre » qui propose les cours des saisons passées (sans les cours d'essai, les activités arrêtées et ceux déjà pris cette saison). Un clic choisit la section et met le tarif à jour : plus besoin de chercher le jour (Pilates samedi ou mercredi…).

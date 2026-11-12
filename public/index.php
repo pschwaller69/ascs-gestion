@@ -148,6 +148,7 @@ $router->get('/reporting/courbe', [ReportingController::class, 'courbe']);
 $router->get('/reporting/mairie', [ReportingController::class, 'mairie']);
 $router->get('/mailing/nouveau', [MailingController::class, 'nouveau']);
 $router->get('/mailing/compter', [MailingController::class, 'compter']);
+$router->post('/mailing/whatsapp', [MailingController::class, 'whatsapp']);
 $router->post('/mailing', [MailingController::class, 'creer']);
 $router->get('/mailing/{id}', [MailingController::class, 'fiche']);
 $router->post('/mailing/{id}/modifier', [MailingController::class, 'modifier']);
