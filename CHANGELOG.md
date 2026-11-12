@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.0
+
+- Contacts Outlook (Mail > Contacts Outlook) : les adhérents de la saison, ou de la saison et de la précédente, sont recopiés dans un dossier de contacts « ASCS » de la boîte Microsoft 365 de l'association, et tenus à jour toutes les heures (bin/contacts.php) ou par « Synchroniser maintenant » : nouvel adhérent, numéro ou adresse modifiés, retrait quand la personne n'est plus inscrite, recréation d'un contact ou du dossier supprimés à la main. Chaque contact : nom, prénom, mail, portable, autre téléphone, adresse, société « ASCS », service et catégories = ses sections, notes = n° d'adhérent et parent. Les autres contacts de la boîte ne sont jamais touchés. Remplace l'ancienne synchronisation de WinDev ; l'export CSV reste disponible.
+- Configuration : application Microsoft Entra avec le droit Graph Contacts.ReadWrite (application), lignes M365_ du .env (README, « Contacts Outlook »).
+
 ## 0.8.12
 
 - Rappel du réglage « SMS individuels » sous chaque bouton d'SMS groupé (SMS à tout le cours, relances des non-inscrits, cartes terminées, envoi depuis le téléphone de l'association) : comment désactiver les messages de groupe sur Android (Messages de Google), Samsung et iPhone, pour que chacun reçoive un SMS séparé sans voir les numéros des autres.

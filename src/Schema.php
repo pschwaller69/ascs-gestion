@@ -271,6 +271,11 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['section_id', 'saison_id', 'date_seance', 'adherent_id']],
             ],
+            // Contacts Outlook (Microsoft 365) tenus à jour : identifiant Graph du contact créé pour chaque adhérent
+            'contact_sync' => [
+                'cols' => ['adherent_id' => 'int', 'graph_id' => 'str:255', 'empreinte' => 'str:32', 'maj_le' => 'datetime'],
+                'pk' => ['adherent_id'],
+            ],
             // Activité arrêtée (section principale ou section) : plus proposée, gardée dans l'historique
             'section_arret' => [
                 'cols' => ['id' => 'auto', 'type' => 'str:12', 'cible_id' => 'int', 'depuis_saison_id' => 'int?', 'arrete_le' => 'datetime'],

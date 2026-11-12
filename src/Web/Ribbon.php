@@ -67,7 +67,7 @@ final class Ribbon
                     ['Validation des mails', 'mail', '/mails/verification', null],
                 ],
                 'Contact' => [
-                    ['Ajout Outlook', 'download', '/contacts/outlook', null],
+                    ['Contacts Outlook', 'users', '/contacts', null],
                 ],
             ]],
             'parametrage' => ['titre' => 'Paramétrage', 'groupes' => [

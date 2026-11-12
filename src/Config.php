@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string,m365_tenant:string,m365_client_id:string,m365_secret:string,m365_boite:string,m365_login_url:string,m365_graph_url:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -59,6 +59,14 @@ final class Config
             'sms_user'         => $get('SMS_USER'),
             'sms_pass'         => $get('SMS_PASS'),
             'sms_transport'    => $get('SMS_TRANSPORT', 'passerelle'),
+            // Contacts dans Microsoft 365 (Outlook) : application déclarée dans Microsoft Entra, droit Contacts.ReadWrite (application)
+            'm365_tenant'      => $get('M365_TENANT'),
+            'm365_client_id'   => $get('M365_CLIENT_ID'),
+            'm365_secret'      => $get('M365_CLIENT_SECRET'),
+            'm365_boite'       => $get('M365_BOITE'),
+            // Adresses de Microsoft (à ne changer que pour les tests)
+            'm365_login_url'   => $get('M365_LOGIN_URL', 'https://login.microsoftonline.com'),
+            'm365_graph_url'   => $get('M365_GRAPH_URL', 'https://graph.microsoft.com/v1.0'),
         ];
     }
 }

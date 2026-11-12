@@ -307,4 +307,31 @@ final class MailingController
         }
         $this->app->redirect('/mailing');
     }
+
+    /** Contacts dans Outlook (Microsoft 365) : état, réglage, synchronisation immédiate. */
+    public function contacts(array $p): string
+    {
+        $s = new \Ascs\Contacts\SyncContacts($this->app->pdo);
+        return $this->app->render('mailing/contacts', [
+            'configure' => \Ascs\Contacts\SyncContacts::configure(), 'saisons' => $s->saisons(), 'derniere' => $s->derniere(),
+            'nbVoulus' => count($s->voulus()), 'nbSynchro' => (int) $this->app->pdo->query('SELECT COUNT(*) FROM contact_sync')->fetchColumn(),
+            'boite' => \Ascs\Config::load()['m365_boite'],
+        ], 'Contacts Outlook', 'mail');
+    }
+
+    public function contactsSync(array $p): void
+    {
+        $s = new \Ascs\Contacts\SyncContacts($this->app->pdo);
+        if (isset($_POST['saisons'])) {
+            $s->regler((int) $_POST['saisons']);
+        }
+        if (($_POST['action'] ?? '') === 'synchroniser') {
+            @set_time_limit(120);
+            $r = $s->executer(null, 400);
+            $this->app->flash($r['erreurs'] ? 'erreur' : 'ok', 'Contacts Outlook : ' . $s->derniere()['resume'] . '.');
+        } else {
+            $this->app->flash('ok', 'Réglage enregistré : il s\'appliquera à la prochaine synchronisation.');
+        }
+        $this->app->redirect('/contacts');
+    }
 }

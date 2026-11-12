@@ -101,3 +101,19 @@ Règles :
 `DB_DRIVER=sqlite DB_SQLITE_PATH=/tmp/t.sqlite php bin/migrate.php && php bin/import.php <xml> && php tests/verify.php <xml>`
 recalcule les totaux directement depuis les XML, vérifie l'absence d'orphelins et de doublons, et prouve que
 rejouer l'import ne change rien.
+
+## Contacts Outlook (Microsoft 365)
+
+Les adhérents de la saison (ou de la saison et de la précédente) sont recopiés dans un dossier de contacts « ASCS » de la boîte Microsoft 365 de l'association, et tenus à jour : création, modification, retrait quand la personne n'est plus inscrite. Seuls les contacts créés par l'application sont touchés. Page : Mail > Contacts Outlook.
+
+Déclaration de l'application, une fois (centre d'administration Microsoft Entra, entra.microsoft.com, avec un compte administrateur) :
+
+1. Applications > Inscriptions d'applications > Nouvelle inscription : nom « ASCS gestion contacts », « Comptes dans cet annuaire d'organisation uniquement », sans URI de redirection.
+2. Sur la page de l'application : « ID d'application (client) » → `M365_CLIENT_ID` ; « ID de l'annuaire (locataire) » → `M365_TENANT`.
+3. Certificats et secrets > Nouveau secret client (24 mois) : copier la **Valeur** (pas l'ID) → `M365_CLIENT_SECRET`. Noter la date d'expiration : il faudra en créer un nouveau avant.
+4. Autorisations d'API > Ajouter une autorisation > Microsoft Graph > **Autorisations d'application** > `Contacts.ReadWrite` > Ajouter, puis « Accorder un consentement d'administrateur ».
+5. `M365_BOITE` = l'adresse de la boîte qui reçoit les contacts (ex. contact@ascs.fr).
+6. Recommandé : limiter l'application à cette seule boîte (Exchange Online, contrôle d'accès des applications / ApplicationAccessPolicy), sinon le droit vaut pour toutes les boîtes du tenant.
+7. Tâche cron toutes les heures : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/contacts.php` (n'affiche rien quand tout va bien).
+
+Sur le téléphone : application Outlook > Réglages > le compte > « Synchroniser les contacts ».

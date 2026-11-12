@@ -161,6 +161,8 @@ $router->post('/mailing/{id}/destinataire/{dest}', [MailingController::class, 'd
 $router->get('/mails/verification', [MailingController::class, 'verification']);
 $router->post('/mails/verification/{id}', [MailingController::class, 'verificationAction']);
 $router->get('/contacts/outlook', [MailingController::class, 'outlook']);
+$router->get('/contacts', [MailingController::class, 'contacts']);
+$router->post('/contacts', [MailingController::class, 'contactsSync']);
 $router->post('/presence/{jeton}', [PresenceController::class, 'enregistrer'], true);
 $router->get('/presence/{jeton}/changer/{inscription}', [PresenceController::class, 'changer'], true);
 $router->get('/animateur/{jeton}', [PresenceController::class, 'animateur'], true);
