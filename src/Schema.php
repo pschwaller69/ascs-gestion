@@ -276,6 +276,12 @@ final class Schema
                 'cols' => ['adherent_id' => 'int', 'graph_id' => 'str:255', 'empreinte' => 'str:32', 'maj_le' => 'datetime'],
                 'pk' => ['adherent_id'],
             ],
+            // Option du formulaire d'inscription en ligne (location d'arc…) : choix avec prix, pour certaines activités
+            'option_inscription' => [
+                'cols' => ['id' => 'auto', 'ordre' => 'int', 'nom' => 'str:150', 'choix' => 'text', 'sections' => 'text', 'obligatoire' => 'bool', 'actif' => 'bool',
+                    'explication' => 'str:255?', 'cree_le' => 'datetime'],
+                'pk' => ['id'],
+            ],
             // Règle d'affectation automatique des opérations de banque (comme le traitement automatique de WinDev)
             'regle_banque' => [
                 'cols' => ['id' => 'auto', 'ordre' => 'int', 'motif' => 'str:150', 'mode' => 'str:10', 'montant' => 'dec:10,2?', 'libelle' => 'str:255',
