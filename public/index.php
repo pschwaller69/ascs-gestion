@@ -245,6 +245,7 @@ $router->get('/utilisateurs', [UtilisateurController::class, 'index']);
 $router->post('/utilisateurs', [UtilisateurController::class, 'creer']);
 $router->post('/utilisateurs/{id}/mot-de-passe', [UtilisateurController::class, 'motDePasse']);
 $router->post('/utilisateurs/{id}/activer', [UtilisateurController::class, 'activer']);
+$router->post('/utilisateurs/{id}/test', [UtilisateurController::class, 'test']);
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 if (App::$base !== '' && str_starts_with($path, App::$base)) {

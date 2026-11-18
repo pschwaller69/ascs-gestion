@@ -40,6 +40,12 @@ final class Envoi
      */
     public function envoyer(string $expediteur, string $nomExpediteur, string $a, string $objet, string $texte, array $pieces, ?int $inscriptionId, string $par): ?string
     {
+        if (\Ascs\Web\ModeTest::actif()) {
+            // Compte de test : rien ne part, l'envoi est noté comme simulé
+            $this->pdo->prepare('INSERT INTO envoi_mail (date_envoi, destinataire, objet, inscription_id, ok, erreur, par) VALUES (?,?,?,?,?,?,?)')
+                ->execute([date('Y-m-d H:i:s'), mb_substr($a, 0, 150), mb_substr('[MODE TEST, NON ENVOYÉ] ' . $objet, 0, 255), $inscriptionId, 0, 'Mode test : mail non envoyé.', mb_substr($par, 0, 150)]);
+            return null;
+        }
         $erreur = null;
         $c = Config::load();
         // Avec un compte SMTP, l'expéditeur est ce compte (sinon le serveur refuse) ; les réponses vont à l'adresse de réponse.

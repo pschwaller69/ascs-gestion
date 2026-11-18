@@ -554,3 +554,4 @@ tr.ligne-arretee td { color: var(--muted); }
 .table-emargement td.e-non { text-align: center; font-size: .75rem; color: #777; }
 td.actions-ligne { white-space: nowrap; }
 td.actions-ligne form { display: inline; }
+.bandeau-test { background: #fff3cd; border: 2px dashed #b8860b; color: #5c4400; padding: .5rem .8rem; border-radius: 6px; margin: 0 0 1rem; }

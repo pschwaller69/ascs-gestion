@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.6
+
+- Comptes de test (stagiaires, formation), dans Paramétrage > Comptes du bureau : case « Compte de test » à la création, ou bouton sur un compte existant. Bandeau « Mode test » en haut de chaque page.
+- Avec un compte de test, aucun mail ne part (noté « mode test, non envoyé » dans l'historique). Permis : fiches, inscriptions, règlements, présences, cartes, personnes à relancer, ventilation d'une ligne bancaire, brouillons de mailing. Refusé avec un message : réglages et paramétrage, comptes, imports (WinDev, banque), effacement et sauvegardes, fusions, changements de cours, validations (demandes, HelloAsso), remises de chèques, envois (factures, liens, mailings, WhatsApp), synchronisation Outlook, règles d'affectation.
+
 ## 0.9.5
 
 - Ventilation à la main d'une ligne bancaire : sans proposition, le montant entier est déjà sur la première ligne (il suffit de choisir la section et la catégorie). Pour partager, en choisissant la section d'une autre ligne, le reste à répartir s'y met tout seul ; le reste est affiché en direct.

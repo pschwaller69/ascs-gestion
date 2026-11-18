@@ -19,7 +19,7 @@ final class UtilisateurController
 
     public function index(array $p, array $err = [], array $saisie = []): string
     {
-        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
+        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'tests' => \Ascs\Web\ModeTest::comptes($this->app->pdo), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
     }
 
     public function creer(array $p): string
@@ -47,6 +47,9 @@ final class UtilisateurController
         }
         $this->app->pdo->prepare('INSERT INTO utilisateur (email, nom, mot_de_passe, actif, cree_le) VALUES (?,?,?,1,?)')
             ->execute([$email, $nom, password_hash($mdp, PASSWORD_DEFAULT), date('Y-m-d H:i:s')]);
+        if (!empty($_POST['test'])) {
+            \Ascs\Web\ModeTest::regler($this->app->pdo, (int) $this->app->pdo->lastInsertId(), true);
+        }
         $this->app->flash('ok', "Compte créé pour $email. Communiquez-lui son mot de passe de vive voix, pas par mail.");
         $this->app->redirect('/utilisateurs');
     }
@@ -73,6 +76,20 @@ final class UtilisateurController
         } else {
             $this->app->pdo->prepare('UPDATE utilisateur SET actif = ? WHERE id = ?')->execute([$actif, $id]);
             $this->app->flash('ok', $actif ? 'Compte réactivé.' : 'Compte désactivé : cette personne ne peut plus se connecter.');
+        }
+        $this->app->redirect('/utilisateurs');
+    }
+
+    /** Passe un compte en compte de test (aucun mail, actions sensibles désactivées), ou le remet en compte normal. */
+    public function test(array $p): void
+    {
+        $id = (int) $p['id'];
+        $test = ($_POST['test'] ?? '') === '1';
+        if ($id === (int) $this->app->user['id'] && $test) {
+            $this->app->flash('erreur', 'Vous ne pouvez pas passer votre propre compte en compte de test.');
+        } else {
+            \Ascs\Web\ModeTest::regler($this->app->pdo, $id, $test);
+            $this->app->flash('ok', $test ? 'Compte de test : aucun mail ne part et les actions sensibles sont désactivées.' : 'Compte remis en compte normal.');
         }
         $this->app->redirect('/utilisateurs');
     }

@@ -7,7 +7,8 @@
             <td><?= e($u['nom']) ?></td>
             <td><?= e($u['email']) ?></td>
             <td><?= $u['derniere_connexion'] ? e(dfr($u['derniere_connexion'])) : 'jamais' ?></td>
-            <td><?= $u['actif'] ? '<span class="pastille pastille-ok">actif</span>' : '<span class="pastille pastille-niv-D">désactivé</span>' ?></td>
+            <td><?= $u['actif'] ? '<span class="pastille pastille-ok">actif</span>' : '<span class="pastille pastille-niv-D">désactivé</span>' ?>
+                <?php if (in_array((int) $u['id'], $tests, true)): ?> <span class="pastille pastille-reste">compte de test</span><?php endif; ?></td>
             <td>
                 <form method="post" action="<?= e(url('/utilisateurs/' . $u['id'] . '/mot-de-passe')) ?>" class="en-ligne">
                     <?= csrf_field() ?>
@@ -21,6 +22,10 @@
                 <form method="post" action="<?= e(url('/utilisateurs/' . $u['id'] . '/activer')) ?>">
                     <?= csrf_field() ?><input type="hidden" name="actif" value="<?= $u['actif'] ? '0' : '1' ?>">
                     <button type="submit" class="btn btn-petit<?= $u['actif'] ? ' btn-danger' : '' ?>"><?= $u['actif'] ? 'Désactiver' : 'Réactiver' ?></button>
+                </form>
+                <form method="post" action="<?= e(url('/utilisateurs/' . $u['id'] . '/test')) ?>">
+                    <?= csrf_field() ?><input type="hidden" name="test" value="<?= in_array((int) $u['id'], $tests, true) ? '0' : '1' ?>">
+                    <button type="submit" class="btn btn-petit"><?= in_array((int) $u['id'], $tests, true) ? 'Compte normal' : 'Compte de test' ?></button>
                 </form>
                 <?php else: ?><span class="aide">vous</span><?php endif; ?>
             </td>
@@ -37,5 +42,6 @@
         <?= champ('Mot de passe', 'mot_de_passe', '', ['type' => 'password', 'required' => true, 'error' => $err['mot_de_passe'] ?? null, 'autocomplete' => 'new-password', 'hint' => '12 caractères minimum.']) ?>
         <?= champ('Confirmation', 'confirmation', '', ['type' => 'password', 'required' => true, 'error' => $err['confirmation'] ?? null, 'autocomplete' => 'new-password']) ?>
     </div>
+    <label class="coche" for="f_test"><input type="checkbox" id="f_test" name="test" value="1"> <span><strong>Compte de test</strong> (stagiaire, formation) : aucun mail n'est envoyé ; réglages, imports, fusions, validations, envois et remises sont désactivés.</span></label>
     <button type="submit" class="btn btn-principal"><?= icon('user-plus') ?> Créer le compte</button>
 </form>

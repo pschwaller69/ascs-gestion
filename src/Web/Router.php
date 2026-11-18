@@ -40,6 +40,14 @@ final class Router
                 }
                 $app->redirect('/connexion');
             }
+            if (ModeTest::actif($app->pdo) && !ModeTest::autorise($method, $path)) {
+                $app->flash('info', 'Mode test : cette action est désactivée pour les comptes de test (rien n\'a été fait).');
+                $ref = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+                $hote = (string) ($_SERVER['HTTP_HOST'] ?? '');
+                $app->redirect($ref !== '' && $hote !== '' && parse_url($ref, PHP_URL_HOST) === explode(':', $hote)[0] && parse_url($ref, PHP_URL_PATH) !== $path
+                    ? (string) preg_replace('#^' . preg_quote(App::$base, '#') . '#', '', (string) parse_url($ref, PHP_URL_PATH)) . (parse_url($ref, PHP_URL_QUERY) ? '?' . parse_url($ref, PHP_URL_QUERY) : '')
+                    : '/');
+            }
             if ($method === 'POST' && $csrf && !App::csrfValid()) {
                 http_response_code(419);
                 echo $app->render('erreur', ['titre' => 'Session expirée', 'message' => 'Le formulaire n\'a pas pu être vérifié (jeton de sécurité absent ou périmé). Revenez à la page précédente, rechargez-la et recommencez.'], 'Session expirée', 'accueil', 419);
