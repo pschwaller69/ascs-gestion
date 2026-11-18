@@ -17,6 +17,14 @@ final class PublicController
         $this->el = new EnLigne($app->pdo);
     }
 
+    /** Bureau connecté (ou compte de test) : le formulaire fermé au public reste visible et utilisable pour l'essayer. */
+    private function apercu(string $type): bool
+    {
+        $a = $this->app->user !== null && !$this->el->ouvert($type);
+        $this->el->apercu($a);
+        return $a;
+    }
+
     private function vide(): array
     {
         return ['nom' => '', 'prenom' => '', 'genre' => '', 'date_naissance' => '', 'mail' => '', 'telephone1' => '', 'adresse' => '',
@@ -30,7 +38,8 @@ final class PublicController
     private function formulaire(string $type, array $saisie, array $err, int $status = 200): string
     {
         $_SESSION['form_affiche'][$type] = time();
-        if (!$this->el->ouvert($type)) {
+        $apercu = $this->apercu($type);
+        if (!$this->el->ouvert($type) && !$apercu) {
             return $this->app->renderPublic('public/ferme', ['type' => $type], $type === 'essai' ? 'Cours d\'essai' : 'Inscription');
         }
         $sections = $this->el->sectionsOuvertes($type === 'essai');
@@ -38,6 +47,7 @@ final class PublicController
             'type' => $type, 's' => $saisie, 'err' => $err, 'sections' => $sections, 'canaux' => $this->el->canaux(),
             'saison' => $this->el->saisonTitre(), 'message' => $this->el->message(),
             'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => \Ascs\Domain\Bulletin::aides(),
+            'apercu' => $apercu,
         ], $type === 'essai' ? 'Cours d\'essai' : 'Inscription', $status);
     }
 
@@ -71,7 +81,7 @@ final class PublicController
 
     private function envoyer(string $type): string
     {
-        if (!$this->el->ouvert($type)) {
+        if (!$this->el->ouvert($type) && !$this->apercu($type)) {
             return $this->app->renderPublic('public/ferme', ['type' => $type], 'Fermé');
         }
         $affiche = $_SESSION['form_affiche'][$type] ?? null;

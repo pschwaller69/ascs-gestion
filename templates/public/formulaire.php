@@ -25,6 +25,8 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
 </div>
 <?php endif; ?>
 
+<?php if (!empty($apercu)): ?><p class="bandeau-test" role="note"><strong>Aperçu pour le bureau</strong> : ce formulaire est fermé au public<?= Ascs\Web\ModeTest::actif() ? ' ; compte de test, les mails partent vers ' . e((string) Ascs\Web\ModeTest::adresseMails()) : '' ?>. Une demande envoyée ici arrive quand même dans « Demandes ».</p>
+<?php elseif (Ascs\Web\ModeTest::actif()): ?><p class="bandeau-test" role="note"><strong>Mode test</strong> : les mails partent vers <?= e((string) Ascs\Web\ModeTest::adresseMails()) ?>.</p><?php endif; ?>
 <?php if (!$sections): ?>
     <p class="vide">Aucune activité n'est ouverte en ligne pour le moment. Adressez-vous au bureau de l'association.</p>
 <?php else: ?>

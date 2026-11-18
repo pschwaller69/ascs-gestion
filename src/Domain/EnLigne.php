@@ -50,7 +50,32 @@ final class EnLigne
     }
 
     /** Sections ouvertes en ligne : activités (essai = false) ou cours d'essai (essai = true). @return list<array<string,mixed>> */
+    /** Aperçu pour le bureau connecté : formulaire visible même fermé, avec toutes les activités si aucune n'est ouverte. */
+    private bool $apercu = false;
+
+    public function apercu(bool $oui): void
+    {
+        $this->apercu = $oui;
+    }
+
     public function sectionsOuvertes(bool $essai): array
+    {
+        if ($this->apercu) {
+            $arretees = (new Arrets($this->pdo))->sections();
+            $ouvertes = $this->sectionsOuvertesSeules($essai);
+            if ($ouvertes) {
+                return $ouvertes;
+            }
+            $st = $this->pdo->prepare('SELECT s.id, s.titre, s.montant, NULL AS description, NULL AS lien_paiement FROM section s
+                WHERE s.essai = ?' . ($essai ? '' : ' AND s.montant > 0') . ' AND EXISTS (SELECT 1 FROM inscription i WHERE i.section_id = s.id AND i.saison_id = ?) ORDER BY s.titre');
+            $st->execute([$essai ? 1 : 0, $this->saisonId()]);
+            return array_values(array_filter($st->fetchAll(), static fn ($s) => !in_array((int) $s['id'], $arretees, true)));
+        }
+        return $this->sectionsOuvertesSeules($essai);
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function sectionsOuvertesSeules(bool $essai): array
     {
         $st = $this->pdo->prepare(
             'SELECT s.id, s.titre, s.montant, e.description, e.lien_paiement

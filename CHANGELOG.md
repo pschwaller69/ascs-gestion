@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.8
+
+- Formulaires en ligne (inscription, cours d'essai) : un membre du bureau connecté, ou un compte de test, peut les ouvrir et les envoyer même quand ils sont fermés au public (bandeau « Aperçu pour le bureau » ; toutes les activités de la saison si aucune n'est encore ouverte). Pratique pour les essayer sur un téléphone avant de les ouvrir.
+- Comptes de test : envoi des formulaires en ligne permis (les mails partent vers l'adresse de test).
+
 ## 0.9.7
 
 - Comptes de test : les mails ne sont plus bloqués mais redirigés vers une adresse de test (par défaut contact@ascs.fr, réglable dans Comptes du bureau), avec « [TEST pour <vrai destinataire>] » dans l'objet et une ligne en tête du texte. Les stagiaires peuvent donc essayer l'envoi d'une facture, d'un lien d'animateur, d'un test de mailing ou du mail d'essai de la facture. Les SMS ne partent jamais, les mailings ne peuvent toujours pas être validés.

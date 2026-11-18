@@ -36,6 +36,8 @@ final class ModeTest
         '#^/sections/\d+/envoyer-lien$#',
         '#^/sections/animateur/envoyer$#',
         '#^/parametres/facture/essai$#',
+        // Formulaires publics (inscription et cours d'essai en ligne), pour les essayer
+        '#^/(inscription|essai)$#',
     ];
 
     /** Adresse qui reçoit tous les mails des comptes de test ; null = aucun mail ne part. */
