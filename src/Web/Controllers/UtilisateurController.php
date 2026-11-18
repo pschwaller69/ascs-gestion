@@ -19,7 +19,7 @@ final class UtilisateurController
 
     public function index(array $p, array $err = [], array $saisie = []): string
     {
-        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'tests' => \Ascs\Web\ModeTest::comptes($this->app->pdo), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
+        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'tests' => \Ascs\Web\ModeTest::comptes($this->app->pdo), 'mailTest' => (string) (\Ascs\Parametres::get($this->app->pdo, \Ascs\Web\ModeTest::CLE_MAIL) ?? \Ascs\Web\ModeTest::MAIL_DEFAUT), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
     }
 
     public function creer(array $p): string
@@ -90,6 +90,18 @@ final class UtilisateurController
         } else {
             \Ascs\Web\ModeTest::regler($this->app->pdo, $id, $test);
             $this->app->flash('ok', $test ? 'Compte de test : aucun mail ne part et les actions sensibles sont désactivées.' : 'Compte remis en compte normal.');
+        }
+        $this->app->redirect('/utilisateurs');
+    }
+
+    public function mailTest(array $p): void
+    {
+        $a = mb_strtolower(trim((string) ($_POST['adresse'] ?? '')));
+        if ($a !== '' && !filter_var($a, FILTER_VALIDATE_EMAIL)) {
+            $this->app->flash('erreur', 'Adresse invalide.');
+        } else {
+            \Ascs\Web\ModeTest::reglerAdresse($this->app->pdo, $a);
+            $this->app->flash('ok', $a !== '' ? "Les mails des comptes de test arrivent à $a." : 'Aucun mail ne part pour les comptes de test.');
         }
         $this->app->redirect('/utilisateurs');
     }

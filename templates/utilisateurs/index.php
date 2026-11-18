@@ -33,6 +33,13 @@
     <?php endforeach; ?>
     </tbody>
 </table></div>
+<h2>Comptes de test</h2>
+<form class="fiche en-ligne" method="post" action="<?= e(url('/utilisateurs/mail-test')) ?>">
+    <?= csrf_field() ?>
+    <p class="aide">Avec un compte de test, chaque mail (facture, lien d'animateur, test de mailing…) part vers cette adresse, jamais au vrai destinataire, avec « [TEST pour …] » dans l'objet. Vide : aucun mail ne part. Les SMS ne partent jamais ; les mailings ne peuvent pas être validés.</p>
+    <?= champ('Adresse qui reçoit les mails des comptes de test', 'adresse', $mailTest, ['type' => 'email']) ?>
+    <button type="submit" class="btn">Enregistrer</button>
+</form>
 <h2>Nouveau compte</h2>
 <form class="fiche" method="post" action="<?= e(url('/utilisateurs')) ?>">
     <?= csrf_field() ?>
@@ -42,6 +49,6 @@
         <?= champ('Mot de passe', 'mot_de_passe', '', ['type' => 'password', 'required' => true, 'error' => $err['mot_de_passe'] ?? null, 'autocomplete' => 'new-password', 'hint' => '12 caractères minimum.']) ?>
         <?= champ('Confirmation', 'confirmation', '', ['type' => 'password', 'required' => true, 'error' => $err['confirmation'] ?? null, 'autocomplete' => 'new-password']) ?>
     </div>
-    <label class="coche" for="f_test"><input type="checkbox" id="f_test" name="test" value="1"> <span><strong>Compte de test</strong> (stagiaire, formation) : aucun mail n'est envoyé ; réglages, imports, fusions, validations, envois et remises sont désactivés.</span></label>
+    <label class="coche" for="f_test"><input type="checkbox" id="f_test" name="test" value="1"> <span><strong>Compte de test</strong> (stagiaire, formation) : les mails partent vers l'adresse de test ci-dessus ; réglages, imports, fusions, validations, envois et remises sont désactivés.</span></label>
     <button type="submit" class="btn btn-principal"><?= icon('user-plus') ?> Créer le compte</button>
 </form>

@@ -41,10 +41,20 @@ final class Envoi
     public function envoyer(string $expediteur, string $nomExpediteur, string $a, string $objet, string $texte, array $pieces, ?int $inscriptionId, string $par): ?string
     {
         if (\Ascs\Web\ModeTest::actif()) {
-            // Compte de test : rien ne part, l'envoi est noté comme simulé
-            $this->pdo->prepare('INSERT INTO envoi_mail (date_envoi, destinataire, objet, inscription_id, ok, erreur, par) VALUES (?,?,?,?,?,?,?)')
-                ->execute([date('Y-m-d H:i:s'), mb_substr($a, 0, 150), mb_substr('[MODE TEST, NON ENVOYÉ] ' . $objet, 0, 255), $inscriptionId, 0, 'Mode test : mail non envoyé.', mb_substr($par, 0, 150)]);
-            return null;
+            // Compte de test : le mail part vers l'adresse de test (celle de l'association), jamais au vrai destinataire
+            $test = \Ascs\Web\ModeTest::adresseMails($this->pdo);
+            if (!filter_var($a, FILTER_VALIDATE_EMAIL)) {
+                return 'Adresse du destinataire invalide.';
+            }
+            if ($test === null) {
+                $this->pdo->prepare('INSERT INTO envoi_mail (date_envoi, destinataire, objet, inscription_id, ok, erreur, par) VALUES (?,?,?,?,?,?,?)')
+                    ->execute([date('Y-m-d H:i:s'), mb_substr($a, 0, 150), mb_substr('[MODE TEST, NON ENVOYÉ] ' . $objet, 0, 255), $inscriptionId, 0, 'Mode test : mail non envoyé.', mb_substr($par, 0, 150)]);
+                return null;
+            }
+            $texte = 'MODE TEST : ce mail aurait été envoyé à ' . $a . ".\n----------------------------------------\n\n" . $texte;
+            $objet = '[TEST pour ' . $a . '] ' . $objet;
+            $par .= ' [mode test]';
+            $a = $test;
         }
         $erreur = null;
         $c = Config::load();

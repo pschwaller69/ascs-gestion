@@ -81,7 +81,7 @@ if ($base !== '' && str_starts_with($retour, $base)) {
 </header>
 <?php endif; ?>
 <main id="contenu" tabindex="-1">
-    <?php if (Ascs\Web\ModeTest::actif()): ?><p class="bandeau-test" role="note"><strong>Mode test</strong> : aucun mail n'est envoyé ; les réglages, imports, fusions, validations et envois sont désactivés.</p><?php endif; ?>
+    <?php if (Ascs\Web\ModeTest::actif()): ?><p class="bandeau-test" role="note"><strong>Mode test</strong> : <?= ($mt = Ascs\Web\ModeTest::adresseMails()) ? 'les mails partent vers ' . e($mt) . ', jamais aux adhérents' : 'aucun mail n\'est envoyé' ?> ; les réglages, imports, fusions, validations et mailings sont désactivés.</p><?php endif; ?>
     <?php foreach ($flashes as $f): ?>
         <p class="flash flash-<?= e($f['type']) ?>" role="<?= $f['type'] === 'erreur' ? 'alert' : 'status' ?>"><?= e($f['message']) ?></p>
     <?php endforeach; ?>

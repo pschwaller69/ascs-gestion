@@ -52,6 +52,9 @@ final class Sms
     /** @return ?string message d'erreur, null si accepté par la passerelle */
     public function envoyer(string $numero, string $texte): ?string
     {
+        if (\Ascs\Web\ModeTest::actif()) {
+            return 'Mode test : SMS non envoyé.';
+        }
         if ($this->transport === 'fichier') {
             $dir = dirname(__DIR__, 2) . '/storage/sms';
             if (!is_dir($dir)) {

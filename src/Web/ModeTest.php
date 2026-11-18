@@ -15,6 +15,9 @@ use PDO;
 final class ModeTest
 {
     public const CLE = 'comptes_test';
+    public const CLE_MAIL = 'mode_test_mail';
+    /** Par défaut, les mails des comptes de test arrivent à l'adresse de l'association. */
+    public const MAIL_DEFAUT = 'contact@ascs.fr';
 
     /** Actions permises à un compte de test (méthode POST, chemin). */
     private const PERMIS = [
@@ -27,8 +30,31 @@ final class ModeTest
         '#^/sections/cartes/recharge/\d+/supprimer$#',
         '#^/sections/a-relancer/\d+$#',
         '#^/banque/ligne/\d+$#',
-        '#^/mailing(/\d+/modifier)?$#',
+        '#^/mailing(/\d+/(modifier|test))?$#',
+        // Mails redirigés vers l'adresse de test : on peut essayer les envois un par un
+        '#^/inscriptions/\d+/facture/envoyer$#',
+        '#^/sections/\d+/envoyer-lien$#',
+        '#^/sections/animateur/envoyer$#',
+        '#^/parametres/facture/essai$#',
     ];
+
+    /** Adresse qui reçoit tous les mails des comptes de test ; null = aucun mail ne part. */
+    public static function adresseMails(?PDO $pdo = null): ?string
+    {
+        try {
+            $pdo ??= \Ascs\Db::connect();
+            $v = Parametres::get($pdo, self::CLE_MAIL);
+        } catch (\Throwable) {
+            return null;
+        }
+        $v = $v === null ? self::MAIL_DEFAUT : trim((string) $v);
+        return filter_var($v, FILTER_VALIDATE_EMAIL) ? $v : null;
+    }
+
+    public static function reglerAdresse(PDO $pdo, string $adresse): void
+    {
+        Parametres::set($pdo, self::CLE_MAIL, trim($adresse));
+    }
 
     /** Pages refusées même en simple consultation (téléchargement de toute la base). */
     private const PAGES_INTERDITES = ['#^/import/sauvegarde$#'];
