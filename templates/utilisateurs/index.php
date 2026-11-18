@@ -34,7 +34,7 @@
     </tbody>
 </table></div>
 <h2>Comptes de test</h2>
-<form class="fiche en-ligne" method="post" action="<?= e(url('/utilisateurs/mail-test')) ?>">
+<form class="fiche" method="post" action="<?= e(url('/utilisateurs/mail-test')) ?>">
     <?= csrf_field() ?>
     <p class="aide">Avec un compte de test, chaque mail (facture, lien d'animateur, test de mailing…) part vers cette adresse, jamais au vrai destinataire, avec « [TEST pour …] » dans l'objet. Vide : aucun mail ne part. Les SMS ne partent jamais ; les mailings ne peuvent pas être validés.</p>
     <?= champ('Adresse qui reçoit les mails des comptes de test', 'adresse', $mailTest, ['type' => 'email']) ?>

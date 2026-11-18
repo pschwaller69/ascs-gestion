@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.9.9
+
+- Téléphone : plus aucune page ne déborde sur le côté (panneaux du tableau de bord, lien WhatsApp des mailings, réglage des comptes de test) ; bandeau « Mode test » plus compact sur petit écran.
+
 ## 0.9.8
 
 - Formulaires en ligne (inscription, cours d'essai) : un membre du bureau connecté, ou un compte de test, peut les ouvrir et les envoyer même quand ils sont fermés au public (bandeau « Aperçu pour le bureau » ; toutes les activités de la saison si aucune n'est encore ouverte). Pratique pour les essayer sur un téléphone avant de les ouvrir.

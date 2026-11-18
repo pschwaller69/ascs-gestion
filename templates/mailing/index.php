@@ -22,7 +22,7 @@ $statuts = ['brouillon' => ['à valider', 'pastille-reste'], 'validee' => ['vali
     <details<?= $whatsapp === '' ? ' open' : '' ?>><summary>Lien d'invitation</summary>
         <form method="post" action="<?= e(url('/mailing/whatsapp')) ?>" class="ligne-reglage">
             <?= csrf_field() ?>
-            <label>Lien <input type="url" name="lien" value="<?= e($whatsapp) ?>" placeholder="https://chat.whatsapp.com/…" size="45"></label>
+            <label class="lien-whatsapp">Lien <input type="url" name="lien" value="<?= e($whatsapp) ?>" placeholder="https://chat.whatsapp.com/…"></label>
             <button class="btn btn-petit" type="submit">Enregistrer</button>
         </form>
         <p class="aide">Si le lien est réinitialisé dans WhatsApp, l'ancien ne marche plus : collez le nouveau ici.</p>
