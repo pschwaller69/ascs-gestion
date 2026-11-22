@@ -255,6 +255,16 @@ final class Schema
                 'pk' => ['id'],
                 'index' => [['campagne_id', 'statut']],
             ],
+            // Retours des mailings : messages relevés dans la boîte des mailings (avis de non-remise, désinscriptions par mail, réponses)
+            'mail_retour' => [
+                'cols' => [
+                    'id' => 'auto', 'recu_le' => 'datetime', 'releve_le' => 'datetime', 'uidvalidity' => 'int', 'uid' => 'int',
+                    'de' => 'str:255?', 'objet' => 'str:255?', 'type' => 'str:20', 'adresse' => 'str:150?', 'statut_smtp' => 'str:20?',
+                    'diagnostic' => 'text?', 'campagne_id' => 'int?', 'destinataire_id' => 'int?', 'action' => 'str:255?',
+                ],
+                'pk' => ['id'],
+                'index' => [['campagne_id'], ['uidvalidity', 'uid']],
+            ],
             'marque_adherent' => [
                 'cols' => [
                     'id' => 'auto', 'adherent_id' => 'int', 'champ' => 'str:40', 'valeur' => 'int', 'mail' => 'str:150?',

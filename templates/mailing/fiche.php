@@ -1,5 +1,6 @@
 <?php use Ascs\Domain\Mailing; use Ascs\Mail\Sms;
-/** @var array $c @var array $dest @var array $sectionsNoms @var string $apercu @var array $reglages @var bool $smsPret */
+/** @var array $c @var array $dest @var array $sectionsNoms @var string $apercu @var array $reglages @var bool $smsPret @var array $retours */
+$important = Mailing::important((string) $c['cible']);
 $sms = $c['canal'] === 'sms';
 $brouillon = $c['statut'] === 'brouillon';
 $actifs = array_values(array_filter($dest, static fn ($d) => $d['statut'] !== 'retire'));
@@ -14,7 +15,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
     <span class="val"><?= count($actifs) ?></span>
     <span class="lib"><?= $sms ? 'numéro' : 'adresse' ?><?= count($actifs) > 1 ? 's' : '' ?> <?= $brouillon ? 'recevront ce ' . ($sms ? 'SMS' : 'mail') : 'pour cet envoi' ?><?= count($dest) - count($actifs) ? ' · ' . (count($dest) - count($actifs)) . ' retiré(s)' : '' ?><?= $c['envoyes'] ? ' · ' . (int) $c['envoyes'] . ' déjà envoyé(s)' : '' ?></span>
 </div>
-<p class="contexte"><strong><?= e($etat) ?></strong> · <?= e(Mailing::CIBLES[$c['cible']] ?? $c['cible']) ?><?= $sectionsNoms ? ' : ' . e(implode(', ', $sectionsNoms)) : '' ?> ·
+<p class="contexte"><strong><?= e($etat) ?></strong> · <?= $sms ? '' : ($important ? '<span class="pastille pastille-reste">message important, sans désinscription</span> · ' : 'mail d\'information, avec désinscription · ') ?><?= e(Mailing::CIBLES[$c['cible']] ?? $c['cible']) ?><?= $sectionsNoms ? ' : ' . e(implode(', ', $sectionsNoms)) : '' ?> ·
     <?= count($actifs) ?> destinataire(s)<?= $c['envoyes'] ? ' · ' . (int) $c['envoyes'] . ' envoyé(s)' : '' ?><?= $c['echecs'] ? ' · <span class="texte-erreur">' . (int) $c['echecs'] . ' échec(s)</span>' : '' ?>
     <?= $c['valide_par'] ? ' · validé par ' . e($c['valide_par']) . ' le ' . e(dfr($c['valide_le'])) : '' ?></p>
 
@@ -22,7 +23,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
 <form class="fiche" method="post" action="<?= e(url('/mailing/' . $c['id'] . '/modifier')) ?>">
     <?= csrf_field() ?>
     <?php if (!$sms): ?><?= champ('Objet', 'objet', $c['objet'], ['required' => true, 'maxlength' => 200]) ?><?php endif; ?>
-    <?= champ('Message', 'texte', $c['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 10, 'required' => true, 'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.']) ?>
+    <?= champ('Message', 'texte', $c['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 10, 'required' => true, 'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.' . ($sms ? '' : ($important ? ' Le rappel de la section est ajouté en bas.' : ' Le lien de désinscription est ajouté en bas.'))]) ?>
     <?php if ($sms): ?><p class="aide" id="compteur-sms" aria-live="polite"></p><?php endif; ?>
     <button type="submit" class="btn">Enregistrer le message</button>
 </form>
@@ -78,6 +79,23 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
     <?php endforeach; ?>
     <?php if (str_contains((string) $c['texte'], '{prenom}') || str_contains((string) $c['texte'], '{nom}')): ?>
         <p class="aide">Envoi par paquet : un même texte pour tous, {prenom} et {nom} sont retirés. Pour un texte personnalisé, utilisez l'envoi un par un ci-dessous.</p>
+    <?php endif; ?>
+</section>
+<?php endif; ?>
+
+<?php if (!$sms && ($retours || !$brouillon)): ?>
+<section class="fiche" id="retours">
+    <h2>Retours <small class="aide"><?= count($retours) ?></small></h2>
+    <?php if (!$retours): ?>
+        <p class="aide">Aucun avis de non-remise ni désinscription reçus pour cet envoi dans la boîte des mailings (relevée toutes les 15 minutes). <a href="<?= e(url('/mailing/retours')) ?>">Tous les retours</a></p>
+    <?php else: ?>
+        <ul class="liste-simple">
+        <?php foreach ($retours as $r): ?>
+            <li><strong><?= e(\Ascs\Mail\Retours::TYPES[$r['type']] ?? $r['type']) ?></strong> · <?= e($r['adresse'] ?: $r['de']) ?><?= $r['statut_smtp'] ? ' (' . e($r['statut_smtp']) . ')' : '' ?>
+                <?= $r['diagnostic'] ? '<br><small class="aide">' . e(mb_strimwidth((string) $r['diagnostic'], 0, 200, '…')) . '</small>' : '' ?><?= $r['action'] ? '<br><small>' . e($r['action']) . '</small>' : '' ?></li>
+        <?php endforeach; ?>
+        </ul>
+        <p><a href="<?= e(url('/mailing/retours')) ?>">Tous les retours</a></p>
     <?php endif; ?>
 </section>
 <?php endif; ?>

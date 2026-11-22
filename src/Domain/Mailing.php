@@ -22,7 +22,20 @@ final class Mailing
         'section' => 'Inscrits de sections choisies',
         'non_reinscrits' => 'Inscrits la saison précédente, pas encore réinscrits',
         'anciens' => 'Anciens adhérents (inscrits avant, pas cette saison)',
+        'section_importante' => 'Information importante à une section (saison en cours)',
     ];
+
+    /**
+     * Messages de service : une seule section de la saison en cours (cours annulé, changement d'horaire…).
+     * Pas de lien de désinscription, et ils partent aussi aux personnes désinscrites des mails d'information
+     * (pas à celles dont l'adresse est invalide). Toutes les autres cibles sont des mails d'information, avec désinscription.
+     */
+    public const IMPORTANTES = ['section_importante'];
+
+    public static function important(string $cible): bool
+    {
+        return in_array($cible, self::IMPORTANTES, true);
+    }
 
     /** Envois par lot : o2switch limite le nombre de mails par heure ; le reste part aux lots suivants (bouton ou tâche cron). */
     public const LOT_MAIL = 40;
@@ -55,6 +68,9 @@ final class Mailing
                 $sql .= 'EXISTS (SELECT 1 FROM inscription i WHERE i.adherent_id = a.id AND i.saison_id = ?' . $essaiExclu . ')';
                 $args[] = $saisonId;
                 break;
+            case 'section_importante':
+                $sections = array_slice(array_values(array_filter(array_map('intval', $sections))), 0, 1);
+                // fallthrough : mêmes inscrits qu'une section choisie
             case 'section':
                 $sections = array_values(array_filter(array_map('intval', $sections)));
                 if (!$sections) {
@@ -87,7 +103,9 @@ final class Mailing
         $exclus = ['refus' => 0, 'sans' => 0, 'invalide' => 0, 'doublon' => 0];
         // Un refus vaut pour l'adresse ou le numéro, pas seulement pour la fiche : une famille qui partage un mail
         // et se désinscrit depuis l'une des fiches ne doit plus rien recevoir par les autres.
-        $refuses = $this->refuses($canal);
+        // Message important d'une section : le refus des mails d'information ne compte pas (les SMS refusés restent exclus).
+        $ignorerRefus = $canal === 'mail' && self::important($cible);
+        $refuses = $ignorerRefus ? [] : $this->refuses($canal);
         foreach ($st->fetchAll() as $a) {
             if ($canal === 'sms') {
                 if ((int) $a['refus_sms'] === 1) {
@@ -105,7 +123,7 @@ final class Mailing
                 }
                 $cle = $num;
             } else {
-                if ((int) $a['refus_mail'] === 1) {
+                if ((int) $a['refus_mail'] === 1 && !$ignorerRefus) {
                     $exclus['refus']++;
                     continue;
                 }
@@ -226,14 +244,61 @@ final class Mailing
         return true;
     }
 
-    /** Texte personnalisé : {prenom} et {nom} remplacés ; pour un mail, lien de désinscription ajouté. */
-    public static function personnaliser(string $texte, array $d, string $canal): string
+    /**
+     * Texte personnalisé : {prenom} et {nom} remplacés. Pour un mail d'information, lien de désinscription ajouté ;
+     * pour un message important de section ($section = nom de la section), simple rappel de la raison de l'envoi.
+     */
+    public static function personnaliser(string $texte, array $d, string $canal, ?string $section = null): string
     {
         $t = strtr($texte, ['{prenom}' => (string) $d['prenom'], '{nom}' => (string) $d['nom']]);
         if ($canal === 'mail') {
-            $t .= "\n\n--\nPour ne plus recevoir les mails d'information de l'association : " . App::urlAbsolue('/desinscription/' . self::jeton((int) $d['adherent_id']));
+            $t .= $section !== null
+                ? "\n\n--\nVous recevez ce message car vous êtes inscrit(e) à la section " . $section . ' cette saison.'
+                : "\n\n--\nPour ne plus recevoir les mails d'information de l'association : " . self::lienDesinscription((int) $d['adherent_id']);
         }
         return $t;
+    }
+
+    public static function lienDesinscription(int $adherentId): string
+    {
+        return App::urlAbsolue('/desinscription/' . self::jeton($adherentId));
+    }
+
+    /** Nom de la section d'un message important, null pour un mail d'information. */
+    public function sectionImportante(array $c): ?string
+    {
+        if (!self::important((string) $c['cible'])) {
+            return null;
+        }
+        $id = (int) ((json_decode((string) $c['sections'], true) ?: [0])[0] ?? 0);
+        $st = $this->pdo->prepare('SELECT titre FROM section WHERE id = ?');
+        $st->execute([$id]);
+        return (string) ($st->fetchColumn() ?: 'concernée');
+    }
+
+    /**
+     * En-têtes d'un mail de mailing. Tous portent la référence du mailing (X-ASCS-Ref), retrouvée dans les avis de rejet.
+     * Les mails d'information ont en plus la désinscription en un clic (RFC 2369 et 8058), demandée par Gmail, Yahoo, Outlook :
+     * lien web (POST sans confirmation) et adresse de la boîte des mailings (objet « desinscription <jeton> »).
+     * @return list<string>
+     */
+    public static function entetes(array $c, array $d): array
+    {
+        $l = ['X-ASCS-Ref: c' . (int) $c['id'] . '-d' . (int) ($d['id'] ?? 0)];
+        if (self::important((string) $c['cible'])) {
+            return $l;
+        }
+        $jeton = self::jeton((int) $d['adherent_id']);
+        $cibles = ['<' . self::lienDesinscription((int) $d['adherent_id']) . '>'];
+        $boite = Envoi::compte('mailing')[0] ?? null;
+        if ($boite !== null) {
+            $cibles[] = '<mailto:' . $boite . '?subject=desinscription%20' . $jeton . '>';
+        }
+        $l[] = 'List-Unsubscribe: ' . implode(', ', $cibles);
+        $l[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+        $l[] = 'List-Id: Informations ASCS <informations.ascs.fr>';
+        $l[] = 'Precedence: bulk';
+        return $l;
     }
 
     /** Envoie le lot suivant des campagnes validées. @return array{envoyes:int,echecs:int,restants:int} */
@@ -255,6 +320,7 @@ final class Mailing
                 continue; // sans passerelle : les SMS partent depuis le téléphone de l'association (page de l'envoi)
             }
             $lot = $c['canal'] === 'sms' ? self::LOT_SMS : self::LOT_MAIL;
+            $section = $this->sectionImportante($c);
             $st = $this->pdo->prepare("SELECT * FROM campagne_destinataire WHERE campagne_id = ? AND statut = 'a_envoyer' ORDER BY id LIMIT $lot");
             $st->execute([$c['id']]);
             $this->pdo->prepare("UPDATE campagne SET statut = 'en_cours' WHERE id = ?")->execute([$c['id']]);
@@ -265,10 +331,10 @@ final class Mailing
                 if ($prendre->rowCount() !== 1) {
                     continue;
                 }
-                $texte = self::personnaliser((string) $c['texte'], $d, (string) $c['canal']);
+                $texte = self::personnaliser((string) $c['texte'], $d, (string) $c['canal'], $section);
                 $erreur = $c['canal'] === 'sms'
                     ? ($sms ? $sms->envoyer((string) $d['adresse'], $texte) : 'Passerelle SMS non configurée.')
-                    : $envoi->envoyer($reg['expediteur'], $reg['association'] ?: 'ASCS', (string) $d['adresse'], (string) $c['objet'], $texte, [], null, 'mailing ' . $c['id']);
+                    : $envoi->envoyer($reg['expediteur'], $reg['association'] ?: 'ASCS', (string) $d['adresse'], (string) $c['objet'], $texte, [], null, 'mailing ' . $c['id'], self::entetes($c, $d));
                 $this->pdo->prepare('UPDATE campagne_destinataire SET statut = ?, erreur = ?, envoye_le = ? WHERE id = ?')
                     ->execute([$erreur ? 'echec' : 'envoye', $erreur, date('Y-m-d H:i:s'), $d['id']]);
                 $erreur ? $r['echecs']++ : $r['envoyes']++;
@@ -341,7 +407,7 @@ final class Mailing
         $st = $this->pdo->prepare("SELECT * FROM campagne_destinataire WHERE campagne_id = ? AND statut <> 'retire' ORDER BY nom, prenom LIMIT 1");
         $st->execute([$campagneId]);
         $modele = $st->fetch() ?: ['prenom' => 'Prénom', 'nom' => 'NOM', 'adherent_id' => 0];
-        $texte = self::personnaliser((string) $c['texte'], $modele, $canal);
+        $texte = self::personnaliser((string) $c['texte'], $modele, $canal, $this->sectionImportante($c));
         if ($canal === 'sms') {
             $sms = Sms::depuisConfig();
             foreach ($cibles as $num) {
@@ -358,7 +424,8 @@ final class Mailing
         $reg = (new Reglages($this->pdo))->tous();
         $envoi = new Envoi($this->pdo, 'mailing');
         foreach ($cibles as $a) {
-            $e = $envoi->envoyer($reg['expediteur'], $reg['association'] ?: 'ASCS', $a, '[TEST] ' . $c['objet'], $texte, [], null, 'test mailing ' . $campagneId . ' (' . $par . ')');
+            $e = $envoi->envoyer($reg['expediteur'], $reg['association'] ?: 'ASCS', $a, '[TEST] ' . $c['objet'], $texte, [], null, 'test mailing ' . $campagneId . ' (' . $par . ')',
+                self::entetes($c, array_merge($modele, ['id' => 0])));
             $e ? $r['erreurs'][] = $a . ' : ' . $e : $r['envoyes'][] = $a;
         }
         return $r;

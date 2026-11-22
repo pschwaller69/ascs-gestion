@@ -1,5 +1,6 @@
 <?php use Ascs\Domain\Mailing;
-/** @var array $d @var array $err @var array $sections @var array $apercu @var array $reglages @var bool $smsPret */
+/** @var array $d @var array $err @var array $sections @var array $sectionsCourantes @var string $saisonCourante @var array $apercu @var array $reglages @var bool $smsPret */
+$important = Mailing::important($d['cible']);
 $sms = $d['canal'] === 'sms';
 $exclus = ['refus' => $sms ? 'ont refusé les SMS' : 'ont refusé les mails', 'sans' => $sms ? 'sans numéro de portable' : 'sans mail', 'invalide' => 'mail invalide', 'doublon' => $sms ? 'numéro partagé (un seul SMS)' : 'mail partagé (un seul mail)'];
 ?>
@@ -10,17 +11,28 @@ $exclus = ['refus' => $sms ? 'ont refusé les SMS' : 'ont refusé les mails', 's
     <input type="hidden" name="canal" value="<?= e($d['canal']) ?>">
     <fieldset>
         <legend>Destinataires</legend>
-        <?php foreach (Mailing::CIBLES as $k => $lib): ?>
+        <?php if (!$sms): ?><p class="aide">Mails d'information (avec lien de désinscription, jamais envoyés aux personnes désinscrites) :</p><?php endif; ?>
+        <?php foreach (Mailing::CIBLES as $k => $lib): if (Mailing::important($k)) { continue; } ?>
             <label class="choix-radio"><input type="radio" name="cible" value="<?= e($k) ?>"<?= attr($d['cible'] === $k, 'checked') ?>> <?= e($lib) ?></label>
         <?php endforeach; ?>
         <div class="sections-choix<?= isset($err['sections']) ? ' en-erreur' : '' ?>"<?= $d['cible'] === 'section' ? '' : ' hidden' ?> id="choix-sections">
             <?php if (isset($err['sections'])): ?><p class="msg-erreur"><?= e($err['sections']) ?></p><?php endif; ?>
             <?php foreach ($sections as $s): ?>
-                <label class="choix-case"><input type="checkbox" name="sections[]" value="<?= (int) $s['id'] ?>"<?= attr(in_array((int) $s['id'], $d['sections'], true), 'checked') ?>> <?= e($s['titre']) ?> <small class="aide">(<?= (int) $s['n'] ?>)</small></label>
+                <label class="choix-case"><input type="checkbox" name="sections[]" value="<?= (int) $s['id'] ?>"<?= attr(!$important && in_array((int) $s['id'], $d['sections'], true), 'checked') ?>> <?= e($s['titre']) ?> <small class="aide">(<?= (int) $s['n'] ?>)</small></label>
+            <?php endforeach; ?>
+        </div>
+        <?php if (!$sms): ?><p class="aide">Message de service (cours annulé, changement d'horaire…), sans lien de désinscription, envoyé aussi aux personnes désinscrites des mails d'information :</p><?php endif; ?>
+        <?php foreach (Mailing::IMPORTANTES as $k): ?>
+            <label class="choix-radio"><input type="radio" name="cible" value="<?= e($k) ?>"<?= attr($d['cible'] === $k, 'checked') ?>> <?= e(Mailing::CIBLES[$k]) ?><?= $saisonCourante !== '' ? ' : ' . e($saisonCourante) : '' ?></label>
+        <?php endforeach; ?>
+        <div class="sections-choix<?= isset($err['section_unique']) ? ' en-erreur' : '' ?>"<?= $important ? '' : ' hidden' ?> id="choix-section-unique">
+            <?php if (isset($err['section_unique'])): ?><p class="msg-erreur"><?= e($err['section_unique']) ?></p><?php endif; ?>
+            <?php foreach ($sectionsCourantes as $s): ?>
+                <label class="choix-radio"><input type="radio" name="section_unique" value="<?= (int) $s['id'] ?>"<?= attr($important && in_array((int) $s['id'], $d['sections'], true), 'checked') ?>> <?= e($s['titre']) ?> <small class="aide">(<?= (int) $s['n'] ?>)</small></label>
             <?php endforeach; ?>
         </div>
         <div class="compteur-envoi" id="compteur-dest" data-url="<?= e(url('/mailing/compter')) ?>" role="status" aria-live="polite">
-            <span class="val"><?= count($apercu['retenus']) ?></span><span class="lib">destinataire<?= count($apercu['retenus']) > 1 ? 's' : '' ?> pour ce choix (saison choisie en haut de page)</span>
+            <span class="val"><?= count($apercu['retenus']) ?></span><span class="lib">destinataire<?= count($apercu['retenus']) > 1 ? 's' : '' ?> pour ce choix (<?= $important ? 'saison en cours' : 'saison choisie en haut de page' ?>)</span>
         </div>
         <details class="noms-dest"><summary>Voir les noms</summary><p id="noms-dest"><?= e(implode(', ', array_map(static fn ($x) => trim($x['prenom'] . ' ' . $x['nom']), $apercu['retenus']))) ?></p></details>
         <p class="apercu-dest" id="exclus-dest" data-libelles="<?= e(json_encode($exclus, JSON_UNESCAPED_UNICODE)) ?>"><?php
@@ -30,7 +42,7 @@ $exclus = ['refus' => $sms ? 'ont refusé les SMS' : 'ont refusé les mails', 's
     </fieldset>
     <?php if (!$sms): ?><?= champ('Objet', 'objet', $d['objet'], ['required' => true, 'maxlength' => 200, 'error' => $err['objet'] ?? null]) ?><?php endif; ?>
     <?= champ('Message', 'texte', $d['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 12, 'required' => true, 'error' => $err['texte'] ?? null,
-        'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.' . ($sms ? '' : ' Un lien de désinscription est ajouté en bas de chaque mail.')]) ?>
+        'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.' . ($sms ? '' : ' En bas de chaque mail sont ajoutés le lien de désinscription (mail d\'information) ou, pour un message important de section, la raison de l\'envoi.')]) ?>
     <?php if ($sms): ?><p class="aide" id="compteur-sms" aria-live="polite"></p><?php endif; ?>
     <div class="actions">
         <button type="submit" class="btn btn-principal"><?= icon('check') ?> Préparer l'envoi</button>

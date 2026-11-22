@@ -175,6 +175,14 @@ final class App
     public static function urlAbsolue(string $path, array $query = []): string
     {
         $base = rtrim(\Ascs\Config::load()['app_url'] ?? '', '/');
+        if ($base === '' && PHP_SAPI === 'cli') {
+            // Tâche planifiée (envoi des lots) : pas d'adresse dans la requête, on reprend celle notée lors de la dernière page ouverte.
+            try {
+                $base = rtrim((string) (\Ascs\Parametres::get(\Ascs\Db::connect(), 'url_publique') ?? ''), '/');
+            } catch (\Throwable) {
+                $base = '';
+            }
+        }
         if ($base === '') {
             $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? '') === '443';
             $base = ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . self::$base;

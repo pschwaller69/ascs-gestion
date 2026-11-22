@@ -131,7 +131,8 @@ $router->post('/essai', [PublicController::class, 'envoyerEssai'], true);
 $router->get('/merci', [PublicController::class, 'merci'], true);
 $router->get('/presence/{jeton}', [PresenceController::class, 'liste'], true);
 $router->get('/desinscription/{jeton}', [MailingController::class, 'desinscription'], true);
-$router->post('/desinscription/{jeton}', [MailingController::class, 'desinscrire'], true);
+// Sans jeton CSRF : la désinscription en un clic (en-tête List-Unsubscribe-Post) est un POST direct de la messagerie ; le jeton du lien suffit.
+$router->post('/desinscription/{jeton}', [MailingController::class, 'desinscrire'], true, false);
 $router->get('/mailing', [MailingController::class, 'index']);
 $router->get('/banque', [BanqueController::class, 'index']);
 $router->post('/banque/nom', [BanqueController::class, 'nommer']);
@@ -153,6 +154,8 @@ $router->get('/reporting/courbe', [ReportingController::class, 'courbe']);
 $router->get('/reporting/mairie', [ReportingController::class, 'mairie']);
 $router->get('/mailing/nouveau', [MailingController::class, 'nouveau']);
 $router->get('/mailing/compter', [MailingController::class, 'compter']);
+$router->get('/mailing/retours', [MailingController::class, 'retours']);
+$router->post('/mailing/retours', [MailingController::class, 'releverRetours']);
 $router->post('/mailing/whatsapp', [MailingController::class, 'whatsapp']);
 $router->post('/mailing', [MailingController::class, 'creer']);
 $router->get('/mailing/{id}', [MailingController::class, 'fiche']);

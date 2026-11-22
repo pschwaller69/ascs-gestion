@@ -3,6 +3,15 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.10.0
+
+- Mailings : deux sortes d'envoi.
+  - Mails d'information (inscrits de la saison, sections choisies, non réinscrits, anciens) : lien de désinscription en bas, comme avant, et maintenant aussi les en-têtes de désinscription en un clic (List-Unsubscribe et List-Unsubscribe-Post) que demandent Gmail, Yahoo et Outlook et que contrôlent les testeurs comme aboutmy.email. Jamais envoyés aux personnes désinscrites.
+  - Information importante à une section (saison en cours, une seule section : cours annulé, changement d'horaire…) : pas de lien de désinscription, envoyée aussi aux personnes désinscrites des mails d'information (pas aux adresses invalides). En bas du mail : « Vous recevez ce message car vous êtes inscrit(e) à la section … cette saison ».
+- Désinscription en un clic depuis la messagerie (bouton « Se désabonner » de Gmail, Outlook…) ou par mail à la boîte des mailings.
+- Retours des mailings (Mailings et SMS > Retours des mailings) : la boîte contact@m.ascs.fr est relevée toutes les 15 minutes par la tâche automatique (ou par un bouton). Avis de non-remise classés : adresse inconnue (envoi en échec et mail marqué invalide sur les fiches), autre rejet (boîte pleine, filtrage : envoi en échec, adresse gardée), retard ; désinscriptions par mail appliquées ; réponses et réponses automatiques notées. Chaque envoi affiche ses retours. Les messages restent dans la boîte.
+- Liens de désinscription corrects aussi dans les lots partis par la tâche automatique quand APP_URL n'est pas renseigné (adresse de l'application notée à la préparation de l'envoi).
+
 ## 0.9.9
 
 - Téléphone : plus aucune page ne déborde sur le côté (panneaux du tableau de bord, lien WhatsApp des mailings, réglage des comptes de test) ; bandeau « Mode test » plus compact sur petit écran.

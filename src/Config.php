@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string,m365_tenant:string,m365_client_id:string,m365_secret:string,m365_boite:string,m365_login_url:string,m365_graph_url:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,imap_host:string,imap_port:string,imap_user:string,imap_pass:string,imap_securite:string,imap_actif:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string,m365_tenant:string,m365_client_id:string,m365_secret:string,m365_boite:string,m365_login_url:string,m365_graph_url:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -54,6 +54,14 @@ final class Config
             // Second compte, réservé aux mailings en nombre (facultatif : sinon le compte ci-dessus sert à tout)
             'smtp_mailing_user' => $get('SMTP_MAILING_USER'),
             'smtp_mailing_pass' => $get('SMTP_MAILING_PASS'),
+            // Relève de la boîte des mailings (avis de non-remise, désinscriptions par mail) : par défaut le serveur SMTP
+            // et le compte SMTP_MAILING_* (même boîte chez o2switch) ; IMAP_ACTIF=non pour ne pas relever.
+            'imap_host'        => $get('IMAP_HOST'),
+            'imap_port'        => $get('IMAP_PORT', '993'),
+            'imap_user'        => $get('IMAP_USER'),
+            'imap_pass'        => $get('IMAP_PASS'),
+            'imap_securite'    => $get('IMAP_SECURITE', 'ssl'),
+            'imap_actif'       => $get('IMAP_ACTIF', 'oui'),
             // SMS : passerelle « SMS Gateway for Android » (identifiants affichés dans l'application du téléphone)
             'sms_url'          => $get('SMS_URL', 'https://api.sms-gate.app/3rdparty/v1/messages'),
             'sms_user'         => $get('SMS_USER'),

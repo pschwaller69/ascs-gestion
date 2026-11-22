@@ -31,18 +31,50 @@ final class MailingController
             'whatsapp' => (string) \Ascs\Parametres::get($this->app->pdo, 'whatsapp_communaute')], 'Mailings et SMS', 'mail');
     }
 
-    private function sections(): array
+    private function sections(?int $saisonId = null): array
     {
         $st = $this->app->pdo->prepare('SELECT s.id, s.titre, COUNT(i.id) AS n FROM section s JOIN inscription i ON i.section_id = s.id AND i.saison_id = ? GROUP BY s.id, s.titre ORDER BY s.titre');
-        $st->execute([$this->app->saisonId()]);
+        $st->execute([$saisonId ?? $this->app->saisonId()]);
         return $st->fetchAll();
+    }
+
+    /** Saison en cours d'après la date du jour : celle des messages importants de section, quelle que soit la saison choisie en haut. */
+    private function saisonCourante(): int
+    {
+        return (int) ((new \Ascs\Domain\Presences($this->app->pdo))->saisonCourante()['id'] ?? $this->app->saisonId());
+    }
+
+    private function saisonPour(string $cible): int
+    {
+        return Mailing::important($cible) ? $this->saisonCourante() : $this->app->saisonId();
+    }
+
+    /** Sections choisies : cases à cocher, ou bouton radio (une seule) pour un message important. @return list<int> */
+    private static function sectionsSaisies(array $src, string $cible): array
+    {
+        if (Mailing::important($cible)) {
+            $u = (int) ($src['section_unique'] ?? 0);
+            return $u > 0 ? [$u] : [];
+        }
+        return array_map('intval', (array) ($src['sections'] ?? []));
+    }
+
+    /** Adresse publique de l'application, notée pour les liens des mails envoyés par la tâche planifiée. */
+    private function noterUrlPublique(): void
+    {
+        if ((\Ascs\Config::load()['app_url'] ?? '') === '' && PHP_SAPI !== 'cli') {
+            $u = App::urlAbsolue('');
+            if (\Ascs\Parametres::get($this->app->pdo, 'url_publique') !== $u) {
+                \Ascs\Parametres::set($this->app->pdo, 'url_publique', $u);
+            }
+        }
     }
 
     public function nouveau(array $p): string
     {
         $canal = ($_GET['canal'] ?? '') === 'sms' ? 'sms' : 'mail';
         $cible = isset(Mailing::CIBLES[$_GET['cible'] ?? '']) ? $_GET['cible'] : 'saison';
-        $d = ['canal' => $canal, 'cible' => $cible, 'sections' => array_map('intval', (array) ($_GET['sections'] ?? [])), 'objet' => '', 'texte' => $canal === 'sms' ? '' : "Bonjour {prenom},\n\n"];
+        $d = ['canal' => $canal, 'cible' => $cible, 'sections' => self::sectionsSaisies($_GET, $cible), 'objet' => '', 'texte' => $canal === 'sms' ? '' : "Bonjour {prenom},\n\n"];
         // Modèle : invitation à la communauté WhatsApp de l'association (tous les adhérents de la saison)
         $wa = (string) \Ascs\Parametres::get($this->app->pdo, 'whatsapp_communaute');
         if (($_GET['modele'] ?? '') === 'whatsapp' && $wa !== '') {
@@ -59,9 +91,13 @@ final class MailingController
 
     private function form(array $d, array $err, int $status = 200): string
     {
-        $apercu = $this->m->destinataires($d['canal'], $d['cible'], $this->app->saisonId(), $d['sections']);
+        $apercu = $this->m->destinataires($d['canal'], $d['cible'], $this->saisonPour($d['cible']), $d['sections']);
+        $cour = $this->saisonCourante();
+        $st = $this->app->pdo->prepare('SELECT titre FROM saison WHERE id = ?');
+        $st->execute([$cour]);
         return $this->app->render('mailing/nouveau', [
-            'd' => $d, 'err' => $err, 'sections' => $this->sections(), 'apercu' => $apercu,
+            'd' => $d, 'err' => $err, 'sections' => $this->sections(), 'sectionsCourantes' => $this->sections($cour),
+            'saisonCourante' => (string) ($st->fetchColumn() ?: ''), 'apercu' => $apercu,
             'reglages' => (new Reglages($this->app->pdo))->tous(), 'smsPret' => Sms::depuisConfig() !== null,
         ], $d['canal'] === 'sms' ? 'Nouveau SMS' : 'Nouveau mail', 'mail', $status);
     }
@@ -71,7 +107,7 @@ final class MailingController
     {
         $canal = ($_GET['canal'] ?? '') === 'sms' ? 'sms' : 'mail';
         $cible = isset(Mailing::CIBLES[$_GET['cible'] ?? '']) ? $_GET['cible'] : 'saison';
-        $r = $this->m->destinataires($canal, $cible, $this->app->saisonId(), array_map('intval', (array) ($_GET['sections'] ?? [])));
+        $r = $this->m->destinataires($canal, $cible, $this->saisonPour($cible), self::sectionsSaisies($_GET, $cible));
         header('Content-Type: application/json');
         return (string) json_encode(['n' => count($r['retenus']), 'exclus' => $r['exclus'],
             'noms' => array_slice(array_map(static fn ($x) => trim($x['prenom'] . ' ' . $x['nom']), $r['retenus']), 0, 400)], JSON_UNESCAPED_UNICODE);
@@ -79,10 +115,11 @@ final class MailingController
 
     public function creer(array $p): ?string
     {
+        $cible = isset(Mailing::CIBLES[$_POST['cible'] ?? '']) ? (string) $_POST['cible'] : 'saison';
         $d = [
             'canal' => ($_POST['canal'] ?? '') === 'sms' ? 'sms' : 'mail',
-            'cible' => isset(Mailing::CIBLES[$_POST['cible'] ?? '']) ? $_POST['cible'] : 'saison',
-            'sections' => array_map('intval', (array) ($_POST['sections'] ?? [])),
+            'cible' => $cible,
+            'sections' => self::sectionsSaisies($_POST, $cible),
             'objet' => trim((string) ($_POST['objet'] ?? '')),
             'texte' => trim(str_replace("\r\n", "\n", (string) ($_POST['texte'] ?? ''))),
         ];
@@ -99,10 +136,14 @@ final class MailingController
         if ($d['cible'] === 'section' && !$d['sections']) {
             $err['sections'] = 'Cochez au moins une section.';
         }
+        if (Mailing::important($d['cible']) && !$d['sections']) {
+            $err['section_unique'] = 'Choisissez la section.';
+        }
         if ($err) {
             return $this->form($d, $err, 422);
         }
-        $id = $this->m->creer($d['canal'], $d['cible'], $this->app->saisonId(), $d['sections'], $d['objet'], $d['texte'], $this->par());
+        $this->noterUrlPublique();
+        $id = $this->m->creer($d['canal'], $d['cible'], $this->saisonPour($d['cible']), $d['sections'], $d['objet'], $d['texte'], $this->par());
         $this->app->flash('ok', 'Brouillon créé : vérifiez les destinataires puis validez l\'envoi.');
         $this->app->redirect('/mailing/' . $id);
         return null;
@@ -137,7 +178,8 @@ final class MailingController
         }
         return $this->app->render('mailing/fiche', [
             'c' => $c, 'dest' => $dest, 'sectionsNoms' => $noms,
-            'apercu' => $premier ? Mailing::personnaliser((string) $c['texte'], $premier, (string) $c['canal']) : (string) $c['texte'],
+            'apercu' => $premier ? Mailing::personnaliser((string) $c['texte'], $premier, (string) $c['canal'], $this->m->sectionImportante($c)) : (string) $c['texte'],
+            'retours' => (new \Ascs\Mail\Retours($this->app->pdo))->deCampagne((int) $c['id']),
             'reglages' => (new Reglages($this->app->pdo))->tous(), 'smsPret' => Sms::depuisConfig() !== null,
             'test' => implode(', ', $this->m->destinatairesTest((string) $c['canal'])), 'liensTest' => $this->lienTests(),
         ], ($c['canal'] === 'sms' ? 'SMS' : 'Mail') . ' ' . ($c['objet'] ?: '#' . $c['id']), 'mail');
@@ -171,6 +213,7 @@ final class MailingController
             $this->app->flash('erreur', 'Renseignez d\'abord l\'adresse d\'envoi des mails (Paramétrage > Facture).');
             $this->app->redirect('/mailing/' . $c['id']);
         }
+        $this->noterUrlPublique();
         $this->m->valider((int) $c['id'], $this->par());
         if ($c['canal'] === 'sms' && Sms::depuisConfig() === null) {
             $this->app->flash('ok', 'SMS validé. Ouvrez cette page sur le téléphone de l\'association pour les envoyer avec l\'application Messages.');
@@ -293,6 +336,27 @@ final class MailingController
         $id = Mailing::verifierJeton((string) $p['jeton']);
         $fait = $id !== null && $this->m->desinscrire($id);
         return $this->app->renderPublic('mailing/desinscription', ['ok' => $id !== null, 'fait' => $fait, 'jeton' => $p['jeton']], 'Désinscription', $id ? 200 : 404);
+    }
+
+    /* Retours des mailings : boîte des mailings relevée (rejets, désinscriptions par mail, réponses) */
+
+    public function retours(array $p): string
+    {
+        $r = new \Ascs\Mail\Retours($this->app->pdo);
+        return $this->app->render('mailing/retours', [
+            'lignes' => $r->liste((string) ($_GET['type'] ?? '')), 'type' => (string) ($_GET['type'] ?? ''), 'etat' => $r->etat(),
+        ], 'Retours des mailings', 'mail');
+    }
+
+    public function releverRetours(array $p): void
+    {
+        if (\Ascs\Web\ModeTest::actif()) {
+            $this->app->flash('erreur', 'Compte de test : relève de la boîte non permise.');
+            $this->app->redirect('/mailing/retours');
+        }
+        $r = (new \Ascs\Mail\Retours($this->app->pdo))->relever();
+        $this->app->flash($r['erreur'] ? 'erreur' : 'ok', $r['erreur'] ?? \Ascs\Mail\Retours::bilan($r));
+        $this->app->redirect('/mailing/retours');
     }
 
     /** Lien d'invitation de la communauté WhatsApp (gardé dans les réglages). */

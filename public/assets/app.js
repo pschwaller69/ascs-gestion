@@ -281,8 +281,13 @@
     'use strict';
     var bloc = document.getElementById('choix-sections');
     if (!bloc) { return; }
+    var unique = document.getElementById('choix-section-unique');
     Array.prototype.forEach.call(document.querySelectorAll('input[name="cible"]'), function (r) {
-        r.addEventListener('change', function () { bloc.hidden = !(r.checked && r.value === 'section'); });
+        r.addEventListener('change', function () {
+            if (!r.checked) { return; }
+            bloc.hidden = r.value !== 'section';
+            if (unique) { unique.hidden = r.value !== 'section_importante'; }
+        });
     });
 }());
 
@@ -394,12 +399,13 @@
         q.set('canal', form.querySelector('[name="canal"]').value);
         var c = form.querySelector('[name="cible"]:checked'); if (c) { q.set('cible', c.value); }
         Array.prototype.forEach.call(form.querySelectorAll('[name="sections[]"]:checked'), function (s) { q.append('sections[]', s.value); });
+        var u = form.querySelector('[name="section_unique"]:checked'); if (u) { q.set('section_unique', u.value); }
         bloc.classList.add('en-cours');
         fetch(bloc.getAttribute('data-url') + '?' + q.toString(), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 bloc.querySelector('.val').textContent = d.n;
-                bloc.querySelector('.lib').textContent = 'destinataire' + (d.n > 1 ? 's' : '') + ' pour ce choix (saison choisie en haut de page)';
+                bloc.querySelector('.lib').textContent = 'destinataire' + (d.n > 1 ? 's' : '') + ' pour ce choix (' + (q.get('cible') === 'section_importante' ? 'saison en cours' : 'saison choisie en haut de page') + ')';
                 noms.textContent = d.noms.join(', ');
                 var parts = Object.keys(d.exclus).map(function (k) { return d.exclus[k] + ' ' + (libelles[k] || k); });
                 exclus.textContent = parts.length ? 'Exclus : ' + parts.join(', ') + '.' : '';
@@ -408,7 +414,7 @@
             .then(function () { bloc.classList.remove('en-cours'); });
     };
     form.addEventListener('change', function (ev) {
-        if (ev.target.name === 'cible' || ev.target.name === 'sections[]') { clearTimeout(minuteur); minuteur = setTimeout(maj, 150); }
+        if (ev.target.name === 'cible' || ev.target.name === 'sections[]' || ev.target.name === 'section_unique') { clearTimeout(minuteur); minuteur = setTimeout(maj, 150); }
     });
 }());
 

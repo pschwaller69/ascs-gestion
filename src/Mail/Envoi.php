@@ -36,9 +36,10 @@ final class Envoi
 
     /**
      * @param list<array{nom:string,contenu:string,type:string}> $pieces
+     * @param list<string> $entetesSup en-têtes en plus (désinscription, référence du mailing), une ligne chacun
      * @return ?string message d'erreur, null si envoyé
      */
-    public function envoyer(string $expediteur, string $nomExpediteur, string $a, string $objet, string $texte, array $pieces, ?int $inscriptionId, string $par): ?string
+    public function envoyer(string $expediteur, string $nomExpediteur, string $a, string $objet, string $texte, array $pieces, ?int $inscriptionId, string $par, array $entetesSup = []): ?string
     {
         if (\Ascs\Web\ModeTest::actif()) {
             // Compte de test : le mail part vers l'adresse de test (celle de l'association), jamais au vrai destinataire
@@ -79,6 +80,9 @@ final class Envoi
                 'MIME-Version: 1.0',
                 'Content-Type: multipart/mixed; boundary="' . $limite . '"',
             ];
+            foreach ($entetesSup as $l) {
+                $entetes[] = str_replace(["\r", "\n"], ' ', $l);
+            }
             $corps = "--$limite\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n"
                 . chunk_split(base64_encode(str_replace("\n", "\r\n", str_replace("\r\n", "\n", $texte))));
             foreach ($pieces as $p) {

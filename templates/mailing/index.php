@@ -5,6 +5,7 @@ $statuts = ['brouillon' => ['à valider', 'pastille-reste'], 'validee' => ['vali
     <div class="actions-titre">
         <a class="btn btn-principal" href="<?= e(url('/mailing/nouveau')) ?>"><?= icon('mail') ?> Nouveau mail</a>
         <a class="btn" href="<?= e(url('/mailing/nouveau', ['canal' => 'sms'])) ?>"><?= icon('mail') ?> Nouveau SMS</a>
+        <a class="btn" href="<?= e(url('/mailing/retours')) ?>">Retours des mailings</a>
     </div>
 </div>
 <section class="fiche bloc-whatsapp">
@@ -28,7 +29,7 @@ $statuts = ['brouillon' => ['à valider', 'pastille-reste'], 'validee' => ['vali
         <p class="aide">Si le lien est réinitialisé dans WhatsApp, l'ancien ne marche plus : collez le nouveau ici.</p>
     </details>
 </section>
-<p class="contexte">Chaque envoi est d'abord un brouillon : vous vérifiez les destinataires, puis vous validez. Les personnes qui ont refusé les mails ou les SMS ne sont jamais incluses.</p>
+<p class="contexte">Chaque envoi est d'abord un brouillon : vous vérifiez les destinataires, puis vous validez. Les mails d'information portent un lien de désinscription et ne partent jamais aux personnes désinscrites ; un message important à une section (saison en cours) n'en a pas et leur est envoyé aussi. Les personnes qui ont refusé les SMS ne reçoivent jamais de SMS.</p>
 <?php if (!$campagnes): ?><p class="vide">Aucun envoi pour l'instant.</p><?php else: ?>
 <div class="table-cadre"><table>
     <thead><tr><th>Date</th><th>Canal</th><th>Objet / texte</th><th>Destinataires</th><th class="num">Envoyés</th><th>État</th></tr></thead>
