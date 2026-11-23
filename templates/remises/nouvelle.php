@@ -29,7 +29,7 @@
                 <td><input type="checkbox" name="cheques[]" value="<?= (int) $c['id'] ?>" checked data-montant="<?= e($c['montant']) ?>" aria-label="Remettre le chèque de <?= e(trim($c['nom'] . ' ' . $c['prenom'])) ?>"></td>
                 <td><a href="<?= e(url('/adherents/' . $c['adherent_id'], ['onglet' => 'reglements'])) ?>"><?= e(trim($c['nom'] . ' ' . $c['prenom'])) ?></a></td>
                 <td><?= e(trim($c['nom_parent'] . ' ' . $c['prenom_parent'])) ?></td>
-                <td><?= e($c['section']) ?></td>
+                <td><?= e($c['section']) ?><?= stripos((string) ($c['remarques'] ?? ''), 'caution') !== false ? ' <a class="pastille pastille-reste" href="' . e(url('/cautions')) . '">caution</a>' : '' ?></td>
                 <td><?= e($c['identifiant']) ?: '<span class="pastille pastille-reste">non renseigné</span>' ?></td>
                 <td class="num"><?= e(money($c['montant'])) ?></td>
             </tr>

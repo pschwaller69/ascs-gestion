@@ -57,7 +57,7 @@ final class Remises
     /** @return list<array<string,mixed>> */
     public function chequesAPoser(string $date): array
     {
-        $st = $this->pdo->prepare('SELECT r.id, r.montant, r.identifiant, r.date_reglement, a.id AS adherent_id, a.nom, a.prenom, a.nom_parent, a.prenom_parent,
+        $st = $this->pdo->prepare('SELECT r.id, r.montant, r.identifiant, r.date_reglement, r.remarques, a.id AS adherent_id, a.nom, a.prenom, a.nom_parent, a.prenom_parent,
                 s.titre AS section, s.section_principale_id, sp.titre AS section_principale
             FROM reglement r JOIN inscription i ON i.id = r.inscription_id JOIN adherent a ON a.id = i.adherent_id
             JOIN section s ON s.id = i.section_id LEFT JOIN section_principale sp ON sp.id = s.section_principale_id

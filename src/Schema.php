@@ -185,6 +185,16 @@ final class Schema
                 'unique' => [['reglement_id']],
                 'index' => [['remise_id']],
             ],
+            // Rappels envoyés pour les chèques de caution (règlement Chèque avec « caution » en remarque) :
+            // une ligne par chèque et par date de pose. Pas de clé étrangère : l'import WinDev peut supprimer le règlement.
+            'rappel_caution' => [
+                'cols' => [
+                    'id' => 'auto', 'reglement_id' => 'int', 'date_pose' => 'date', 'envoye_le' => 'datetime',
+                    'destinataire' => 'str:150', 'ok' => 'bool', 'erreur' => 'text?', 'par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+                'index' => [['reglement_id']],
+            ],
             // --- Inscriptions et essais en ligne (formulaires publics) ---------------------------
             // Pas de clé étrangère vers section / adherent : l'import WinDev peut les modifier (mode transition).
             'section_en_ligne' => [

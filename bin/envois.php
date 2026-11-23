@@ -5,6 +5,7 @@ declare(strict_types=1);
  * Tâche planifiée (cron toutes les 5 minutes) : envoie le lot suivant des mailings et SMS validés par le bureau.
  *   php bin/envois.php
  * Un lot à la fois (40 mails ou 20 SMS) pour respecter la limite horaire du serveur mail.
+ * Envoie aussi, une fois par jour à partir de 9 h, les rappels des chèques de caution (Ascs\Domain\Cautions).
  * Relève ensuite la boîte des mailings (avis de non-remise, désinscriptions par mail) : voir Ascs\Mail\Retours.
  */
 require dirname(__DIR__) . '/src/autoload.php';
@@ -22,6 +23,20 @@ if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
 $r = (new Ascs\Domain\Mailing($pdo))->envoyerLot();
 if ($r['envoyes'] || $r['echecs']) {
     echo date('Y-m-d H:i:s'), sprintf(" envoyés %d, échecs %d, restants %d\n", $r['envoyes'], $r['echecs'], $r['restants']);
+}
+
+// Rappels des chèques de caution : une passe par jour à partir de 9 h (voir Ascs\Domain\Cautions)
+try {
+    $pdo->query('SELECT 1 FROM rappel_caution LIMIT 1');
+    $rc = (new Ascs\Domain\Cautions($pdo))->tache();
+    if ($rc && ($rc['envoyes'] || $rc['echecs'])) {
+        echo date('Y-m-d H:i:s'), sprintf(" rappels de caution : envoyés %d, échecs %d\n", $rc['envoyes'], $rc['echecs']);
+        foreach ($rc['erreurs'] as $err) {
+            echo '  ', $err, "\n";
+        }
+    }
+} catch (PDOException) {
+    // table pas encore créée
 }
 
 // Retours des mailings (boîte contact@m.ascs.fr) : une relève toutes les 15 minutes au plus

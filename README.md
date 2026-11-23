@@ -117,3 +117,8 @@ Déclaration de l'application, une fois (centre d'administration Microsoft Entra
 7. Tâche cron chaque jour à 19 h (`0 19 * * *`) : `/usr/local/bin/php /home4/mvpm7496/gestion.ascs.fr/bin/contacts.php` (n'affiche rien quand tout va bien).
 
 Sur le téléphone : application Outlook > Réglages > le compte > « Synchroniser les contacts ».
+
+## Chèques de caution (depuis 0.11.0)
+1. Saisir le chèque laissé en caution comme un règlement « Chèque », avec « caution » dans les remarques, à la date où il sera déposé en banque (1er ou 15).
+2. Accueil > Règlement > Chèques de caution : cocher « Envoyer le rappel automatiquement » (le texte et le délai, 7 jours par défaut, sont modifiables). La tâche cron `bin/envois.php` envoie les rappels chaque jour à partir de 9 h.
+3. Quand la personne apporte les espèces, passer le règlement en « Espèces » et lui rendre le chèque.

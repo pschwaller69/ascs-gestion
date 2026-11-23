@@ -22,6 +22,7 @@ use Ascs\Web\Controllers\ReportingController;
 use Ascs\Web\Controllers\HelloAssoController;
 use Ascs\Web\Controllers\PublicController;
 use Ascs\Web\Controllers\RemiseController;
+use Ascs\Web\Controllers\CautionController;
 use Ascs\Web\Controllers\HomeController;
 use Ascs\Web\Controllers\ImportController;
 use Ascs\Web\Controllers\UtilisateurController;
@@ -225,6 +226,9 @@ $router->post('/helloasso/{id}', [HelloAssoController::class, 'valider']);
 $router->post('/helloasso/{id}/ignorer', [HelloAssoController::class, 'ignorer']);
 $router->post('/helloasso/{id}/retablir', [HelloAssoController::class, 'retablir']);
 
+$router->get('/cautions', [CautionController::class, 'index']);
+$router->post('/cautions', [CautionController::class, 'enregistrer']);
+$router->post('/cautions/envoyer', [CautionController::class, 'envoyer']);
 $router->get('/remises', [RemiseController::class, 'index']);
 $router->post('/remises', [RemiseController::class, 'creer']);
 $router->post('/remises/depuis', [RemiseController::class, 'depuis']);

@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.11.0
+
+- Chèques de caution (Accueil > Règlement > Chèques de caution) : les chèques laissés par les personnes qui paient en espèces, saisis comme règlement « Chèque » avec le mot « caution » dans les remarques, à leur date de pose. Liste de ceux qui ne sont pas encore remis en banque, avec l'état du rappel (envoyé, échec, pas de mail valide avec le téléphone à appeler, date prévue).
+- Rappel automatique par mail 7 jours avant la date de pose (délai réglable), envoyé chaque jour à partir de 9 h par la tâche automatique `bin/envois.php` : un seul mail par adresse et par date, même pour plusieurs enfants, avec le numéro, le montant et la section de chaque chèque. Un chèque n'est rappelé qu'une fois par date de pose (de nouveau si la date change). Quand la personne apporte les espèces, passer le règlement en « Espèces » : il n'est plus relancé.
+- Désactivé à l'installation : à activer sur la page, où l'objet et le texte du mail sont modifiables. Bouton « Envoyer les rappels du jour » et aperçu du mail.
+- Nouvelle remise de chèques : les chèques de caution portent une pastille « caution ».
+
 ## 0.10.0
 
 - Mailings : deux sortes d'envoi.
