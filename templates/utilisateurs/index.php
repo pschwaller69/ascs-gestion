@@ -1,6 +1,6 @@
 <h1>Comptes du bureau</h1>
 <div class="table-cadre"><table>
-    <thead><tr><th>Nom</th><th>Mail</th><th>Dernière connexion</th><th>État</th><th>Nouveau mot de passe</th><th></th></tr></thead>
+    <thead><tr><th>Nom</th><th>Mail</th><th>Dernière connexion</th><th>État</th><th>Double authentification</th><th>Nouveau mot de passe</th><th></th></tr></thead>
     <tbody>
     <?php foreach ($liste as $u): ?>
         <tr>
@@ -9,6 +9,18 @@
             <td><?= $u['derniere_connexion'] ? e(dfr($u['derniere_connexion'])) : 'jamais' ?></td>
             <td><?= $u['actif'] ? '<span class="pastille pastille-ok">actif</span>' : '<span class="pastille pastille-niv-D">désactivé</span>' ?>
                 <?php if (in_array((int) $u['id'], $tests, true)): ?> <span class="pastille pastille-reste">compte de test</span><?php endif; ?></td>
+            <td><?php $d = $da[(int) $u['id']] ?? ['exigee' => false, 'active' => false, 'secours' => 0]; $f = e(url('/utilisateurs/' . $u['id'] . '/double-auth')); ?>
+                <?php if (!$d['exigee']): ?>
+                    <span class="pastille">non</span>
+                    <form method="post" action="<?= $f ?>"><?= csrf_field() ?><input type="hidden" name="action" value="exiger"><button type="submit" class="btn btn-petit">Exiger</button></form>
+                <?php else: ?>
+                    <?= $d['active'] ? '<span class="pastille pastille-ok">active</span> <small class="aide">' . (int) $d['secours'] . ' code(s) de secours</small>' : '<span class="pastille pastille-reste">à enregistrer</span> <small class="aide">à la prochaine connexion</small>' ?>
+                    <?php if ($n = (int) ($appareils[(int) $u['id']] ?? 0)): ?><br><small class="aide"><?= $n ?> ordinateur(s) de confiance</small>
+                    <form method="post" action="<?= $f ?>"><?= csrf_field() ?><input type="hidden" name="action" value="oublier"><button type="submit" class="btn btn-petit">Oublier les ordinateurs</button></form><?php endif; ?>
+                    <form method="post" action="<?= $f ?>"><?= csrf_field() ?><input type="hidden" name="action" value="reinitialiser"><button type="submit" class="btn btn-petit" title="Téléphone perdu ou changé, plus de codes de secours">Réinitialiser</button></form>
+                    <form method="post" action="<?= $f ?>"><?= csrf_field() ?><input type="hidden" name="action" value="retirer"><button type="submit" class="btn btn-petit btn-danger">Ne plus exiger</button></form>
+                <?php endif; ?>
+            </td>
             <td>
                 <form method="post" action="<?= e(url('/utilisateurs/' . $u['id'] . '/mot-de-passe')) ?>" class="en-ligne">
                     <?= csrf_field() ?>
@@ -33,6 +45,7 @@
     <?php endforeach; ?>
     </tbody>
 </table></div>
+<p class="aide">Double authentification : à chaque connexion, en plus du mot de passe, un code à 6 chiffres donné par une application du téléphone (Google Authenticator, Microsoft Authenticator…). « Exiger » : la personne enregistre son application à sa prochaine connexion et reçoit 10 codes de secours ; sa session en cours est fermée. « Réinitialiser » si elle a perdu ou changé de téléphone. « Se souvenir de cet ordinateur » évite le code pendant 30 jours sur un appareil (le mot de passe reste demandé) ; « Oublier les ordinateurs » l'annule, par exemple après un vol.</p>
 <h2>Comptes de test</h2>
 <form class="fiche" method="post" action="<?= e(url('/utilisateurs/mail-test')) ?>">
     <?= csrf_field() ?>

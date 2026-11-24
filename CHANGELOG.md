@@ -3,6 +3,15 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.14.0
+
+- Double authentification des comptes du bureau, exigée compte par compte (Paramétrage > Comptes du bureau, bouton « Exiger »). À chaque connexion, après le mot de passe : code à 6 chiffres d'une application d'authentification (Google Authenticator, Microsoft Authenticator, FreeOTP…, norme TOTP).
+- À la première connexion après « Exiger » : QR code à scanner (ou lien direct vers l'application sur le téléphone, ou clé à saisir), premier code pour confirmer, puis 10 codes de secours à usage unique affichés une seule fois (stockés hachés).
+- Un code déjà utilisé est refusé ; 5 codes faux renvoient au mot de passe, et comptent dans la limite des essais de connexion. Étape du code valable 10 minutes.
+- « Réinitialiser » (téléphone perdu ou changé) : sessions ouvertes fermées, application et codes de secours à enregistrer de nouveau. « Exiger » ferme aussi la session en cours du compte. « Ne plus exiger » : retour au mot de passe seul.
+- « Se souvenir de cet ordinateur pendant 30 jours » (case sous le code) : sur cet appareil, le mot de passe suffit ; ailleurs, le code reste demandé. Cookie protégé (HttpOnly), seul son hachage est gardé en base. Comptes du bureau : nombre d'ordinateurs de confiance et bouton « Oublier les ordinateurs » ; « Réinitialiser » et « Ne plus exiger » les oublient aussi.
+- Pages de connexion introuvables sur le sous-domaine des adhérents.
+
 ## 0.13.0
 
 - Deux sous-domaines (facultatif, `PUBLIC_URL` dans `.env`, par exemple https://inscription.ascs.fr) : celui des adhérents ne sert que l'inscription, le cours d'essai, le paiement en ligne, la désinscription et les listes de présence des animateurs. La connexion, toutes les pages du bureau et la page d'installation y sont introuvables.

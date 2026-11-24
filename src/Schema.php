@@ -149,6 +149,25 @@ final class Schema
                 'pk' => ['id'],
                 'unique' => [['email']],
             ],
+            // Double authentification (TOTP) d'un compte du bureau ; secret vide = application à enregistrer
+            'utilisateur_2fa' => [
+                'cols' => [
+                    'utilisateur_id' => 'int', 'exigee' => 'bool', 'secret' => 'str:64?', 'dernier_pas' => 'int?',
+                    'codes_secours' => 'text?', 'active_le' => 'datetime?', 'modifie_le' => 'datetime', 'modifie_par' => 'str:150?',
+                ],
+                'pk' => ['utilisateur_id'],
+            ],
+            // Appareils de confiance (« se souvenir de cet ordinateur ») : le code n'y est plus demandé, le mot de passe si.
+            // Seul le hachage du jeton du cookie est gardé.
+            'appareil_confiance' => [
+                'cols' => [
+                    'id' => 'auto', 'utilisateur_id' => 'int', 'jeton_hash' => 'str:64', 'libelle' => 'str:120?', 'ip' => 'str:45?',
+                    'cree_le' => 'datetime', 'expire_le' => 'datetime', 'utilise_le' => 'datetime?',
+                ],
+                'pk' => ['id'],
+                'unique' => [['jeton_hash']],
+                'index' => [['utilisateur_id']],
+            ],
             'tentative_connexion' => [
                 'cols' => ['id' => 'auto', 'email' => 'str:150', 'ip' => 'str:45', 'date_tentative' => 'datetime'],
                 'pk' => ['id'],

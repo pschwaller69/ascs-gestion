@@ -19,7 +19,7 @@ final class UtilisateurController
 
     public function index(array $p, array $err = [], array $saisie = []): string
     {
-        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'tests' => \Ascs\Web\ModeTest::comptes($this->app->pdo), 'mailTest' => (string) (\Ascs\Parametres::get($this->app->pdo, \Ascs\Web\ModeTest::CLE_MAIL) ?? \Ascs\Web\ModeTest::MAIL_DEFAUT), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
+        return $this->app->render('utilisateurs/index', ['liste' => $this->liste(), 'da' => (new \Ascs\Web\DoubleAuth($this->app->pdo))->etats(), 'appareils' => (new \Ascs\Web\DoubleAuth($this->app->pdo))->appareilsParCompte(), 'tests' => \Ascs\Web\ModeTest::comptes($this->app->pdo), 'mailTest' => (string) (\Ascs\Parametres::get($this->app->pdo, \Ascs\Web\ModeTest::CLE_MAIL) ?? \Ascs\Web\ModeTest::MAIL_DEFAUT), 'err' => $err, 'saisie' => $saisie + ['email' => '', 'nom' => '']], 'Comptes du bureau', 'parametrage', $err ? 422 : 200);
     }
 
     public function creer(array $p): string
@@ -90,6 +90,36 @@ final class UtilisateurController
         } else {
             \Ascs\Web\ModeTest::regler($this->app->pdo, $id, $test);
             $this->app->flash('ok', $test ? 'Compte de test : aucun mail ne part et les actions sensibles sont désactivées.' : 'Compte remis en compte normal.');
+        }
+        $this->app->redirect('/utilisateurs');
+    }
+
+    /** Double authentification d'un compte : exiger, ne plus exiger, réinitialiser (téléphone perdu ou changé). */
+    public function doubleAuth(array $p): void
+    {
+        $id = (int) $p['id'];
+        $action = (string) ($_POST['action'] ?? '');
+        $st = $this->app->pdo->prepare('SELECT email FROM utilisateur WHERE id = ?');
+        $st->execute([$id]);
+        $email = $st->fetchColumn();
+        $da = new \Ascs\Web\DoubleAuth($this->app->pdo);
+        $par = (string) ($this->app->user['email'] ?? '');
+        if ($email === false) {
+            $this->app->flash('erreur', 'Compte introuvable.');
+        } elseif ($action === 'exiger') {
+            $da->exiger($id, true, $par);
+            $this->app->flash('ok', $id === (int) $this->app->user['id']
+                ? 'Double authentification exigée pour votre compte : à la prochaine connexion, vous enregistrerez votre application d\'authentification.'
+                : "Double authentification exigée pour $email : à sa prochaine connexion, il ou elle enregistrera son application d'authentification (sa session en cours est fermée).");
+        } elseif ($action === 'retirer') {
+            $da->exiger($id, false, $par);
+            $this->app->flash('ok', "Double authentification retirée pour $email : le mot de passe seul suffit de nouveau.");
+        } elseif ($action === 'oublier') {
+            $da->oublierAppareils($id);
+            $this->app->flash('ok', "Ordinateurs de confiance oubliés pour $email : le code sera de nouveau demandé partout.");
+        } elseif ($action === 'reinitialiser') {
+            $da->reinitialiser($id, $par);
+            $this->app->flash('ok', "Double authentification réinitialisée pour $email : ses sessions ouvertes sont fermées, l'application et les codes de secours sont à enregistrer de nouveau à la prochaine connexion.");
         }
         $this->app->redirect('/utilisateurs');
     }

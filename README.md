@@ -37,6 +37,9 @@ Pour séparer le bureau (gestion.ascs.fr) des pages des adhérents (par exemple 
 
 Ensuite, le sous-domaine des adhérents ne sert que l'inscription, le cours d'essai, le paiement en ligne, la désinscription et les listes de présence des animateurs : la connexion, les pages du bureau et `/installation` y répondent « page introuvable ». Les QR codes, les liens des mails (paiement, désinscription) et les liens des animateurs pointent vers lui ; il faut donc **réimprimer les affiches QR** (les anciens QR codes continuent de marcher : gestion.ascs.fr renvoie vers le nouveau sous-domaine). Le bureau connecté sur gestion.ascs.fr garde l'aperçu des formulaires fermés.
 
+## Double authentification du bureau (depuis 0.14.0)
+Paramétrage > Comptes du bureau > « Exiger » pour chaque compte concerné. À sa connexion suivante, la personne scanne un QR code avec une application d'authentification (Google Authenticator, Microsoft Authenticator, FreeOTP…) et note ses 10 codes de secours. Case « Se souvenir de cet ordinateur » : plus de code pendant 30 jours sur cet appareil (le mot de passe reste demandé) ; « Oublier les ordinateurs » l'annule. Téléphone perdu : « Réinitialiser » depuis un autre compte. Le serveur doit être à l'heure (c'est le cas chez o2switch) ; côté téléphone, l'heure doit être automatique.
+
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 

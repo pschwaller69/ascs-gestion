@@ -558,3 +558,8 @@ td.actions-ligne form { display: inline; }
 input, select, textarea { max-width: 100%; }
 @media (max-width: 600px) { .bandeau-test { font-size: .8rem; padding: .35rem .6rem; margin-bottom: .6rem; } }
 .lien-whatsapp { display: flex; gap: .4rem; align-items: center; flex: 1 1 18rem; min-width: 0; } .lien-whatsapp input { flex: 1; min-width: 0; }
+
+/* Double authentification (0.14.0) */
+.carte-connexion .qr { width: 12rem; height: 12rem; margin: .5rem 0; background: #fff; }
+.codes-secours { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem 1rem; }
+.codes-secours code { font-size: 1.05rem; letter-spacing: .05em; }

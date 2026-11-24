@@ -86,6 +86,10 @@ try {
 $router = new Router();
 $router->get('/connexion', [AuthController::class, 'form'], true);
 $router->post('/connexion', [AuthController::class, 'connexion'], true);
+$router->get('/connexion/code', [AuthController::class, 'code'], true);
+$router->post('/connexion/code', [AuthController::class, 'verifierCode'], true);
+$router->get('/connexion/activation', [AuthController::class, 'activation'], true);
+$router->post('/connexion/activation', [AuthController::class, 'activer'], true);
 $router->post('/deconnexion', [AuthController::class, 'deconnexion']);
 $router->post('/saison', [AuthController::class, 'saison']);
 $router->get('/', [HomeController::class, 'index']);
@@ -263,6 +267,7 @@ $router->post('/utilisateurs', [UtilisateurController::class, 'creer']);
 $router->post('/utilisateurs/{id}/mot-de-passe', [UtilisateurController::class, 'motDePasse']);
 $router->post('/utilisateurs/{id}/activer', [UtilisateurController::class, 'activer']);
 $router->post('/utilisateurs/{id}/test', [UtilisateurController::class, 'test']);
+$router->post('/utilisateurs/{id}/double-auth', [UtilisateurController::class, 'doubleAuth']);
 $router->post('/utilisateurs/mail-test', [UtilisateurController::class, 'mailTest']);
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';

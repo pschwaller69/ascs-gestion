@@ -49,6 +49,17 @@ final class App
                 $st = $app->pdo->prepare('SELECT id, email, nom FROM utilisateur WHERE id = ? AND actif = 1');
                 $st->execute([(int) $_SESSION['uid']]);
                 $app->user = $st->fetch() ?: null;
+                // Double authentification exigée depuis l'ouverture de la session, ou réinitialisée (téléphone perdu) : session fermée
+                if ($app->user !== null) {
+                    try {
+                        $da = (new DoubleAuth($app->pdo))->etat((int) $app->user['id']);
+                        if ($da['exigee'] && (empty($_SESSION['2fa_ok']) || ($_SESSION['2fa_le'] ?? null) !== $da['active_le'])) {
+                            $app->user = null;
+                        }
+                    } catch (\PDOException) {
+                        // table pas encore créée (mise à jour en cours)
+                    }
+                }
                 if ($app->user === null) {
                     $_SESSION = [];
                 } else {
