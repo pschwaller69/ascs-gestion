@@ -3,6 +3,15 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.12.0
+
+- Paiement en ligne à la fin de l'inscription en ligne (HelloAsso Checkout, sans frais pour l'association). Quand la personne choisit « Carte bancaire » comme seul moyen de paiement, la page de fin du formulaire propose « Payer maintenant » le reste à régler (aides déduites), en 1 fois ou en 3 fois à partir de 60 € (échéances mensuelles sur la même carte). Le mail de confirmation contient aussi le lien, pour payer plus tard.
+- Au retour de HelloAsso, la commande est relue sur l'API (l'adresse de retour seule ne prouve rien). Les paiements abandonnés en cours de route sont rattrapés par la tâche `bin/helloasso.php` et par les notifications HelloAsso ; les échéances suivantes sont suivies de la même façon.
+- Règlements créés automatiquement à la validation de la demande par le bureau : mode « HelloAsso », identifiant = numéro de commande, un règlement par échéance et par activité, partagés au prorata du montant des inscriptions (arrondis compensés). Échéances futures : règlements à venir ; prélevées : date réelle ; refusées : règlement retiré. Un règlement modifié par le bureau n'est plus touché.
+- Demandes en ligne : pastille « payé » dans la liste, détail du paiement (échéances, commande) sur la demande.
+- Accueil > HelloAsso : réglage « Paiement en ligne à l'inscription » (coupé à l'installation) et « Paiement en 3 fois ».
+- Mode transition : les règlements des paiements en ligne effacés par un import WinDev sont recréés.
+
 ## 0.11.0
 
 - Chèques de caution (Accueil > Règlement > Chèques de caution) : les chèques laissés par les personnes qui paient en espèces, saisis comme règlement « Chèque » avec le mot « caution » dans les remarques, à leur date de pose. Liste de ceux qui ne sont pas encore remis en banque, avec l'état du rappel (envoyé, échec, pas de mail valide avec le téléphone à appeler, date prévue).

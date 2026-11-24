@@ -126,6 +126,49 @@ final class Client
         throw new RuntimeException('HelloAsso : jeton refusé.');
     }
 
+    /**
+     * POST JSON sur /v5/… (paiement en ligne). @return array{0:int,1:array<string,mixed>} [code HTTP, réponse décodée]
+     * Les erreurs de validation (400) sont rendues à l'appelant, qui peut réessayer autrement.
+     */
+    public function post(string $chemin, array $corps): array
+    {
+        $url = $this->baseUrl . '/v5' . $chemin;
+        $json = (string) json_encode($corps, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        foreach ([false, true] as $forcer) {
+            [$code, $body] = $this->http('POST', $url, ['Authorization: Bearer ' . $this->jeton($forcer), 'Accept: application/json', 'Content-Type: application/json'], $json);
+            if ($code === 401 && !$forcer) {
+                continue;
+            }
+            if ($code === 403) {
+                throw new RuntimeException('HelloAsso refuse le paiement en ligne (HTTP 403) : le client API doit avoir le droit « Checkout » et l\'association doit être vérifiée par HelloAsso pour recevoir des paiements.');
+            }
+            if ($code === 429) {
+                throw new RuntimeException('HelloAsso limite le nombre d\'appels (HTTP 429) : réessayez dans quelques minutes.');
+            }
+            $d = json_decode($body, true);
+            return [$code, is_array($d) ? $d : []];
+        }
+        throw new RuntimeException('HelloAsso : jeton refusé.');
+    }
+
+    /** Intention de paiement (Checkout). @return array{0:int,1:array<string,mixed>} */
+    public function creerCheckout(array $corps): array
+    {
+        return $this->post('/organizations/' . rawurlencode($this->organisation) . '/checkout-intents', $corps);
+    }
+
+    /** Intention de paiement avec sa commande (présente seulement une fois le paiement autorisé). */
+    public function checkout(int $id): array
+    {
+        return $this->get('/organizations/' . rawurlencode($this->organisation) . '/checkout-intents/' . $id);
+    }
+
+    /** Commande (suivi des échéances d'un paiement en plusieurs fois). */
+    public function commande(int $id): array
+    {
+        return $this->get('/orders/' . $id);
+    }
+
     /** Paramètres répétés à la façon .NET : tierTypes=Membership&tierTypes=… */
     private static function query(array $q): string
     {

@@ -43,6 +43,8 @@ final class HelloAssoController
             'organisation' => $cfg['ha_organisation'], 'webhook' => strlen($cfg['ha_webhook_token']) >= 16,
             'depuis' => (new Sync($this->app->pdo))->depuisParDefaut(),
             'auto' => (new Sync($this->app->pdo))->autoActive(),
+            'pel' => \Ascs\Parametres::get($this->app->pdo, 'paiement_en_ligne') === '1',
+            'pel3' => (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->troisFoisPermis(),
             'raisons' => $vue === 'a_traiter' ? $this->raisons($this->val->liste(['a_traiter'])) : [],
         ], 'HelloAsso', 'accueil');
     }
@@ -81,6 +83,19 @@ final class HelloAssoController
         }
         $n = $sync->compteur()['auto'];
         $this->app->flash('ok', 'Validation automatique activée' . ($n ? sprintf(' : %d adhésion(s) validée(s) tout de suite.', $n) : '.'));
+        $this->app->redirect('/helloasso');
+    }
+
+    /** Paiement en ligne à la fin de l'inscription en ligne : activation et paiement en 3 fois. */
+    public function paiementEnLigne(array $p): void
+    {
+        $pdo = $this->app->pdo;
+        $actif = ($_POST['actif'] ?? '') === '1';
+        \Ascs\Parametres::set($pdo, 'paiement_en_ligne', $actif ? '1' : '0');
+        \Ascs\Parametres::set($pdo, 'paiement_en_ligne_3fois', ($_POST['trois_fois'] ?? '') === '1' ? '1' : '0');
+        $this->app->flash('ok', $actif
+            ? 'Paiement en ligne activé : les personnes qui choisissent la carte bancaire peuvent payer sur HelloAsso à la fin du formulaire d\'inscription.'
+            : 'Paiement en ligne coupé : la fin du formulaire d\'inscription ne propose plus de payer sur HelloAsso.');
         $this->app->redirect('/helloasso');
     }
 
@@ -173,6 +188,13 @@ final class HelloAssoController
         echo 'ok';
         if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
+        }
+        // Paiements en ligne des inscriptions (Checkout) : relus tout de suite
+        try {
+            @set_time_limit(120);
+            (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo, Client::depuisConfig($this->app->pdo, $cfg)))->suivre();
+        } catch (\Throwable $e) {
+            error_log('ASCS paiement en ligne, notification : ' . $e->getMessage());
         }
         // HelloAsso envoie plusieurs notifications par commande, à quelques secondes d'intervalle.
         $derniere = Parametres::get($this->app->pdo, 'helloasso_derniere_sync');

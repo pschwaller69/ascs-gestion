@@ -58,7 +58,7 @@ final class Demandes
     /** @return list<array<string,mixed>> */
     public function liste(string $statut, int $limite = 300): array
     {
-        $st = $this->pdo->prepare('SELECT * FROM demande WHERE statut = ? ORDER BY cree_le ' . ($statut === 'a_traiter' ? 'ASC' : 'DESC') . ' LIMIT ' . (int) $limite);
+        $st = $this->pdo->prepare("SELECT d.*, (SELECT COALESCE(SUM(p.montant),0) FROM paiement_en_ligne p WHERE p.demande_id = d.id AND p.statut = 'paye') AS paye_en_ligne FROM demande d WHERE d.statut = ? ORDER BY d.cree_le " . ($statut === 'a_traiter' ? 'ASC' : 'DESC') . ' LIMIT ' . (int) $limite);
         $st->execute([$statut]);
         $out = [];
         foreach ($st->fetchAll() as $d) {
@@ -92,7 +92,7 @@ final class Demandes
     /**
      * @param array<string,mixed> $in adherent ('nouveau' | id), completer, saison_id, creer[] (sections retenues), montant[sid], champs de fiche
      * @param bool $rejeu true après un import WinDev : une fiche « très probable » déjà présente est reprise au lieu d'en créer une nouvelle
-     * @return array{ok:bool,erreurs:array<string,string>,inscriptions:list<int>}
+     * @return array{ok:bool,erreurs:array<string,string>,inscriptions:list<int>,reglements?:int}
      */
     public function valider(int $id, array $in, string $par, bool $rejeu = false): array
     {
@@ -210,6 +210,8 @@ final class Demandes
             }
             $this->pdo->prepare('UPDATE demande SET statut = ?, adherent_id = ?, inscriptions = ?, choix = ?, traite_le = ?, traite_par = ? WHERE id = ?')
                 ->execute(['valide', $adherentId, json_encode($creees), json_encode($garde, JSON_UNESCAPED_UNICODE), date('Y-m-d H:i:s'), $par, $id]);
+            // Paiement en ligne HelloAsso déjà fait : ses règlements vont sur les inscriptions créées
+            $reglements = (new \Ascs\HelloAsso\PaiementEnLigne($this->pdo))->creerReglements($id);
             if ($propre) {
                 $this->pdo->commit();
             }
@@ -219,7 +221,7 @@ final class Demandes
             }
             throw $e;
         }
-        return ['ok' => true, 'erreurs' => [], 'inscriptions' => $creees];
+        return ['ok' => true, 'erreurs' => [], 'inscriptions' => $creees, 'reglements' => $reglements];
     }
 
     private function completer(int $adherentId, array $d): void

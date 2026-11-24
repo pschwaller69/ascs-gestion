@@ -245,6 +245,31 @@ final class Schema
                 'cols' => ['formulaire' => 'str:150', 'tarif' => 'str:255', 'section_id' => 'int'],
                 'pk' => ['formulaire', 'tarif'],
             ],
+            // --- Paiement en ligne HelloAsso (Checkout) à la fin d'une inscription en ligne ---------
+            // Une ligne par intention de paiement ouverte (la personne peut recommencer) ; statut cree | paye | echec.
+            'paiement_en_ligne' => [
+                'cols' => [
+                    'id' => 'auto', 'demande_id' => 'int', 'checkout_id' => 'int?', 'commande_id' => 'int?', 'fois' => 'smallint',
+                    'montant' => 'dec:10,2', 'statut' => 'str:12', 'cree_le' => 'datetime', 'paye_le' => 'datetime?',
+                    'maj_le' => 'datetime', 'erreur' => 'text?',
+                ],
+                'pk' => ['id'],
+                'index' => [['demande_id'], ['checkout_id'], ['statut']],
+            ],
+            // Paiements (échéances) de la commande HelloAsso, avec leur état
+            'paiement_en_ligne_echeance' => [
+                'cols' => [
+                    'id' => 'int', 'paiement_id' => 'int', 'montant' => 'dec:10,2', 'date_paiement' => 'datetime?',
+                    'etat' => 'str:30', 'echeance' => 'int?', 'maj_le' => 'datetime',
+                ],
+                'pk' => ['id'],
+                'index' => [['paiement_id']],
+            ],
+            // Part d'une échéance affectée à une inscription de la demande -> règlement créé
+            'paiement_en_ligne_reglement' => [
+                'cols' => ['echeance_id' => 'int', 'inscription_id' => 'int', 'montant' => 'dec:10,2', 'reglement_id' => 'int?'],
+                'pk' => ['echeance_id', 'inscription_id'],
+            ],
             'demande_complement' => [
                 'cols' => ['demande_id' => 'int', 'donnees' => 'text'],
                 'pk' => ['demande_id'],

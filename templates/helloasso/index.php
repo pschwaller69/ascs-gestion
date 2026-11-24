@@ -44,6 +44,21 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
     <button type="submit" class="btn btn-petit"><?= $auto ? 'Couper la validation automatique' : 'Activer la validation automatique' ?></button>
 </form>
 
+<form method="post" action="<?= e(url('/helloasso/paiement-en-ligne')) ?>" class="reglage-auto">
+    <?= csrf_field() ?>
+    <p>
+        <strong>Paiement en ligne à l'inscription <?= $pel ? 'activé' : 'coupé' ?>.</strong>
+        Quand une personne choisit « Carte bancaire » comme seul moyen de paiement dans le formulaire d'inscription en ligne, la fin du formulaire et le mail de confirmation lui proposent de payer tout de suite le reste à régler sur HelloAsso (Checkout, sans frais pour l'association).
+        Les paiements apparaissent sur la demande ; les règlements « HelloAsso » sont créés à la validation de la demande, partagés entre les activités.
+        <?= $configure ? '' : '<br><strong>Connexion HelloAsso à configurer d\'abord.</strong>' ?>
+    </p>
+    <p>
+        <label><input type="checkbox" name="actif" value="1"<?= attr($pel, 'checked') ?>> Proposer le paiement en ligne</label><br>
+        <label><input type="checkbox" name="trois_fois" value="1"<?= attr($pel3, 'checked') ?>> Permettre le paiement en 3 fois (à partir de <?= e(money(Ascs\HelloAsso\PaiementEnLigne::SEUIL_3_FOIS)) ?>, échéances mensuelles)</label>
+    </p>
+    <button type="submit" class="btn btn-petit">Enregistrer</button>
+</form>
+
 <nav class="sous-onglets" aria-label="Adhésions HelloAsso">
     <a href="<?= e(url('/helloasso')) ?>"<?= $vue === 'a_traiter' ? ' aria-current="page"' : '' ?>>À valider (<?= (int) $compteurs['a_traiter'] ?>)</a>
     <a href="<?= e(url('/helloasso', ['vue' => 'traites'])) ?>"<?= $vue === 'traites' ? ' aria-current="page"' : '' ?>>Traitées (<?= (int) ($compteurs['importe'] + $compteurs['deja_present']) ?>)</a>

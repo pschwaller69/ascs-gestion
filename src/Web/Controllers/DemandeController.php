@@ -48,6 +48,7 @@ final class DemandeController
             }
         }
         return $this->app->render('demandes/fiche', [
+            'paiements' => (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->historique((int) $d['id']),
             'd' => $d, 'candidats' => $candidats, 'choix' => $choix, 'fiche' => $fiche, 'err' => $err, 'post' => $post,
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
             'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions,
@@ -66,7 +67,8 @@ final class DemandeController
             return $this->fiche($p, $r['erreurs']);
         }
         $n = count($r['inscriptions']);
-        $this->app->flash('ok', $n > 1 ? "$n inscriptions créées." : 'Inscription créée.');
+        $nr = (int) ($r['reglements'] ?? 0);
+        $this->app->flash('ok', ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.') . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : ''));
         $suivante = $this->app->pdo->query("SELECT id FROM demande WHERE statut = 'a_traiter' ORDER BY cree_le LIMIT 1")->fetchColumn();
         if (($_POST['suite'] ?? '') === 'suivante' && $suivante !== false) {
             $this->app->redirect('/demandes/' . $suivante);

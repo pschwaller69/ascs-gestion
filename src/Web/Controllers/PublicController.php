@@ -143,6 +143,8 @@ final class PublicController
                 . ($type === 'essai' ? 'Le bureau vous recontacte pour vous confirmer le jour du cours.' : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
                 . ($c ? "\n\n" . self::texteRecap($c['recap']) : '')
                 . ($pieces ? "\n\nÀ apporter au premier cours :\n- " . implode("\n- ", $pieces) : '')
+                . (($pl = $type === 'inscription' ? $this->paiementEnLigne($ref) : null)
+                    ? "\n\nPayer en ligne par carte bancaire (HelloAsso) : " . \Ascs\Web\App::urlAbsolue('/paiement/' . $pl['jeton']) : '')
                 . ($c ? "\n\nVous avez accepté le règlement intérieur (signé en ligne par " . $c['soussigne'] . ' le ' . date('d/m/Y') . ').' : '')
                 . "\n\nÀ bientôt,\n" . $asso . ($r['telephone'] ? "\n" . $r['telephone'] : '') . ($r['site'] ? "\n" . $r['site'] : '');
             (new \Ascs\Mail\Envoi($this->app->pdo))->envoyer($r['expediteur'], $asso, (string) $d['mail'],
@@ -183,6 +185,27 @@ final class PublicController
                 }
             }
         }
-        return $this->app->renderPublic('public/merci', ['m' => $m, 'paiements' => $paiements, 'message' => $this->el->message()], 'Demande envoyée');
+        return $this->app->renderPublic('public/merci', ['m' => $m, 'paiements' => $paiements, 'message' => $this->el->message(),
+            'enLigne' => $m['type'] === 'inscription' ? $this->paiementEnLigne((string) $m['ref']) : null], 'Demande envoyée');
+    }
+
+    /** Paiement HelloAsso proposé pour cette demande : jeton du lien, montant, 3 fois possible ; null sinon. */
+    private function paiementEnLigne(string $ref): ?array
+    {
+        try {
+            $pel = new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo);
+            if (!$pel->actif()) {
+                return null;
+            }
+            $d = $pel->demande($ref);
+            $montant = $d ? \Ascs\HelloAsso\PaiementEnLigne::montantDu($d) : null;
+            if ($montant === null) {
+                return null;
+            }
+            return ['jeton' => \Ascs\HelloAsso\PaiementEnLigne::jeton($ref), 'montant' => $montant,
+                'troisFois' => $pel->troisFoisPermis() && $montant >= \Ascs\HelloAsso\PaiementEnLigne::SEUIL_3_FOIS];
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

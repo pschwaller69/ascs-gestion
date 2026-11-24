@@ -66,6 +66,14 @@ final class Transition
             $lignes[] = 'Changements de cours : impossible de les refaire (' . $e->getMessage() . ').';
         }
         try {
+            $n = (new \Ascs\HelloAsso\PaiementEnLigne($pdo))->reglementsManquants();
+            if ($n) {
+                $lignes[] = sprintf('Paiements en ligne HelloAsso : %d règlement(s) recréé(s).', $n);
+            }
+        } catch (\Throwable $e) {
+            $lignes[] = 'Paiements en ligne : règlements impossibles à recréer (' . $e->getMessage() . ').';
+        }
+        try {
             $r = (new \Ascs\Domain\Remises($pdo))->rapprocher();
             if ($r['ventilees'] || $r['ecarts']) {
                 $lignes[] = sprintf('Remises de chèques : %d ventilation(s) écrite(s) dans les comptes, %d remise(s) avec un montant différent de la banque.', $r['ventilees'], $r['ecarts']);

@@ -21,6 +21,7 @@ use Ascs\Web\Controllers\BanqueController;
 use Ascs\Web\Controllers\ReportingController;
 use Ascs\Web\Controllers\HelloAssoController;
 use Ascs\Web\Controllers\PublicController;
+use Ascs\Web\Controllers\PaiementController;
 use Ascs\Web\Controllers\RemiseController;
 use Ascs\Web\Controllers\CautionController;
 use Ascs\Web\Controllers\HomeController;
@@ -130,6 +131,12 @@ $router->post('/inscription', [PublicController::class, 'envoyerInscription'], t
 $router->get('/essai', [PublicController::class, 'essai'], true);
 $router->post('/essai', [PublicController::class, 'envoyerEssai'], true);
 $router->get('/merci', [PublicController::class, 'merci'], true);
+// Paiement en ligne HelloAsso d'une inscription (lien signé)
+$router->get('/paiement/{jeton}', [PaiementController::class, 'afficher'], true);
+$router->get('/paiement/{jeton}/payer', [PaiementController::class, 'payer'], true);
+$router->get('/paiement/{jeton}/retour', [PaiementController::class, 'retour'], true);
+$router->get('/paiement/{jeton}/erreur', [PaiementController::class, 'erreur'], true);
+$router->post('/helloasso/paiement-en-ligne', [HelloAssoController::class, 'paiementEnLigne']);
 $router->get('/presence/{jeton}', [PresenceController::class, 'liste'], true);
 $router->get('/desinscription/{jeton}', [MailingController::class, 'desinscription'], true);
 // Sans jeton CSRF : la désinscription en un clic (en-tête List-Unsubscribe-Post) est un POST direct de la messagerie ; le jeton du lien suffit.

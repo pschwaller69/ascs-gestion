@@ -31,6 +31,23 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <tr><th>Assurance</th><td><?= $c['assurance'] === 'oui' ? '<strong>souscrit</strong>' . ($c['assurance_option'] ? ', option ' . e($c['assurance_option']) : '') : 'ne souscrit pas' ?></td></tr>
             <tr><th>Règlement prévu</th><td><?= e(preg_replace('/^Règlement prévu : | ; assurance.*$/u', '', Ascs\Domain\Bulletin::resumeReglement($c))) ?>
                 <?php $r = $c['recap']; ?><br><small>Total <?= e(money($r['total'])) ?><?= $r['aides'] ? ', aides ' . e(money(array_sum(array_column($r['aides'], 'montant')))) : '' ?><?= $r['frais'] ? ', frais ANCV ' . e(money($r['frais'])) : '' ?> : reste annoncé <strong><?= e(money($r['reste'])) ?></strong></small></td></tr>
+            <?php if (!empty($paiements)): ?>
+            <tr><th>Paiement en ligne</th><td>
+                <?php $aPaye = in_array('paye', array_column($paiements, 'statut'), true); $dernier = array_key_last($paiements);
+                // Payé : seulement le paiement ; sinon les tentatives en cours et le dernier échec
+                foreach ($paiements as $k => $pl): if (($aPaye && $pl['statut'] !== 'paye') || (!$aPaye && $pl['statut'] === 'echec' && $k !== $dernier)) { continue; } ?>
+                    <?php if ($pl['statut'] === 'paye'): ?>
+                        <span class="pastille pastille-ok">payé</span> <?= e(money($pl['montant'])) ?><?= (int) $pl['fois'] > 1 ? ' en ' . (int) $pl['fois'] . ' fois' : '' ?> le <?= e(dfr(substr((string) $pl['paye_le'], 0, 10))) ?> — commande HelloAsso <?= e((string) $pl['commande_id']) ?>
+                        <?php foreach ($pl['echeances'] as $ec): ?><br><small><?= e(dfr(substr((string) $ec['date_paiement'], 0, 10))) ?> : <?= e(money($ec['montant'])) ?> — <?= e(in_array($ec['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'encaissé' : (in_array($ec['etat'], Ascs\HelloAsso\Sync::A_VENIR, true) ? 'prélèvement prévu' : 'refusé ou annulé')) ?></small><?php endforeach; ?>
+                        <?php if ($d['statut'] === 'a_traiter'): ?><br><small class="aide">Les règlements HelloAsso seront créés à la validation, partagés entre les activités retenues au prorata de leur montant.</small><?php endif; ?>
+                    <?php elseif ($pl['statut'] === 'cree'): ?>
+                        <span class="pastille pastille-reste">commencé</span> paiement ouvert le <?= e(dfr(substr((string) $pl['cree_le'], 0, 10))) ?>, pas encore confirmé par HelloAsso<br>
+                    <?php else: ?>
+                        <span class="pastille">non abouti</span> <?= e((string) $pl['erreur']) ?><br>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </td></tr>
+            <?php endif; ?>
             <tr><th>Signature</th><td>« Je soussigné(e) <?= e($c['soussigne']) ?> reconnais avoir pris connaissance du règlement intérieur » — fait à <?= e($c['fait_a'] ?: '?') ?> le <?= e(dfr($c['signe_le'])) ?></td></tr>
         <?php endif; ?>
     </table>

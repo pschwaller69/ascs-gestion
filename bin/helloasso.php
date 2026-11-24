@@ -11,6 +11,7 @@ require __DIR__ . '/../src/autoload.php';
 use Ascs\Config;
 use Ascs\Db;
 use Ascs\HelloAsso\Client;
+use Ascs\HelloAsso\PaiementEnLigne;
 use Ascs\HelloAsso\Sync;
 
 date_default_timezone_set('Europe/Paris');
@@ -24,8 +25,14 @@ foreach (array_slice($argv, 1) as $a) {
 $cfg = Config::load();
 $pdo = Db::connect($cfg);
 try {
-    $r = (new Sync($pdo))->executer(Client::depuisConfig($pdo, $cfg), 'cron', $depuis);
+    $client = Client::depuisConfig($pdo, $cfg);
+    $r = (new Sync($pdo))->executer($client, 'cron', $depuis);
     echo date('d/m/Y H:i') . ' — ' . $r['resume'] . "\n";
+    // Paiements en ligne des inscriptions (Checkout) : paiements non revenus sur le site, échéances prélevées ou refusées
+    $p = (new PaiementEnLigne($pdo, $client))->suivre();
+    if ($p['payes'] || $p['reglements'] || $p['retires'] || $p['abandons']) {
+        printf("%s — paiements en ligne : %d payé(s), %d règlement(s) créé(s), %d retiré(s), %d abandonné(s)\n", date('d/m/Y H:i'), $p['payes'], $p['reglements'], $p['retires'], $p['abandons']);
+    }
 } catch (Throwable $e) {
     fwrite(STDERR, date('d/m/Y H:i') . ' — ÉCHEC : ' . $e->getMessage() . "\n");
     exit(1);
