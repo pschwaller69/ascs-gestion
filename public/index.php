@@ -39,8 +39,11 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-// Page d'installation : fonctionne même si la base est inaccessible (elle sert à le diagnostiquer).
 $chemin = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+// Sous-domaine des adhérents (PUBLIC_URL) : seulement les pages publiques, ni connexion, ni bureau, ni installation.
+Ascs\Web\Hotes::filtrerPublic($chemin);
+
+// Page d'installation : fonctionne même si la base est inaccessible (elle sert à le diagnostiquer).
 if (preg_match('#/installation/?$#', $chemin)) {
     (new Ascs\Web\Install())->handle($_SERVER['REQUEST_METHOD'] ?? 'GET');
     exit;
@@ -270,6 +273,8 @@ if ($path === '/index.php') {
     $path = '/';
 }
 $path = rtrim($path, '/') ?: '/';
+// Sous-domaine du bureau : pages publiques renvoyées vers le sous-domaine des adhérents (sauf bureau connecté)
+Ascs\Web\Hotes::renvoyerVersPublic($path, $app->user !== null);
 
 try {
     $router->dispatch($app, $_SERVER['REQUEST_METHOD'] ?? 'GET', $path);

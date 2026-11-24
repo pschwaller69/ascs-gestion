@@ -29,6 +29,14 @@ Les commandes `bin/*.php` restent disponibles pour le Terminal.
 - Le dossier du clone doit avoir les droits 0711 (cPanel le crée en 0700, ce qui bloque le site avec une erreur 403).
 - Ne modifiez pas les fichiers du projet directement sur le serveur : la mise à jour suivante serait bloquée (voir le journal).
 
+## Sous-domaine des adhérents (depuis 0.13.0, facultatif)
+Pour séparer le bureau (gestion.ascs.fr) des pages des adhérents (par exemple inscription.ascs.fr) :
+1. cPanel > Domaines : créer le sous-domaine `inscription.ascs.fr` avec **le même dossier racine** que gestion.ascs.fr (`…/gestion.ascs.fr/public`).
+2. cPanel > SSL/TLS Status : lancer AutoSSL pour avoir le certificat du nouveau sous-domaine.
+3. Dans `.env` : `PUBLIC_URL=https://inscription.ascs.fr` (et `APP_URL=https://gestion.ascs.fr`).
+
+Ensuite, le sous-domaine des adhérents ne sert que l'inscription, le cours d'essai, le paiement en ligne, la désinscription et les listes de présence des animateurs : la connexion, les pages du bureau et `/installation` y répondent « page introuvable ». Les QR codes, les liens des mails (paiement, désinscription) et les liens des animateurs pointent vers lui ; il faut donc **réimprimer les affiches QR** (les anciens QR codes continuent de marcher : gestion.ascs.fr renvoie vers le nouveau sous-domaine). Le bureau connecté sur gestion.ascs.fr garde l'aperçu des formulaires fermés.
+
 ## Mise à jour vers une nouvelle version
 Remplacer les fichiers du projet (sans toucher à `.env` ni au dossier `storage/`). À la première page ouverte, l'application crée elle-même les tables nouvelles (depuis 0.3.4).
 

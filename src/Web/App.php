@@ -174,6 +174,10 @@ final class App
     /** Adresse complète d'une page (pour les QR codes) : APP_URL du .env, sinon l'adresse de la requête. */
     public static function urlAbsolue(string $path, array $query = []): string
     {
+        // Pages des adhérents et des animateurs : sur le sous-domaine public s'il est réglé (PUBLIC_URL)
+        if (Hotes::cheminPublic($path) && ($pub = Hotes::urlPublique()) !== '') {
+            return $pub . $path . ($query ? '?' . http_build_query($query) : '');
+        }
         $base = rtrim(\Ascs\Config::load()['app_url'] ?? '', '/');
         if ($base === '' && PHP_SAPI === 'cli') {
             // Tâche planifiée (envoi des lots) : pas d'adresse dans la requête, on reprend celle notée lors de la dernière page ouverte.

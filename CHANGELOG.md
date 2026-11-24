@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.13.0
+
+- Deux sous-domaines (facultatif, `PUBLIC_URL` dans `.env`, par exemple https://inscription.ascs.fr) : celui des adhérents ne sert que l'inscription, le cours d'essai, le paiement en ligne, la désinscription et les listes de présence des animateurs. La connexion, toutes les pages du bureau et la page d'installation y sont introuvables.
+- QR codes, liens de paiement et de désinscription des mails, liens des animateurs et des contrôleurs : sur le sous-domaine des adhérents.
+- Sur gestion.ascs.fr, les pages publiques renvoient vers le sous-domaine des adhérents (anciens QR codes et liens toujours valables) ; les envois en cours (formulaire déjà ouvert, désinscription en un clic des anciens mails) restent acceptés, et le bureau connecté garde l'aperçu des formulaires fermés.
+
 ## 0.12.0
 
 - Paiement en ligne à la fin de l'inscription en ligne (HelloAsso Checkout, sans frais pour l'association). Quand la personne choisit « Carte bancaire » comme seul moyen de paiement, la page de fin du formulaire propose « Payer maintenant » le reste à régler (aides déduites), en 1 fois ou en 3 fois à partir de 60 € (échéances mensuelles sur la même carte). Le mail de confirmation contient aussi le lien, pour payer plus tard.
