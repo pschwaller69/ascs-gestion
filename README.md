@@ -34,6 +34,7 @@ Pour séparer le bureau (gestion.ascs.fr) des pages des adhérents (par exemple 
 1. cPanel > Domaines : créer le sous-domaine `inscription.ascs.fr` avec **le même dossier racine** que gestion.ascs.fr (`…/gestion.ascs.fr/public`).
 2. cPanel > SSL/TLS Status : lancer AutoSSL pour avoir le certificat du nouveau sous-domaine.
 3. Dans `.env` : `PUBLIC_URL=https://inscription.ascs.fr` (et `APP_URL=https://gestion.ascs.fr`).
+4. Facultatif, même principe pour le cours d'essai : sous-domaine `essai.ascs.fr` (même dossier racine, certificat) et `ESSAI_URL=https://essai.ascs.fr` ; son adresse seule ouvre le cours d'essai.
 
 Ensuite, le sous-domaine des adhérents ne sert que l'inscription, le cours d'essai, le paiement en ligne, la désinscription et les listes de présence des animateurs : la connexion, les pages du bureau et `/installation` y répondent « page introuvable ». Les QR codes, les liens des mails (paiement, désinscription) et les liens des animateurs pointent vers lui ; il faut donc **réimprimer les affiches QR** (les anciens QR codes continuent de marcher : gestion.ascs.fr renvoie vers le nouveau sous-domaine). Le bureau connecté sur gestion.ascs.fr garde l'aperçu des formulaires fermés.
 

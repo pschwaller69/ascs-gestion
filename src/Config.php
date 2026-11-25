@@ -6,7 +6,7 @@ namespace Ascs;
 /** Configuration lue dans l'environnement ou dans le fichier .env à la racine du projet. */
 final class Config
 {
-    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,public_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,imap_host:string,imap_port:string,imap_user:string,imap_pass:string,imap_securite:string,imap_actif:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string,m365_tenant:string,m365_client_id:string,m365_secret:string,m365_boite:string,m365_login_url:string,m365_graph_url:string} */
+    /** @return array{driver:string,host:string,name:string,user:string,pass:string,sqlite_path:string,setup_code:string,app_url:string,public_url:string,essai_url:string,ha_client_id:string,ha_client_secret:string,ha_organisation:string,ha_webhook_token:string,ha_api_url:string,mail_transport:string,smtp_host:string,smtp_port:string,smtp_user:string,smtp_pass:string,smtp_securite:string,smtp_mailing_user:string,smtp_mailing_pass:string,imap_host:string,imap_port:string,imap_user:string,imap_pass:string,imap_securite:string,imap_actif:string,sms_url:string,sms_user:string,sms_pass:string,sms_transport:string,m365_tenant:string,m365_client_id:string,m365_secret:string,m365_boite:string,m365_login_url:string,m365_graph_url:string} */
     public static function load(?string $root = null): array
     {
         $root ??= dirname(__DIR__);
@@ -38,6 +38,7 @@ final class Config
             'app_url'     => $get('APP_URL'),
             // HelloAsso (API v5) : identifiants créés dans « Mon compte > Intégrations et API »
             'public_url'       => $get('PUBLIC_URL'),
+            'essai_url'        => $get('ESSAI_URL'),
             'ha_client_id'     => $get('HELLOASSO_CLIENT_ID'),
             'ha_client_secret' => $get('HELLOASSO_CLIENT_SECRET'),
             'ha_organisation'  => $get('HELLOASSO_ORGANISATION'),

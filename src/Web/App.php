@@ -186,7 +186,7 @@ final class App
     public static function urlAbsolue(string $path, array $query = []): string
     {
         // Pages des adhérents et des animateurs : sur le sous-domaine public s'il est réglé (PUBLIC_URL)
-        if (Hotes::cheminPublic($path) && ($pub = Hotes::urlPublique()) !== '') {
+        if (Hotes::cheminPublic($path) && ($pub = Hotes::basePour($path)) !== '') {
             return $pub . $path . ($query ? '?' . http_build_query($query) : '');
         }
         $base = rtrim(\Ascs\Config::load()['app_url'] ?? '', '/');

@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.14.1
+
+- Sous-domaine du cours d'essai (facultatif, `ESSAI_URL` dans `.env`, par exemple https://essai.ascs.fr) : son adresse seule ouvre le formulaire de cours d'essai ; comme le sous-domaine des adhérents, il ne sert que les pages publiques. Les QR codes et liens du cours d'essai pointent vers lui.
+
 ## 0.14.0
 
 - Double authentification des comptes du bureau, exigée compte par compte (Paramétrage > Comptes du bureau, bouton « Exiger »). À chaque connexion, après le mot de passe : code à 6 chiffres d'une application d'authentification (Google Authenticator, Microsoft Authenticator, FreeOTP…, norme TOTP).

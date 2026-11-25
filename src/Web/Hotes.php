@@ -11,7 +11,8 @@ use Ascs\Config;
  *    désinscription, listes de présence) : la connexion et toutes les pages du bureau y répondent « introuvable » ;
  *  - le sous-domaine du bureau (gestion.ascs.fr) renvoie ces pages publiques vers le sous-domaine public,
  *    pour que les anciens QR codes et liens continuent de marcher.
- * PUBLIC_URL vide : un seul sous-domaine, comme avant.
+ * ESSAI_URL (facultatif, ex. https://essai.ascs.fr) : même rôle, ouvre directement le formulaire de cours d'essai.
+ * PUBLIC_URL et ESSAI_URL vides : un seul sous-domaine, comme avant.
  */
 final class Hotes
 {
@@ -22,14 +23,40 @@ final class Hotes
 
     public static function urlPublique(): string
     {
-        $u = rtrim(Config::load()['public_url'] ?? '', '/');
+        return self::url('public_url');
+    }
+
+    /** Sous-domaine du cours d'essai (ESSAI_URL, ex. https://essai.ascs.fr), facultatif. */
+    public static function urlEssai(): string
+    {
+        return self::url('essai_url');
+    }
+
+    private static function url(string $cle): string
+    {
+        $u = rtrim(Config::load()[$cle] ?? '', '/');
         return preg_match('#^https?://[^/]+#i', $u) ? $u : '';
     }
 
+    private static function hote(string $url): ?string
+    {
+        return $url === '' ? null : strtolower((string) parse_url($url, PHP_URL_HOST));
+    }
+
+    /** Un sous-domaine public au moins est réglé. */
     public static function hotePublic(): ?string
     {
-        $u = self::urlPublique();
-        return $u === '' ? null : strtolower((string) parse_url($u, PHP_URL_HOST));
+        return self::hote(self::urlPublique()) ?? self::hote(self::urlEssai());
+    }
+
+    /** Adresse de base d'une page publique : celle du cours d'essai pour /essai, sinon celle des adhérents. */
+    public static function basePour(string $chemin): string
+    {
+        $essai = self::urlEssai();
+        if ($essai !== '' && ($chemin === '/essai' || str_starts_with($chemin, '/essai/'))) {
+            return $essai;
+        }
+        return self::urlPublique() !== '' ? self::urlPublique() : $essai;
     }
 
     private static function hoteRequete(): string
@@ -37,10 +64,16 @@ final class Hotes
         return strtolower((string) preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
     }
 
+    private static function surHoteEssai(): bool
+    {
+        $h = self::hote(self::urlEssai());
+        return $h !== null && self::hoteRequete() === $h;
+    }
+
     public static function surHotePublic(): bool
     {
-        $h = self::hotePublic();
-        return $h !== null && self::hoteRequete() === $h;
+        $h = self::hote(self::urlPublique());
+        return ($h !== null && self::hoteRequete() === $h) || self::surHoteEssai();
     }
 
     public static function cheminPublic(string $chemin): bool
@@ -73,7 +106,7 @@ final class Hotes
             return;
         }
         if ($chemin === '/' || $chemin === '') {
-            header('Location: ' . self::urlPublique() . '/inscription', true, 302);
+            header('Location: ' . (self::surHoteEssai() ? '/essai' : '/inscription'), true, 302);
             exit;
         }
         http_response_code(404);
@@ -97,7 +130,7 @@ final class Hotes
             return;
         }
         $q = (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY);
-        header('Location: ' . self::urlPublique() . $chemin . ($q !== '' ? '?' . $q : ''), true, 302);
+        header('Location: ' . self::basePour($chemin) . $chemin . ($q !== '' ? '?' . $q : ''), true, 302);
         exit;
     }
 }
