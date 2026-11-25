@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.14.2
+
+- Cours d'essai en ligne proposés pour toutes les sections « Z ESSAI … » (hors sections arrêtées), sans avoir à les ouvrir une par une. Inscriptions en ligne : case « Bloquer » par section d'essai (ex. couture). Les sections de mailing marquées « essai » (Z MAIRIE, Z ASSOCIATIONS…) ne sont jamais proposées.
+- Listes de présence des animateurs : bloc séparé « Cours d'essai » sous les inscrits (cadre violet, pastille « essai », date de l'essai, « Essai ce jour »), avec les essais de la même activité (même section principale ou même nom) depuis 14 jours. Une personne déjà inscrite au cours n'y apparaît plus.
+
 ## 0.14.1
 
 - Sous-domaine du cours d'essai (facultatif, `ESSAI_URL` dans `.env`, par exemple https://essai.ascs.fr) : son adresse seule ouvre le formulaire de cours d'essai ; comme le sous-domaine des adhérents, il ne sert que les pages publiques. Les QR codes et liens du cours d'essai pointent vers lui.

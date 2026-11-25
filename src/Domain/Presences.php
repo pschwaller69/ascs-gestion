@@ -72,6 +72,46 @@ final class Presences
         return $out;
     }
 
+    /**
+     * Personnes en cours d'essai pour ce cours (bloc séparé de la liste de présence) : inscriptions de la saison dans une
+     * section « Z ESSAI … » de la même activité (même section principale, ou titre de l'essai contenu dans celui du cours).
+     * Essais d'il y a plus de 14 jours écartés. Date d'essai = date de l'inscription d'essai.
+     * @return list<array<string,mixed>>
+     */
+    public function essais(int $sectionId, int $saisonId): array
+    {
+        $cours = $this->section($sectionId);
+        if (!$cours || (int) $cours['essai'] === 1) {
+            return [];
+        }
+        $norm = static fn (string $t): string => trim((string) preg_replace('/\s+/', ' ', strtr(mb_strtoupper($t),
+            ['À' => 'A', 'Â' => 'A', 'Ä' => 'A', 'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Î' => 'I', 'Ï' => 'I', 'Ô' => 'O', 'Ö' => 'O', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ç' => 'C'])));
+        $titreCours = $norm((string) $cours['titre']);
+        $essaisIds = [];
+        foreach ($this->pdo->query('SELECT id, titre, section_principale_id FROM section WHERE essai = 1') as $e) {
+            if (!preg_match('/^Z\s*ESSAI\s+(.+)$/iu', (string) $e['titre'], $m)) {
+                continue;
+            }
+            $activite = $norm($m[1]);
+            $memePrincipale = $e['section_principale_id'] !== null && (int) $e['section_principale_id'] === (int) $cours['section_principale_id'];
+            if ($memePrincipale || ($activite !== '' && str_contains($titreCours, $activite))) {
+                $essaisIds[] = (int) $e['id'];
+            }
+        }
+        if (!$essaisIds) {
+            return [];
+        }
+        $st = $this->pdo->prepare('SELECT i.id AS inscription_id, i.date_inscription, s.titre AS section, a.id, a.nom, a.prenom, a.date_naissance,
+                a.telephone1, a.telephone2, a.nom_parent, a.prenom_parent
+            FROM inscription i JOIN adherent a ON a.id = i.adherent_id JOIN section s ON s.id = i.section_id
+            WHERE i.section_id IN (' . implode(',', $essaisIds) . ') AND i.saison_id = ? AND i.date_inscription >= ?
+            ORDER BY i.date_inscription, a.nom, a.prenom');
+        $st->execute([$saisonId, date('Y-m-d', strtotime('-14 days'))]);
+        // Déjà inscrit au cours : ce n'est plus un essai
+        $inscrits = array_flip(array_map('intval', array_column($this->inscrits($sectionId, $saisonId), 'id')));
+        return array_values(array_filter($st->fetchAll(), static fn ($r) => !isset($inscrits[(int) $r['id']])));
+    }
+
     /** @return list<string> libellés des créneaux (« Mardi 18:30 ») */
     public function creneaux(int $sectionId): array
     {

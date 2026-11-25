@@ -186,7 +186,7 @@ final class PresenceController
         $pa = new Participants($this->app->pdo);
         $inscrits = $this->pr->inscrits($sid, $said);
         return $this->app->renderPublic('presence/liste', $c + [
-            'date' => $date, 'inscrits' => $inscrits, 'creneaux' => $this->pr->creneaux($sid),
+            'date' => $date, 'inscrits' => $inscrits, 'creneaux' => $this->pr->creneaux($sid), 'essais' => $this->pr->essais($sid, $said),
             'cartes' => (new \Ascs\Domain\Cartes($this->app->pdo))->etats(array_column($inscrits, 'inscription_id')),
             'libres' => $pa->duCours($sid, $said), 'noteeLibres' => $pa->seance($sid, $said, $date), 'ajoutFait' => self::prendre('ajout_fait'),
             'changeFait' => self::prendre('changement_fait'), 'peutChanger' => !isset($c['controleur']) && (new Changements($this->app->pdo))->cibles($sid, $said),

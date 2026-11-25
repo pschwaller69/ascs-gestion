@@ -91,6 +91,26 @@ $texteSms = 'Bonjour, information pour le cours ' . $s['titre'] . ' : ';
     </div>
 </form>
 <?php endif; ?>
+<?php if (!empty($essais)): ?>
+<section class="bloc-essais" aria-labelledby="titre-essais">
+    <h2 id="titre-essais">Cours d'essai <small class="aide">(<?= count($essais) ?>, pas encore inscrits : gratuit, ne pas compter dans les inscrits)</small></h2>
+    <ul class="presence-liste presence-essais">
+    <?php foreach ($essais as $es): $age = age_from($es['date_naissance']); $tel = (string) ($es['telephone1'] ?: ($es['telephone2'] ?? '')); $mob = Ascs\Mail\Sms::mobile($tel); $num = preg_replace('/[^\d+]/', '', $tel); $jour = (string) $es['date_inscription'] === $date; ?>
+        <li>
+            <span class="p-nom"><span class="pastille pastille-essai">essai</span> <?= e(mb_strtoupper((string) $es['nom'])) ?> <?= e($es['prenom']) ?><?php if ($age !== null && $age < 18): ?> <small class="aide"><?= e($age . ' ans') ?></small><?php endif; ?>
+                <br><small class="<?= $jour ? 'essai-jour' : 'aide' ?>"><?= $jour ? 'Essai ce jour' : 'Essai le ' . e(dfr((string) $es['date_inscription'])) ?></small>
+                <?php if ($tel !== ''): ?><br><small class="p-tel"><?= e($tel) ?></small><?php endif; ?></span>
+            <span class="p-actions">
+                <?php if ($mob): ?><a class="p-rond" href="sms:<?= e($mob) ?>" aria-label="SMS à <?= e($es['prenom'] . ' ' . $es['nom']) ?>"><?= icon('sms') ?></a><?php endif; ?>
+                <?php if ($num !== ''): ?><a class="p-rond" href="tel:<?= e($num) ?>" aria-label="Appeler <?= e($es['prenom'] . ' ' . $es['nom']) ?>"><?= icon('phone') ?></a><?php endif; ?>
+            </span>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+    <?php $adrInscr = preg_replace(['#^https?://#i', '#/inscription$#'], '', Ascs\Web\App::urlAbsolue('/inscription')); ?>
+    <p class="aide">La personne veut s'inscrire après son essai : donnez-lui l'adresse <strong><?= e($adrInscr) ?></strong>.</p>
+</section>
+<?php endif; ?>
 <?php if ($seances): ?>
     <h2>Séances notées</h2>
     <ul class="liste-simple">

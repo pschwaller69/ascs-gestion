@@ -39,14 +39,18 @@
     <?= champ('Message affiché sur les formulaires (facultatif)', 'message', $message, ['type' => 'textarea', 'rows' => 2, 'hint' => 'Par exemple : chèques à l\'ordre de l\'ASCS, certificat médical, dates du forum…']) ?>
     <?= champ('Règlement intérieur (accepté et signé en ligne à l\'inscription)', 'reglement_interieur', $reglement, ['type' => 'textarea', 'rows' => 12, 'hint' => 'Un article par ligne, comme sur le bulletin papier. Vide : texte du bulletin 2026/2027.']) ?>
 
-    <?php foreach ([0 => 'Activités proposées à l\'inscription', 1 => 'Activités proposées en cours d\'essai (sections « essai »)'] as $essai => $titre): ?>
+    <?php foreach ([0 => 'Activités proposées à l\'inscription', 1 => 'Cours d\'essai (toutes les sections « Z ESSAI », sauf celles bloquées)'] as $essai => $titre): ?>
     <h3><?= e($titre) ?></h3>
     <div class="table-cadre"><table class="table-reglages">
-        <thead><tr><th>Ouverte</th><th>Section</th><?php if (!$essai): ?><th class="num">Tarif</th><?php endif; ?><th>Texte affiché (horaires, public…)</th><?php if (!$essai): ?><th>Lien de paiement HelloAsso</th><?php endif; ?></tr></thead>
+        <thead><tr><th><?= $essai ? 'Bloquer' : 'Ouverte' ?></th><th>Section</th><?php if (!$essai): ?><th class="num">Tarif</th><?php endif; ?><th>Texte affiché (horaires, public…)</th><?php if (!$essai): ?><th>Lien de paiement HelloAsso</th><?php endif; ?></tr></thead>
         <tbody>
-        <?php foreach ($sections as $s): if ((int) $s['essai'] !== $essai) { continue; } $sid = (int) $s['id']; ?>
+        <?php foreach ($sections as $s): if ((int) $s['essai'] !== $essai || ($essai && !Ascs\Domain\EnLigne::estSectionEssai($s))) { continue; } $sid = (int) $s['id']; ?>
             <tr>
+                <?php if ($essai): ?>
+                <td><input type="hidden" name="s[<?= $sid ?>][ouvert]" value="<?= (int) $s['ouvert'] ?>"><input type="checkbox" id="ouv-<?= $sid ?>" name="s[<?= $sid ?>][bloque]" value="1"<?= attr(in_array($sid, $essaisBloques, true), 'checked') ?> aria-label="Pas de cours d'essai en ligne pour <?= e($s['titre']) ?>"></td>
+                <?php else: ?>
                 <td><input type="checkbox" id="ouv-<?= $sid ?>" name="s[<?= $sid ?>][ouvert]" value="1"<?= attr((bool) $s['ouvert'], 'checked') ?> aria-label="Ouvrir <?= e($s['titre']) ?> en ligne"></td>
+                <?php endif; ?>
                 <td><label for="ouv-<?= $sid ?>"><?= e($s['titre']) ?></label></td>
                 <?php if (!$essai): ?><td class="num"><?= e(money($s['montant'])) ?></td><?php endif; ?>
                 <td><input type="text" name="s[<?= $sid ?>][description]" value="<?= e($s['description']) ?>" maxlength="500" aria-label="Texte affiché pour <?= e($s['titre']) ?>"></td>

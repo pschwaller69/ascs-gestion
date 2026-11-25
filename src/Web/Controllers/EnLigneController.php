@@ -21,7 +21,7 @@ final class EnLigneController
     public function index(array $p, array $err = []): string
     {
         return $this->app->render('enligne/index', [
-            'sections' => $this->el->toutesSections(), 'err' => $err,
+            'sections' => $this->el->toutesSections(), 'essaisBloques' => $this->el->essaisBloques(), 'err' => $err,
             'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'),
             'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
             'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(),
@@ -58,13 +58,19 @@ final class EnLigneController
         Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
         $up = \Ascs\Db::upsertStatement($pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id']);
         $existe = $pdo->prepare('SELECT COUNT(*) FROM section WHERE id = ?');
+        $bloques = [];
         foreach ($sections as $sid => $r) {
             $existe->execute([(int) $sid]);
             if ((int) $existe->fetchColumn() === 0 || !is_array($r)) {
                 continue;
             }
             $up->execute([(int) $sid, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500), Input::str($r, 'lien_paiement', 255)]);
+            if (!empty($r['bloque'])) {
+                $bloques[] = (int) $sid;
+            }
         }
+        // Cours d'essai : proposés pour toutes les sections « Z ESSAI », sauf celles cochées « Bloquer »
+        Parametres::set($pdo, 'essai_bloquees', json_encode(array_values(array_unique($bloques))));
         $pdo->commit();
         $this->app->flash('ok', 'Réglages enregistrés.');
         $this->app->redirect('/en-ligne');

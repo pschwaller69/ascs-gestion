@@ -74,9 +74,32 @@ final class EnLigne
         return $this->sectionsOuvertesSeules($essai);
     }
 
+    /** Sections « Z ESSAI … » sans cours d'essai en ligne (case « Bloquer » des réglages). @return list<int> */
+    public function essaisBloques(): array
+    {
+        return array_values(array_map('intval', json_decode((string) Parametres::get($this->pdo, 'essai_bloquees'), true) ?: []));
+    }
+
+    /** Une section de cours d'essai : drapeau « essai » et titre « Z ESSAI … » (les autres, Z MAIRIE, Z ASSOCIATIONS…, servent aux mailings). */
+    public static function estSectionEssai(array $s): bool
+    {
+        return (int) $s['essai'] === 1 && preg_match('/^Z\s*ESSAI\b/iu', (string) $s['titre']) === 1;
+    }
+
     /** @return list<array<string,mixed>> */
     private function sectionsOuvertesSeules(bool $essai): array
     {
+        if ($essai) {
+            // Cours d'essai : toutes les sections « Z ESSAI … » sauf celles bloquées et les sections arrêtées
+            $bloques = $this->essaisBloques();
+            $arretees = (new Arrets($this->pdo))->sections();
+            $lignes = $this->pdo->query(
+                'SELECT s.id, s.titre, s.montant, s.essai, e.description, e.lien_paiement
+                 FROM section s LEFT JOIN section_en_ligne e ON e.section_id = s.id WHERE s.essai = 1 ORDER BY s.titre'
+            )->fetchAll();
+            return array_values(array_filter($lignes, static fn ($s) => self::estSectionEssai($s)
+                && !in_array((int) $s['id'], $bloques, true) && !in_array((int) $s['id'], $arretees, true)));
+        }
         $st = $this->pdo->prepare(
             'SELECT s.id, s.titre, s.montant, e.description, e.lien_paiement
              FROM section s JOIN section_en_ligne e ON e.section_id = s.id
