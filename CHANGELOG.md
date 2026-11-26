@@ -5,7 +5,7 @@ Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip
 
 ## 0.15.2
 
-- Tarif bénévole : 10 € pour tous, sans la réduction Rillieux (comme le jogging et la marche).
+- Tarifs bénévole et conseil d'administration : 10 € pour tous, sans la réduction Rillieux (comme le jogging et la marche).
 
 ## 0.15.1
 

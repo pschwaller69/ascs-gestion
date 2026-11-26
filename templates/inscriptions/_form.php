@@ -22,7 +22,7 @@
             <?php if (isset($err['saison_id'])): ?><p class="msg-erreur"><?= e($err['saison_id']) ?></p><?php endif; ?>
         </div>
         <?= champ('Montant (tarif complet)', 'montant', $d['montant'], ['required' => true, 'inputmode' => 'decimal', 'error' => $err['montant'] ?? null, 'hint' => 'Le prix complet de la section, même payé en plusieurs fois. ' . ($rillieux
-            ? 'Habitant de Rillieux : 10 € de réduction déjà déduits du tarif proposé (sauf jogging, marche et bénévole).'
+            ? 'Habitant de Rillieux : 10 € de réduction déjà déduits du tarif proposé (sauf jogging, marche, bénévole et conseil d\'administration).'
             : 'Adresse hors Rillieux : tarif extérieur.')]) ?>
         <?= champ('Date d\'inscription', 'date_inscription', substr((string) $d['date_inscription'], 0, 10), ['type' => 'date', 'error' => $err['date_inscription'] ?? null]) ?>
         <?= champ('Fait à', 'fait_a', $d['fait_a'], ['maxlength' => 60]) ?>
