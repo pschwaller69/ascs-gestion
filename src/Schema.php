@@ -314,6 +314,11 @@ final class Schema
                 'cols' => ['section_id' => 'int', 'saison_id' => 'int', 'reprise' => 'date?', 'essai_des' => 'date?'],
                 'pk' => ['section_id', 'saison_id'],
             ],
+            // Lieu d'une activité (depuis 0.22.0) : adresse et lien WhatsApp affichés aux adhérents et aux personnes à l'essai
+            'section_lieu' => [
+                'cols' => ['section_id' => 'int', 'adresse' => 'str:255?', 'whatsapp' => 'str:255?'],
+                'pk' => ['section_id'],
+            ],
             // Cours d'essai validés (depuis 0.18.0) : plus d'inscription gratuite dans une section « Z ESSAI »
             'cours_essai' => [
                 'cols' => [

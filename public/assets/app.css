@@ -67,7 +67,7 @@ main:focus { outline: none; }
 .champ { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .75rem; }
 .champ label { font-size: .85rem; color: var(--muted); }
 .oblig { color: var(--red); }
-input[type=text], input[type=email], input[type=password], input[type=date], input[type=number], input[type=search], input[type=tel], select, textarea {
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=number], input[type=search], input[type=tel], input[type=url], select, textarea {
     font: inherit; padding: .4rem .55rem; border: 1px solid #aebdbc; border-radius: 4px; background: #fff; color: var(--ink); width: 100%; min-height: 2.25rem;
 }
 input[readonly] { background: var(--bg); }
@@ -579,7 +579,7 @@ input, select, textarea { max-width: 100%; }
 /* Réglages des activités en ligne : une carte par activité */
 .activites-filtre { margin: .25rem 0 .5rem; }
 .activites-reglages { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
-.activite-reglage { display: grid; grid-template-columns: minmax(11rem, 1.2fr) 11.5rem minmax(17rem, 1.1fr) minmax(15rem, 1.5fr); gap: .5rem 1rem; align-items: center;
+.activite-reglage { display: grid; grid-template-columns: minmax(14rem, 1fr) 11.5rem minmax(17rem, 22rem); gap: .5rem 1rem; align-items: center;
     background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 6px; padding: .6rem .8rem; }
 .activite-reglage:has(.bascule input:checked) { border-left-color: var(--teal); }
 .activite-reglage:not(:has(.bascule input:checked)) .ar-titre { color: var(--muted); }
@@ -603,7 +603,7 @@ input, select, textarea { max-width: 100%; }
 .activite-reglage .ar-dates input, .activite-reglage .ar-textes input { font-size: .85rem; padding: .25rem .4rem; width: 100%; min-width: 0; min-height: 2rem; height: 2rem; box-sizing: border-box; }
 .ar-dates label, .ar-textes label { min-width: 0; }
 .ar-textes input[aria-invalid="true"], .ar-dates input[aria-invalid="true"] { border-color: #c0392b; }
-@media (max-width: 78rem) { .activite-reglage { grid-template-columns: 1fr auto; } .ar-dates, .ar-textes { grid-column: 1 / -1; } .ar-textes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 60rem) { .activite-reglage { grid-template-columns: 1fr auto; } .ar-dates, .ar-textes { grid-column: 1 / -1; } .ar-textes { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 40rem) { .activite-reglage { grid-template-columns: 1fr; } .ar-bascules { flex-direction: row; flex-wrap: wrap; } .ar-textes { grid-template-columns: 1fr; } }
 .activite-reglage input[type=url] { font: inherit; border: 1px solid #aebdbc; border-radius: 4px; background: #fff; color: var(--ink); }
 .aide-droit { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--ink); background: var(--teal-l); border-left: 3px solid var(--teal); padding: .3rem .55rem; border-radius: 0 4px 4px 0; }
@@ -612,3 +612,15 @@ input, select, textarea { max-width: 100%; }
 .table-reglages td:has(.aide-droit-saisie) { width: 60%; }
 .aide-droit-saisie { width: 100%; }
 .table-reglages input[name^="aide_limite"], .table-reglages input[name^="aide_garantie"] { width: 6.5rem; }
+.ar-bascules-ligne { flex-direction: row; flex-wrap: wrap; margin: .3rem 0 .6rem; }
+.ar-bascules-ligne .bascule span { width: auto; }
+.etat-en-ligne { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.sous-onglets a:last-child { margin-left: auto; }
+.a-retenir .lieu-cours { padding: .4rem 0; border-top: 1px solid var(--line); }
+.a-retenir .lieu-cours:first-of-type { border-top: 0; }
+.a-retenir .lieu-cours p { margin: .15rem 0; }
+.btn-whatsapp { background: #e7f7ee; border-color: #25a35a; color: #13612f; }
+.btn-whatsapp:hover { background: #d2f0df; color: #0c4421; }
+.activite-reglage .ar-textes { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); padding-top: .4rem; border-top: 1px dashed var(--line); }
+@media (max-width: 78rem) { .activite-reglage .ar-textes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 40rem) { .activite-reglage .ar-textes { grid-template-columns: 1fr; } }

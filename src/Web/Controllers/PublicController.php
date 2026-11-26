@@ -158,9 +158,12 @@ final class PublicController
             $titre = (string) preg_replace('/^Z\s*ESSAI\s*/iu', '', (string) $s['titre']);
             if ($type === 'essai') {
                 $jour = $d['date_essai'] ?: null;
-                $dates[] = $jour ? $titre . ' : cours d\'essai le ' . dfr($jour) : $titre . ' : cours d\'essai dès maintenant, au prochain cours';
-            } elseif ($s['reprise']) {
-                $dates[] = $titre . ' : reprise des cours le ' . dfr($s['reprise']);
+                $quand = $jour ? 'cours d\'essai le ' . dfr($jour) : 'cours d\'essai dès maintenant, au prochain cours';
+            } else {
+                $quand = $s['reprise'] ? 'reprise des cours le ' . dfr($s['reprise']) : '';
+            }
+            if ($quand !== '' || $s['adresse'] || $s['whatsapp']) {
+                $dates[] = ['titre' => $titre, 'quand' => $quand, 'adresse' => $s['adresse'], 'whatsapp' => $s['whatsapp']];
             }
         }
         $pieces = $c !== null ? $bulletin->pieces($d, $c) : [];
@@ -193,7 +196,9 @@ final class PublicController
                 . ($type === 'essai' ? 'Nous avons bien reçu votre demande de cours d\'essai' : 'Nous avons bien reçu votre demande d\'inscription')
                 . ($noms ? ' pour : ' . implode(', ', $noms) : '') . ".\nRéférence : " . $ref . "\n\n"
                 . ($type === 'essai' ? ($essaiValide ? 'Votre cours d\'essai est enregistré : l\'animateur a votre nom sur sa liste. Présentez-vous à l\'heure du cours.' : 'Le bureau vous recontacte pour vous confirmer le jour du cours.') : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
-                . ($dates ? "\n\nÀ retenir :\n- " . implode("\n- ", $dates) : '')
+                . ($dates ? "\n\nÀ retenir :" . implode('', array_map(static fn ($x) => "\n- " . $x['titre'] . ($x['quand'] !== '' ? ' : ' . $x['quand'] : '')
+                    . ($x['adresse'] ? "\n  Adresse : " . $x['adresse'] . "\n  Plan : " . EnLigne::lienPlan($x['adresse']) : '')
+                    . ($x['whatsapp'] ? "\n  Vous ne trouvez pas ? WhatsApp : " . $x['whatsapp'] : ''), $dates)) : '')
                 . ($c ? "\n\n" . self::texteRecap($c['recap']) : '')
                 . ($bureau ? "\n\nÀ déposer au bureau de l'association (ouvert " . $horaires . ") :\n- " . implode("\n- ", $bureau) : '')
                 . ($pieces ? "\n\nÀ apporter au premier cours :\n- " . implode("\n- ", $pieces) : '')

@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.22.0
+
+- Réglages des inscriptions en ligne déplacés dans Paramétrage, groupe « En ligne » : « Inscriptions en ligne » (ouverture, saison, validation automatique des essais, horaires du bureau, message, règlement intérieur), « Activités en ligne », « Aides » (bénéficiaires, dates limites, garanties) et « Paiement HelloAsso ». Accueil > QR codes ne garde que l'état (ouvert / fermé), les QR codes et les affiches.
+- Fiche d'une section (Paramétrage > Sections) : bloc « En ligne » avec les mêmes réglages que la liste des activités (inscription en ligne, cours d'essai, dates de reprise et d'essai, texte, adresse, WhatsApp, lien de paiement).
+- Adresse du cours et lien WhatsApp par activité : adresse affichée dans les formulaires ; page de fin et mail de confirmation avec l'adresse, un lien vers le plan et « Vous ne trouvez pas ? WhatsApp » (groupe chat.whatsapp.com ou numéro wa.me).
+
 ## 0.21.0
 
 - Aides : « Qui y a droit » affiché en évidence sous chaque aide du formulaire d'inscription, séparé du fonctionnement de l'aide. Texte modifiable par aide dans Accueil > QR codes (à revoir à chaque rentrée ; vide : texte par défaut).

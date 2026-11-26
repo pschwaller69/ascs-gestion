@@ -73,8 +73,8 @@ Puis Paramétrage > Facture : adresse de réponse, et « M'envoyer un mail d'ess
 3. Quand la ligne « REM CHQ » arrive dans les comptes, elle est ventilée automatiquement par section principale.
 
 ## Inscriptions et cours d'essai en ligne (depuis 0.3.1)
-1. Accueil > QR codes : cocher « Inscriptions en ligne ouvertes » et/ou « Demandes de cours d'essai ouvertes », choisir la saison, puis pour chaque activité les cases « Inscription en ligne » et « Cours d'essai » (texte et lien de paiement HelloAsso facultatifs). Les sections « Z ESSAI » ne sont plus utilisées : un essai validé est noté sur l'activité et apparaît à part sur la liste de présence de l'animateur.
-2. Cliquer sur « Imprimer les deux affiches » : un QR code pour les inscriptions, un pour les cours d'essai (une affiche A4 chacun). Mettre `APP_URL` dans `.env` si l'adresse des QR doit être différente de celle utilisée par le bureau.
+1. Paramétrage > Inscriptions en ligne : cocher « Inscriptions en ligne ouvertes » et/ou « Demandes de cours d'essai ouvertes », choisir la saison ; Paramétrage > Activités en ligne (ou la fiche de chaque section) : les cases « Inscription en ligne » et « Cours d'essai » (texte et lien de paiement HelloAsso facultatifs). Les sections « Z ESSAI » ne sont plus utilisées : un essai validé est noté sur l'activité et apparaît à part sur la liste de présence de l'animateur.
+2. Accueil > QR codes : « Imprimer les deux affiches » : un QR code pour les inscriptions, un pour les cours d'essai (une affiche A4 chacun). Mettre `APP_URL` dans `.env` si l'adresse des QR doit être différente de celle utilisée par le bureau.
 3. Les demandes arrivent dans Accueil > Demandes (rappel sur la page d'accueil) : choisir la fiche existante ou « Nouvelle fiche », puis valider.
 
 ## HelloAsso (depuis 0.3.0)

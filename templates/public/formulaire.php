@@ -51,6 +51,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
                     <?php if (!$essai && (float) $sec['montant'] > 0): $rill = Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true); ?><span class="prix"><?= e(money($sec['montant'])) ?><?= $rill < (float) $sec['montant'] ? ' · ' . e(money($rill)) . ' pour les habitants de Rillieux' : '' ?></span><?php endif; ?>
                     <?php if ($essai && ($sec['essai_debut'] ?? null) && $sec['essai_debut'] > date('Y-m-d')): ?><span class="reprise">Essai possible à partir du <?= e(dfr($sec['essai_debut'])) ?></span>
                     <?php elseif (!$essai && ($sec['reprise'] ?? null)): ?><span class="reprise">Reprise des cours le <?= e(dfr($sec['reprise'])) ?></span><?php endif; ?>
+                    <?php if (!empty($sec['adresse'])): ?><span class="desc lieu">📍 <?= e($sec['adresse']) ?></span><?php endif; ?>
                     <?php if ($sec['description']): ?><span class="desc"><?= nl2br(e($sec['description'])) ?></span><?php endif; ?>
                 </span>
             </label>

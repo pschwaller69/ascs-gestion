@@ -78,6 +78,12 @@ final class Ribbon
                 'Section' => [['Sections', 'layers', '/parametrage/sections', null], ['Résultat section', 'chart', '/resultats/sections', null], ['Activités arrêtées', 'x', '/activites-arretees', null]],
                 'Section principale' => [['Sections principales', 'layers', '/parametrage/sections-principales', null], ['Résultat', 'chart', '/resultats/sections-principales', null]],
                 'Famille' => [['Familles', 'layers', '/parametrage/familles', null]],
+                'En ligne' => [
+                    ['Inscriptions en ligne', 'gear', '/parametres/en-ligne', null],
+                    ['Activités en ligne', 'layers', '/parametres/activites-en-ligne', null],
+                    ['Aides', 'wallet', '/parametres/aides', null],
+                    ['Paiement HelloAsso', 'upload', '/helloasso#paiement-en-ligne', null],
+                ],
                 'Documents' => [
                     ['Facture', 'file', '/parametres/facture', null],
                     ['Coupons mairie', 'file', '/parametres/coupons', null],

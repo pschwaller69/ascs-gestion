@@ -65,7 +65,7 @@ TXT;
         ];
     }
 
-    // ------------------------------------------------------------------ dates des aides (Inscriptions en ligne > Réglages)
+    // ------------------------------------------------------------------ dates des aides (Paramétrage > En ligne)
 
     /** Date limite de demande (jj/mm) : après, l'aide n'est plus proposée dans le formulaire. Vide : pas de limite. */
     public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '31/12', 'pass_region' => ''];
@@ -75,7 +75,7 @@ TXT;
      */
     public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '31/12', 'pass_region' => ''];
 
-    /** Qui a droit à chaque aide (texte modifiable dans Inscriptions en ligne > Réglages, à revoir chaque saison). */
+    /** Qui a droit à chaque aide (texte modifiable dans Paramétrage > Aides, à revoir chaque saison). */
     public const DROITS_DEFAUT = [
         'coupon_sport' => 'Enfants et jeunes de 6 à 16 ans habitant Rillieux-la-Pape, dont la famille perçoit l\'allocation de rentrée scolaire.',
         'coupon_culture' => 'Mêmes bénéficiaires que le coupon sport (6 à 16 ans, Rillieux-la-Pape, allocation de rentrée scolaire).',
@@ -242,7 +242,7 @@ TXT;
         return $p;
     }
 
-    /** Horaires du bureau pour déposer les chèques (Inscriptions en ligne > Réglages). */
+    /** Horaires du bureau pour déposer les chèques (Paramétrage > En ligne). */
     public const HORAIRES_DEFAUT = 'du lundi au jeudi de 14 h à 18 h';
 
     public function horairesBureau(): string

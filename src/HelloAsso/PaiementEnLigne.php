@@ -156,7 +156,7 @@ final class PaiementEnLigne
 
     /**
      * Garanties par carte des aides demandées (coupon mairie…) : montant de l'aide programmé en dernière échéance
-     * à la date réglée (Inscriptions en ligne > Réglages), annulé quand l'aide est confirmée.
+     * à la date réglée (Paramétrage > En ligne), annulé quand l'aide est confirmée.
      * Seulement pour un paiement par carte, et si la date est encore à venir.
      * @return list<array{aide:string,libelle:string,montant:float,date:string}>
      */

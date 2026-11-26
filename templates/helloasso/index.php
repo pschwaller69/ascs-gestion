@@ -44,7 +44,7 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
     <button type="submit" class="btn btn-petit"><?= $auto ? 'Couper la validation automatique' : 'Activer la validation automatique' ?></button>
 </form>
 
-<form method="post" action="<?= e(url('/helloasso/paiement-en-ligne')) ?>" class="reglage-auto">
+<form method="post" action="<?= e(url('/helloasso/paiement-en-ligne')) ?>" class="reglage-auto" id="paiement-en-ligne">
     <?= csrf_field() ?>
     <p>
         <strong>Paiement en ligne à l'inscription <?= $pel ? 'activé' : 'coupé' ?>.</strong>

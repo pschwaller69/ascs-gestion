@@ -292,7 +292,7 @@ final class Demandes
         return $r;
     }
 
-    /** Validation automatique des cours d'essai (Inscriptions en ligne > Réglages, cochée par défaut). */
+    /** Validation automatique des cours d'essai (Paramétrage > Inscriptions en ligne, cochée par défaut). */
     public function essaisAuto(): bool
     {
         return \Ascs\Parametres::get($this->pdo, 'essai_auto') !== '0';

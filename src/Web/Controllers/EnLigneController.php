@@ -8,7 +8,7 @@ use Ascs\Domain\Input;
 use Ascs\Parametres;
 use Ascs\Web\App;
 
-/** Réglages des inscriptions en ligne et affiches QR code (bureau). */
+/** Inscriptions en ligne : QR codes et affiches (Accueil), réglages (Paramétrage > En ligne). */
 final class EnLigneController
 {
     private EnLigne $el;
@@ -18,46 +18,38 @@ final class EnLigneController
         $this->el = new EnLigne($app->pdo);
     }
 
-    public function index(array $p, array $err = []): string
+    /** Accueil > QR codes : état, QR codes et affiches (les réglages sont dans Paramétrage). */
+    public function index(array $p): string
     {
         return $this->app->render('enligne/index', [
-            'sections' => $this->el->toutesSections(), 'err' => $err,
-            'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'), 'essaiAuto' => (new \Ascs\Domain\Demandes($this->app->pdo))->essaisAuto(),
-            'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
-            'horaires' => (string) Parametres::get($this->app->pdo, 'horaires_bureau'),
-            'aidesDates' => (function (): array {
-                $b = new \Ascs\Domain\Bulletin($this->app->pdo);
-                return array_map(static fn ($a) => ['cle' => $a['cle'], 'libelle' => $a['libelle'], 'limite' => $b->reglageAide($a['cle'], 'limite'), 'garantie' => $b->reglageAide($a['cle'], 'garantie'), 'droit' => $b->droitAide($a['cle']), 'droit_defaut' => \Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? ''], \Ascs\Domain\Bulletin::aides());
-            })(),
-            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(),
-            'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
+            'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'),
+            'saisonTitre' => $this->el->saisonTitre(),
             'urlInscription' => App::urlAbsolue('/inscription'), 'urlEssai' => App::urlAbsolue('/essai'),
         ], 'Inscriptions en ligne', 'accueil');
     }
 
-    public function enregistrer(array $p): string
+    // ------------------------------------------------------------------ Paramétrage > En ligne
+
+    public function general(array $p, array $err = []): string
     {
         $pdo = $this->app->pdo;
-        $err = [];
+        return $this->app->render('enligne/general', [
+            'err' => $err, 'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'),
+            'essaiAuto' => (new \Ascs\Domain\Demandes($pdo))->essaisAuto(),
+            'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
+            'horaires' => (string) Parametres::get($pdo, 'horaires_bureau'),
+            'reglement' => (new \Ascs\Domain\Bulletin($pdo))->reglementInterieur(),
+            'saisons' => $pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
+        ], 'Inscriptions en ligne', 'parametrage');
+    }
+
+    public function enregistrerGeneral(array $p): string
+    {
+        $pdo = $this->app->pdo;
         $saison = Input::int($_POST, 'saison_id');
         if ($saison === null || (int) $pdo->query('SELECT COUNT(*) FROM saison WHERE id = ' . $saison)->fetchColumn() === 0) {
-            $err['saison_id'] = 'Choisissez la saison.';
-        }
-        $sections = (array) ($_POST['s'] ?? []);
-        foreach ($sections as $sid => $r) {
-            foreach (['reprise' => 'Date de reprise', 'essai_des' => 'Date de début des essais'] as $k => $lib) {
-                if (is_array($r) && trim((string) ($r[$k] ?? '')) !== '' && Input::date($r, $k) === null) {
-                    $err[$k . '_' . (int) $sid] = $lib . ' invalide.';
-                }
-            }
-            $lien = trim((string) ($r['lien_paiement'] ?? ''));
-            if ($lien !== '' && !preg_match('#^https://[^\s"<>]+$#i', $lien)) {
-                $err['lien_' . (int) $sid] = 'Lien invalide (il doit commencer par https://).';
-            }
-        }
-        if ($err) {
-            $this->app->flash('erreur', 'Réglages non enregistrés : ' . implode(' ', array_unique($err)));
-            return $this->index($p, $err);
+            $this->app->flash('erreur', 'Réglages non enregistrés : choisissez la saison.');
+            return $this->general($p, ['saison_id' => 'Choisissez la saison.']);
         }
         $pdo->beginTransaction();
         Parametres::set($pdo, 'inscription_ouverte', !empty($_POST['inscription_ouverte']) ? '1' : null);
@@ -66,6 +58,61 @@ final class EnLigneController
         Parametres::set($pdo, 'en_ligne_saison', (string) $saison);
         Parametres::set($pdo, 'en_ligne_message', Input::text($_POST, 'message', 1000));
         Parametres::set($pdo, 'horaires_bureau', Input::text($_POST, 'horaires_bureau', 120));
+        $ri = trim(str_replace("\r\n", "\n", (string) ($_POST['reglement_interieur'] ?? '')));
+        Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
+        $pdo->commit();
+        $this->app->flash('ok', 'Réglages enregistrés.');
+        $this->app->redirect('/parametres/en-ligne');
+    }
+
+    public function activites(array $p, array $err = []): string
+    {
+        return $this->app->render('enligne/activites', [
+            'err' => $err, 'sections' => $this->el->toutesSections(), 'saisonTitre' => $this->el->saisonTitre(),
+        ], 'Activités en ligne', 'parametrage');
+    }
+
+    public function enregistrerActivites(array $p): string
+    {
+        $pdo = $this->app->pdo;
+        $err = [];
+        $sections = (array) ($_POST['s'] ?? []);
+        foreach ($sections as $sid => $r) {
+            foreach (is_array($r) ? EnLigne::erreursSection($r) : [] as $k => $m) {
+                $err[$k . '_' . (int) $sid] = $m;
+            }
+        }
+        if ($err) {
+            $this->app->flash('erreur', 'Réglages non enregistrés : ' . implode(' ', array_unique($err)));
+            return $this->activites($p, $err);
+        }
+        $pdo->beginTransaction();
+        $existe = $pdo->prepare('SELECT COUNT(*) FROM section WHERE id = ?');
+        foreach ($sections as $sid => $r) {
+            $existe->execute([(int) $sid]);
+            if ((int) $existe->fetchColumn() > 0 && is_array($r)) {
+                $this->el->enregistrerSection((int) $sid, $r);
+            }
+        }
+        $pdo->commit();
+        $this->app->flash('ok', 'Activités enregistrées.');
+        $this->app->redirect('/parametres/activites-en-ligne');
+    }
+
+    public function aides(array $p): string
+    {
+        $b = new \Ascs\Domain\Bulletin($this->app->pdo);
+        return $this->app->render('enligne/aides', [
+            'aidesDates' => array_map(static fn ($a) => ['cle' => $a['cle'], 'libelle' => $a['libelle'], 'limite' => $b->reglageAide($a['cle'], 'limite'),
+                'garantie' => $b->reglageAide($a['cle'], 'garantie'), 'droit' => $b->droitAide($a['cle']),
+                'droit_defaut' => \Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? ''], \Ascs\Domain\Bulletin::aides()),
+        ], 'Aides financières', 'parametrage');
+    }
+
+    public function enregistrerAides(array $p): void
+    {
+        $pdo = $this->app->pdo;
+        $pdo->beginTransaction();
         foreach (\Ascs\Domain\Bulletin::aides() as $a) {
             foreach (['limite', 'garantie'] as $t) {
                 $v = trim((string) ($_POST['aide_' . $t][$a['cle']] ?? ''));
@@ -76,25 +123,9 @@ final class EnLigneController
             $droit = trim(str_replace(["\r\n", "\n"], ' ', (string) ($_POST['aide_droit'][$a['cle']] ?? '')));
             Parametres::set($pdo, 'aide_' . $a['cle'] . '_droit', $droit === (\Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? '') ? '' : mb_substr($droit, 0, 600));
         }
-        $ri = trim(str_replace("\r\n", "\n", (string) ($_POST['reglement_interieur'] ?? '')));
-        Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
-        $up = \Ascs\Db::upsertStatement($pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id']);
-        $upEssai = \Ascs\Db::upsertStatement($pdo, 'section_essai', ['section_id', 'ouvert'], ['section_id']);
-        $upDates = \Ascs\Db::upsertStatement($pdo, 'section_reprise', ['section_id', 'saison_id', 'reprise', 'essai_des'], ['section_id', 'saison_id']);
-        $existe = $pdo->prepare('SELECT COUNT(*) FROM section WHERE id = ?');
-        foreach ($sections as $sid => $r) {
-            $existe->execute([(int) $sid]);
-            if ((int) $existe->fetchColumn() === 0 || !is_array($r)) {
-                continue;
-            }
-            $up->execute([(int) $sid, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500), Input::str($r, 'lien_paiement', 255)]);
-            $upEssai->execute([(int) $sid, !empty($r['essai']) ? 1 : 0]);
-            $upDates->execute([(int) $sid, $saison, Input::date($r, 'reprise'), Input::date($r, 'essai_des')]);
-        }
-
         $pdo->commit();
-        $this->app->flash('ok', 'Réglages enregistrés.');
-        $this->app->redirect('/en-ligne');
+        $this->app->flash('ok', 'Aides enregistrées.');
+        $this->app->redirect('/parametres/aides');
     }
 
     /** Deux affiches A4 : une pour les inscriptions, une pour les cours d'essai (seulement celles ouvertes). */

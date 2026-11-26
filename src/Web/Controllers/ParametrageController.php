@@ -77,12 +77,17 @@ final class ParametrageController
             $this->app->redirect('/parametrage/' . $p['cle']);
         }
         $cr = $def['table'] === 'section' ? array_map(static fn ($c) => ['jour' => (int) $c['jour'], 'heure' => $c['heure_debut'] ? substr((string) $c['heure_debut'], 0, 5) : ''], $this->ref->creneaux((int) $l['id'])) : [];
-        return $this->form($p, $def, $l, $l, [], $cr);
+        return $this->form($p, $def, $l, $l, [], $cr, 200, $def['table'] === 'section' ? (new \Ascs\Domain\EnLigne($this->app->pdo))->reglageSection((int) $l['id']) : null);
     }
 
-    private function form(array $p, array $def, ?array $l, array $v, array $err, array $creneaux, int $status = 200): string
+    private function form(array $p, array $def, ?array $l, array $v, array $err, array $creneaux, int $status = 200, ?array $enLigne = null): string
     {
+        if ($def['table'] === 'section' && $enLigne === null) {
+            $enLigne = \Ascs\Domain\EnLigne::REGLAGE_VIDE;
+        }
+        $el = new \Ascs\Domain\EnLigne($this->app->pdo);
         return $this->app->render('parametrage/form', [
+            'enLigne' => $enLigne, 'saisonEnLigne' => $def['table'] === 'section' ? $el->saisonTitre() : '',
             'cle' => $p['cle'], 'def' => $def, 'l' => $l, 'v' => $v, 'err' => $err, 'options' => $this->options($def),
             'creneaux' => $creneaux, 'usage' => $l ? $this->ref->usage($def, (int) $l['id']) : [],
         ], $l ? $def['un'] . ' ' . ($l['titre'] ?? '') : 'Nouvelle ' . $def['un'], 'parametrage', $status);
@@ -97,14 +102,24 @@ final class ParametrageController
         }
         [$v, $err] = $this->ref->nettoyer($def, $_POST, $id);
         $creneaux = array_values(array_filter((array) ($_POST['creneaux'] ?? []), static fn ($c) => is_array($c) && ($c['jour'] ?? '') !== ''));
+        $enLigne = $def['table'] === 'section' ? (array) ($_POST['en_ligne'] ?? []) : null;
+        if ($enLigne !== null) {
+            foreach (\Ascs\Domain\EnLigne::erreursSection($enLigne) as $k => $m) {
+                $err['en_ligne_' . $k] = $m;
+            }
+        }
         if ($err) {
-            return $this->form($p, $def, $id ? $this->ref->trouver($def, $id) : null, $_POST, $err, $creneaux, 422);
+            $retour = $enLigne === null ? null : ['ouvert' => !empty($enLigne['ouvert']), 'essai' => !empty($enLigne['essai'])] + $enLigne + \Ascs\Domain\EnLigne::REGLAGE_VIDE;
+            return $this->form($p, $def, $id ? $this->ref->trouver($def, $id) : null, $_POST, $err, $creneaux, 422, $retour);
         }
         $pdo = $this->app->pdo;
         $pdo->beginTransaction();
         $id = $this->ref->enregistrer($def, $v, $id);
         if ($def['table'] === 'section') {
             $this->ref->enregistrerCreneaux($id, $creneaux);
+            if ($enLigne !== null && !empty($_POST['en_ligne_present'])) {
+                (new \Ascs\Domain\EnLigne($pdo))->enregistrerSection($id, $enLigne);
+            }
         }
         $pdo->commit();
         $this->app->flash('ok', ucfirst($def['un']) . ' « ' . ($v['titre'] ?? '') . ' » enregistrée.');

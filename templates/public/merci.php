@@ -5,7 +5,15 @@
     ? (!empty($m['essai_valide']) ? 'Votre cours d\'essai est enregistré : l\'animateur a votre nom sur sa liste. Présentez-vous à l\'heure du cours.' : 'Le bureau vous recontacte pour confirmer la date de votre cours d\'essai.')
     : 'Le bureau valide votre inscription. Elle sera définitive une fois le règlement reçu.' ?></p>
 <?php if (!empty($m['dates'])): ?>
-    <section class="recap"><h2>À retenir</h2><ul class="pieces"><?php foreach ($m['dates'] as $l): ?><li><?= e($l) ?></li><?php endforeach; ?></ul></section>
+    <section class="recap a-retenir"><h2>À retenir</h2>
+    <?php foreach ($m['dates'] as $l): if (!is_array($l)) { continue; } ?>
+        <div class="lieu-cours">
+            <p><strong><?= e($l['titre']) ?></strong><?= $l['quand'] !== '' ? ' : ' . e($l['quand']) : '' ?></p>
+            <?php if ($l['adresse']): ?><p><?= e($l['adresse']) ?> · <a href="<?= e(Ascs\Domain\EnLigne::lienPlan($l['adresse'])) ?>" target="_blank" rel="noopener">Voir le plan</a></p><?php endif; ?>
+            <?php if ($l['whatsapp']): ?><p><a class="btn btn-whatsapp" href="<?= e($l['whatsapp']) ?>" target="_blank" rel="noopener">Vous ne trouvez pas ? WhatsApp</a></p><?php endif; ?>
+        </div>
+    <?php endforeach; ?>
+    </section>
 <?php endif; ?>
 <?php if (!empty($m['recap'])): $r = $m['recap']; ?>
     <section class="recap">

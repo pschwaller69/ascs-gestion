@@ -236,7 +236,12 @@ $router->post('/demandes/{id}/refuser', [DemandeController::class, 'refuser']);
 $router->post('/demandes/{id}/rembourser', [DemandeController::class, 'rembourser']);
 $router->post('/demandes/{id}/retablir', [DemandeController::class, 'retablir']);
 $router->get('/en-ligne', [EnLigneController::class, 'index']);
-$router->post('/en-ligne', [EnLigneController::class, 'enregistrer']);
+$router->get('/parametres/en-ligne', [EnLigneController::class, 'general']);
+$router->post('/parametres/en-ligne', [EnLigneController::class, 'enregistrerGeneral']);
+$router->get('/parametres/activites-en-ligne', [EnLigneController::class, 'activites']);
+$router->post('/parametres/activites-en-ligne', [EnLigneController::class, 'enregistrerActivites']);
+$router->get('/parametres/aides', [EnLigneController::class, 'aides']);
+$router->post('/parametres/aides', [EnLigneController::class, 'enregistrerAides']);
 $router->get('/en-ligne/affiches', [EnLigneController::class, 'affiches']);
 
 $router->get('/helloasso', [HelloAssoController::class, 'index']);

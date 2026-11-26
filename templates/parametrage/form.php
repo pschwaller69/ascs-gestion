@@ -48,6 +48,23 @@ $val = static fn (string $c) => $v[$c] ?? '';
         <?php endforeach; ?>
         </div>
     <?php endif; ?>
+    <?php if ($def['table'] === 'section' && !empty($enLigne)): $el = $enLigne; ?>
+        <h2>En ligne</h2>
+        <input type="hidden" name="en_ligne_present" value="1">
+        <p class="aide">Formulaires d'inscription et de cours d'essai (même réglage que Paramétrage &gt; Activités en ligne). Dates pour la saison <?= e($saisonEnLigne) ?>.</p>
+        <div class="ar-bascules ar-bascules-ligne">
+            <label class="bascule"><input type="checkbox" name="en_ligne[ouvert]" value="1"<?= attr((bool) $el['ouvert'], 'checked') ?>><span><?= icon('check') ?> Inscription en ligne</span></label>
+            <label class="bascule bascule-essai"><input type="checkbox" name="en_ligne[essai]" value="1"<?= attr((bool) $el['essai'], 'checked') ?>><span><?= icon('check') ?> Cours d'essai</span></label>
+        </div>
+        <div class="grille-champs">
+            <?= champ('Reprise des cours', 'en_ligne[reprise]', (string) $el['reprise'], ['type' => 'date', 'id' => 'f_el_reprise', 'error' => $err['en_ligne_reprise'] ?? null, 'hint' => 'Affichée aux adhérents.']) ?>
+            <?= champ('Cours d\'essai à partir du', 'en_ligne[essai_des]', (string) $el['essai_des'], ['type' => 'date', 'id' => 'f_el_essai_des', 'error' => $err['en_ligne_essai_des'] ?? null, 'hint' => 'Vide : la date de reprise.']) ?>
+            <?= champ('Texte affiché (horaires, public…)', 'en_ligne[description]', (string) $el['description'], ['id' => 'f_el_description', 'maxlength' => 500]) ?>
+            <?= champ('Adresse du cours', 'en_ligne[adresse]', (string) $el['adresse'], ['maxlength' => 255, 'hint' => 'Lieu précis : salle, rue, ville. Affichée avec un lien vers le plan.']) ?>
+            <?= champ('Lien WhatsApp', 'en_ligne[whatsapp]', (string) $el['whatsapp'], ['type' => 'url', 'maxlength' => 255, 'error' => $err['en_ligne_whatsapp'] ?? null, 'hint' => 'Groupe (https://chat.whatsapp.com/…) ou numéro de l\'animateur (https://wa.me/336…) : « vous ne trouvez pas ? »']) ?>
+            <?= champ('Lien de paiement HelloAsso', 'en_ligne[lien_paiement]', (string) $el['lien_paiement'], ['type' => 'url', 'id' => 'f_el_lien', 'maxlength' => 255, 'error' => $err['en_ligne_lien'] ?? null]) ?>
+        </div>
+    <?php endif; ?>
     <div class="actions">
         <button type="submit" class="btn btn-principal"><?= icon('check') ?> Enregistrer</button>
         <a class="btn" href="<?= e(url('/parametrage/' . $cle)) ?>">Annuler</a>

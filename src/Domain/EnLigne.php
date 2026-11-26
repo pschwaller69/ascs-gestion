@@ -80,12 +80,36 @@ final class EnLigne
         return $out;
     }
 
+    /** Adresse et lien WhatsApp de chaque activité. @return array<int,array{adresse:?string,whatsapp:?string}> */
+    public function lieux(): array
+    {
+        $out = [];
+        foreach ($this->pdo->query('SELECT section_id, adresse, whatsapp FROM section_lieu')->fetchAll() as $r) {
+            $out[(int) $r['section_id']] = ['adresse' => $r['adresse'] ?: null, 'whatsapp' => $r['whatsapp'] ?: null];
+        }
+        return $out;
+    }
+
+    /** Lien Google Maps vers une adresse. */
+    public static function lienPlan(string $adresse): string
+    {
+        return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($adresse);
+    }
+
+    /** Lien WhatsApp accepté : groupe (chat.whatsapp.com), numéro (wa.me) ou api.whatsapp.com, en https. */
+    public static function lienWhatsappValide(string $l): bool
+    {
+        return preg_match('#^https://(chat\.whatsapp\.com|wa\.me|api\.whatsapp\.com|whatsapp\.com/channel)/[^\s"<>]*$#i', $l) === 1;
+    }
+
     /** @param list<array<string,mixed>> $l @return list<array<string,mixed>> */
     private function avecDates(array $l): array
     {
         $d = $this->dates();
+        $lieux = $this->lieux();
         foreach ($l as &$s) {
             $s += $d[(int) $s['id']] ?? ['reprise' => null, 'essai_des' => null, 'essai_debut' => null];
+            $s += $lieux[(int) $s['id']] ?? ['adresse' => null, 'whatsapp' => null];
         }
         unset($s);
         return $l;
@@ -157,6 +181,53 @@ final class EnLigne
         }
         unset($s);
         return $this->avecDates($l);
+    }
+
+    /** Réglages en ligne d'une activité (fiche de la section). @return array<string,mixed> */
+    public function reglageSection(int $sectionId): array
+    {
+        foreach ($this->toutesSections() as $s) {
+            if ((int) $s['id'] === $sectionId) {
+                return ['ouvert' => (bool) $s['ouvert'], 'essai' => (bool) $s['essai_ouvert'], 'reprise' => $s['reprise'], 'essai_des' => $s['essai_des'],
+                    'description' => (string) $s['description'], 'lien_paiement' => (string) $s['lien_paiement'],
+                    'adresse' => (string) $s['adresse'], 'whatsapp' => (string) $s['whatsapp']];
+            }
+        }
+        return self::REGLAGE_VIDE;
+    }
+
+    public const REGLAGE_VIDE = ['ouvert' => false, 'essai' => false, 'reprise' => null, 'essai_des' => null, 'description' => '', 'lien_paiement' => '', 'adresse' => '', 'whatsapp' => ''];
+
+    /** Contrôle des réglages en ligne d'une activité. @return array<string,string> erreurs, clés « reprise », « essai_des », « lien » */
+    public static function erreursSection(array $r): array
+    {
+        $err = [];
+        foreach (['reprise' => 'Date de reprise', 'essai_des' => 'Date de début des essais'] as $k => $lib) {
+            if (trim((string) ($r[$k] ?? '')) !== '' && Input::date($r, $k) === null) {
+                $err[$k] = $lib . ' invalide.';
+            }
+        }
+        $lien = trim((string) ($r['lien_paiement'] ?? ''));
+        if ($lien !== '' && !preg_match('#^https://[^\s"<>]+$#i', $lien)) {
+            $err['lien'] = 'Lien de paiement invalide (il doit commencer par https://).';
+        }
+        $wa = trim((string) ($r['whatsapp'] ?? ''));
+        if ($wa !== '' && !self::lienWhatsappValide($wa)) {
+            $err['whatsapp'] = 'Lien WhatsApp invalide (https://chat.whatsapp.com/… ou https://wa.me/…).';
+        }
+        return $err;
+    }
+
+    /** Enregistre les réglages en ligne d'une activité (dates : saison des inscriptions en ligne). */
+    public function enregistrerSection(int $sectionId, array $r): void
+    {
+        \Ascs\Db::upsertStatement($this->pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id'])
+            ->execute([$sectionId, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500), Input::str($r, 'lien_paiement', 255)]);
+        \Ascs\Db::upsertStatement($this->pdo, 'section_essai', ['section_id', 'ouvert'], ['section_id'])->execute([$sectionId, !empty($r['essai']) ? 1 : 0]);
+        \Ascs\Db::upsertStatement($this->pdo, 'section_reprise', ['section_id', 'saison_id', 'reprise', 'essai_des'], ['section_id', 'saison_id'])
+            ->execute([$sectionId, $this->saisonId(), Input::date($r, 'reprise'), Input::date($r, 'essai_des')]);
+        \Ascs\Db::upsertStatement($this->pdo, 'section_lieu', ['section_id', 'adresse', 'whatsapp'], ['section_id'])
+            ->execute([$sectionId, Input::text($r, 'adresse', 255), Input::str($r, 'whatsapp', 255)]);
     }
 
     /** Cours d'essai ouvert pour une activité : réglage enregistré, sinon comme l'inscription en ligne (sauf couture). */

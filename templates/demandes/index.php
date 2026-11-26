@@ -1,6 +1,6 @@
 <div class="titre-page">
     <h1>Demandes en ligne</h1>
-    <a class="btn" href="<?= e(url('/en-ligne')) ?>">Réglages et QR codes</a>
+    <a class="btn" href="<?= e(url('/parametres/en-ligne')) ?>">Réglages</a> <a class="btn" href="<?= e(url('/en-ligne')) ?>">QR codes</a>
 </div>
 <nav class="sous-onglets" aria-label="Demandes">
     <a href="<?= e(url('/demandes')) ?>"<?= $vue === 'a_traiter' ? ' aria-current="page"' : '' ?>>À traiter (<?= (int) $compteurs['a_traiter'] ?>)</a>
