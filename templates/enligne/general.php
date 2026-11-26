@@ -21,6 +21,7 @@
         </div>
     </div>
     <?= champ('Horaires du bureau (dépôt des chèques)', 'horaires_bureau', $horaires, ['maxlength' => 120, 'hint' => 'Affiché sur le formulaire, la page de fin et le mail de confirmation : « Le bureau est ouvert … ». Vide : ' . Ascs\Domain\Bulletin::HORAIRES_DEFAUT . '.']) ?>
+    <?= champ('Communauté WhatsApp de l\'association', 'whatsapp_lien', $whatsapp, ['type' => 'url', 'maxlength' => 255, 'error' => $err['whatsapp_lien'] ?? null, 'hint' => 'Lien d\'invitation (https://chat.whatsapp.com/…). Proposé sur la page de fin et dans le mail de confirmation : « Vous ne trouvez pas le cours ? Rejoignez la communauté WhatsApp ». Même lien que dans Mail (invitations). Vide : pas de lien.']) ?>
     <?= champ('Message affiché sur les formulaires (facultatif)', 'message', $message, ['type' => 'textarea', 'rows' => 2, 'hint' => 'Par exemple : chèques à l\'ordre de l\'ASCS, certificat médical, dates du forum…']) ?>
     <?= champ('Règlement intérieur (accepté et signé en ligne à l\'inscription)', 'reglement_interieur', $reglement, ['type' => 'textarea', 'rows' => 12, 'hint' => 'Un article par ligne, comme sur le bulletin papier. Vide : texte du bulletin 2026/2027.']) ?>
 

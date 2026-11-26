@@ -38,6 +38,7 @@ final class EnLigneController
             'essaiAuto' => (new \Ascs\Domain\Demandes($pdo))->essaisAuto(),
             'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
             'horaires' => (string) Parametres::get($pdo, 'horaires_bureau'),
+            'whatsapp' => (string) ($_POST['whatsapp_lien'] ?? Parametres::get($pdo, 'whatsapp_communaute')),
             'reglement' => (new \Ascs\Domain\Bulletin($pdo))->reglementInterieur(),
             'saisons' => $pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
         ], 'Inscriptions en ligne', 'parametrage');
@@ -51,6 +52,11 @@ final class EnLigneController
             $this->app->flash('erreur', 'Réglages non enregistrés : choisissez la saison.');
             return $this->general($p, ['saison_id' => 'Choisissez la saison.']);
         }
+        $wa = trim((string) ($_POST['whatsapp_lien'] ?? ''));
+        if ($wa !== '' && !EnLigne::lienWhatsappValide($wa)) {
+            $this->app->flash('erreur', 'Réglages non enregistrés : lien WhatsApp invalide.');
+            return $this->general($p, ['whatsapp_lien' => 'Lien invalide : collez le lien d\'invitation (https://chat.whatsapp.com/…).']);
+        }
         $pdo->beginTransaction();
         Parametres::set($pdo, 'inscription_ouverte', !empty($_POST['inscription_ouverte']) ? '1' : null);
         Parametres::set($pdo, 'essai_ouvert', !empty($_POST['essai_ouvert']) ? '1' : null);
@@ -58,6 +64,7 @@ final class EnLigneController
         Parametres::set($pdo, 'en_ligne_saison', (string) $saison);
         Parametres::set($pdo, 'en_ligne_message', Input::text($_POST, 'message', 1000));
         Parametres::set($pdo, 'horaires_bureau', Input::text($_POST, 'horaires_bureau', 120));
+        Parametres::set($pdo, 'whatsapp_communaute', $wa !== '' ? mb_substr($wa, 0, 255) : null);
         $ri = trim(str_replace("\r\n", "\n", (string) ($_POST['reglement_interieur'] ?? '')));
         Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
         $pdo->commit();

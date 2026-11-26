@@ -61,8 +61,6 @@ $val = static fn (string $c) => $v[$c] ?? '';
             <?= champ('Cours d\'essai à partir du', 'en_ligne[essai_des]', (string) $el['essai_des'], ['type' => 'date', 'id' => 'f_el_essai_des', 'error' => $err['en_ligne_essai_des'] ?? null, 'hint' => 'Vide : la date de reprise.']) ?>
             <?= champ('Texte affiché (horaires, public…)', 'en_ligne[description]', (string) $el['description'], ['id' => 'f_el_description', 'maxlength' => 500]) ?>
             <?= champ('Adresse du cours', 'en_ligne[adresse]', (string) $el['adresse'], ['maxlength' => 255, 'hint' => 'Lieu précis : salle, rue, ville. Affichée avec un lien vers le plan.']) ?>
-            <?= champ('Lien WhatsApp', 'en_ligne[whatsapp]', (string) $el['whatsapp'], ['type' => 'url', 'maxlength' => 255, 'error' => $err['en_ligne_whatsapp'] ?? null, 'hint' => 'Groupe (https://chat.whatsapp.com/…) ou numéro de l\'animateur (https://wa.me/336…) : « vous ne trouvez pas ? »']) ?>
-            <?= champ('Lien de paiement HelloAsso', 'en_ligne[lien_paiement]', (string) $el['lien_paiement'], ['type' => 'url', 'id' => 'f_el_lien', 'maxlength' => 255, 'error' => $err['en_ligne_lien'] ?? null]) ?>
         </div>
     <?php endif; ?>
     <div class="actions">

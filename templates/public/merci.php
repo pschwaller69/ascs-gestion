@@ -10,10 +10,12 @@
         <div class="lieu-cours">
             <p><strong><?= e($l['titre']) ?></strong><?= $l['quand'] !== '' ? ' : ' . e($l['quand']) : '' ?></p>
             <?php if ($l['adresse']): ?><p><?= e($l['adresse']) ?> · <a href="<?= e(Ascs\Domain\EnLigne::lienPlan($l['adresse'])) ?>" target="_blank" rel="noopener">Voir le plan</a></p><?php endif; ?>
-            <?php if ($l['whatsapp']): ?><p><a class="btn btn-whatsapp" href="<?= e($l['whatsapp']) ?>" target="_blank" rel="noopener">Vous ne trouvez pas ? WhatsApp</a></p><?php endif; ?>
         </div>
     <?php endforeach; ?>
     </section>
+<?php endif; ?>
+<?php if (!empty($m['whatsapp'])): ?>
+    <p class="whatsapp-communaute">Vous ne trouvez pas le cours, une question ? <a class="btn btn-whatsapp" href="<?= e($m['whatsapp']) ?>" target="_blank" rel="noopener">Rejoindre la communauté WhatsApp</a></p>
 <?php endif; ?>
 <?php if (!empty($m['recap'])): $r = $m['recap']; ?>
     <section class="recap">
@@ -39,6 +41,7 @@
 <?php if (!empty($enLigne)): $c = (int) round($enLigne['montant'] * 100); $part = intdiv($c, max(1, $enLigne['fois'])); ?>
     <h2>Payer maintenant</h2>
     <p>Réglez le reste, <strong><?= e(money($enLigne['montant'])) ?></strong>, par carte bancaire sur la page sécurisée de HelloAsso :</p>
+    <div class="note-contribution" role="note"><strong>Pas de frais à payer à HelloAsso.</strong> Au moment de payer, HelloAsso ajoute une « contribution volontaire » à son fonctionnement, souvent cochée d'office. Elle n'est pas obligatoire et ne va pas à l'association : modifiez-la et mettez 0 € pour ne payer que la cotisation.</div>
     <ul class="liens-paiement">
         <li><a class="btn btn-principal" href="<?= e(url('/paiement/' . $enLigne['jeton'] . '/payer', ['fois' => 1])) ?>" rel="nofollow">Payer <?= e(money($enLigne['montant'])) ?></a></li>
         <?php if ($enLigne['fois'] > 1): $f = (int) $enLigne['fois']; ?>
@@ -49,14 +52,5 @@
     <p class="flash flash-info garantie-aide"><?php foreach ($enLigne['garanties'] as $g): ?>Garantie de votre <?= e(mb_strtolower($g['libelle'])) ?> : <?= e(money($g['montant'])) ?> seront programmés sur la même carte le <?= e(dfr($g['date'])) ?>, en plus. Ce prélèvement est annulé dès que l'aide est confirmée par la mairie ; il n'est fait que si elle est refusée.<br><?php endforeach; ?></p>
 <?php endif; ?>
     <p class="aide">Vous pouvez aussi payer plus tard avec le lien reçu par mail.</p>
-<?php elseif ($paiements): ?>
-    <h2>Régler en ligne</h2>
-    <p>Vous pouvez régler par carte bancaire sur HelloAsso :</p>
-    <ul class="liens-paiement">
-    <?php foreach ($paiements as $s): ?>
-        <li><a class="btn btn-principal" href="<?= e($s['lien_paiement']) ?>" rel="noopener"><?= e($s['titre']) ?></a></li>
-    <?php endforeach; ?>
-    </ul>
-    <p class="aide">Vous pouvez aussi régler par chèque, espèces, chèques vacances ou Pass Sport auprès du bureau, ouvert <?= e($m['horaires'] ?? Ascs\Domain\Bulletin::HORAIRES_DEFAUT) ?>.</p>
 <?php endif; ?>
 <?php if ($message): ?><p class="flash flash-info"><?= nl2br(e($message)) ?></p><?php endif; ?>

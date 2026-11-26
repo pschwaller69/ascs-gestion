@@ -3,11 +3,17 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.22.1
+
+- Lien WhatsApp unique : celui de la communauté WhatsApp de l'association (même réglage que Mail > Mailing, modifiable aussi dans Paramétrage > Inscriptions en ligne). Proposé sur la page de fin et dans le mail de confirmation (« Vous ne trouvez pas le cours, une question ? »). Plus de lien WhatsApp par activité.
+- Liens de paiement HelloAsso par activité retirés (réglages et page de fin) : le paiement par carte passe par le paiement en ligne intégré.
+- Paiement par carte : encadré « Pas de frais à payer à HelloAsso » sur la page de paiement et la page de fin, et rappel dans le mail : la contribution volontaire proposée par HelloAsso n'est pas obligatoire et peut être mise à 0 €.
+
 ## 0.22.0
 
 - Réglages des inscriptions en ligne déplacés dans Paramétrage, groupe « En ligne » : « Inscriptions en ligne » (ouverture, saison, validation automatique des essais, horaires du bureau, message, règlement intérieur), « Activités en ligne », « Aides » (bénéficiaires, dates limites, garanties) et « Paiement HelloAsso ». Accueil > QR codes ne garde que l'état (ouvert / fermé), les QR codes et les affiches.
-- Fiche d'une section (Paramétrage > Sections) : bloc « En ligne » avec les mêmes réglages que la liste des activités (inscription en ligne, cours d'essai, dates de reprise et d'essai, texte, adresse, WhatsApp, lien de paiement).
-- Adresse du cours et lien WhatsApp par activité : adresse affichée dans les formulaires ; page de fin et mail de confirmation avec l'adresse, un lien vers le plan et « Vous ne trouvez pas ? WhatsApp » (groupe chat.whatsapp.com ou numéro wa.me).
+- Fiche d'une section (Paramétrage > Sections) : bloc « En ligne » avec les mêmes réglages que la liste des activités (inscription en ligne, cours d'essai, dates de reprise et d'essai, texte, adresse).
+- Adresse du cours par activité : affichée dans les formulaires ; page de fin et mail de confirmation avec l'adresse et un lien vers le plan.
 
 ## 0.21.0
 

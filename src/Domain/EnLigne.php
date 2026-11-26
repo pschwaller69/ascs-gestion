@@ -80,14 +80,21 @@ final class EnLigne
         return $out;
     }
 
-    /** Adresse et lien WhatsApp de chaque activité. @return array<int,array{adresse:?string,whatsapp:?string}> */
+    /** Adresse de chaque activité. @return array<int,array{adresse:?string}> */
     public function lieux(): array
     {
         $out = [];
-        foreach ($this->pdo->query('SELECT section_id, adresse, whatsapp FROM section_lieu')->fetchAll() as $r) {
-            $out[(int) $r['section_id']] = ['adresse' => $r['adresse'] ?: null, 'whatsapp' => $r['whatsapp'] ?: null];
+        foreach ($this->pdo->query('SELECT section_id, adresse FROM section_lieu')->fetchAll() as $r) {
+            $out[(int) $r['section_id']] = ['adresse' => $r['adresse'] ?: null];
         }
         return $out;
+    }
+
+    /** Lien de la communauté WhatsApp de l'association (même réglage que Mail > Mailing), commun à toutes les activités. */
+    public function whatsapp(): ?string
+    {
+        $l = trim((string) Parametres::get($this->pdo, 'whatsapp_communaute'));
+        return $l !== '' && self::lienWhatsappValide($l) ? $l : null;
     }
 
     /** Lien Google Maps vers une adresse. */
@@ -96,10 +103,10 @@ final class EnLigne
         return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($adresse);
     }
 
-    /** Lien WhatsApp accepté : groupe (chat.whatsapp.com), numéro (wa.me) ou api.whatsapp.com, en https. */
+    /** Lien d'invitation à la communauté WhatsApp (même contrôle que Mail > Mailing). */
     public static function lienWhatsappValide(string $l): bool
     {
-        return preg_match('#^https://(chat\.whatsapp\.com|wa\.me|api\.whatsapp\.com|whatsapp\.com/channel)/[^\s"<>]*$#i', $l) === 1;
+        return preg_match('#^https://chat\.whatsapp\.com/[A-Za-z0-9]+$#', $l) === 1;
     }
 
     /** @param list<array<string,mixed>> $l @return list<array<string,mixed>> */
@@ -109,7 +116,7 @@ final class EnLigne
         $lieux = $this->lieux();
         foreach ($l as &$s) {
             $s += $d[(int) $s['id']] ?? ['reprise' => null, 'essai_des' => null, 'essai_debut' => null];
-            $s += $lieux[(int) $s['id']] ?? ['adresse' => null, 'whatsapp' => null];
+            $s += ['adresse' => $lieux[(int) $s['id']]['adresse'] ?? null];
         }
         unset($s);
         return $l;
@@ -189,16 +196,16 @@ final class EnLigne
         foreach ($this->toutesSections() as $s) {
             if ((int) $s['id'] === $sectionId) {
                 return ['ouvert' => (bool) $s['ouvert'], 'essai' => (bool) $s['essai_ouvert'], 'reprise' => $s['reprise'], 'essai_des' => $s['essai_des'],
-                    'description' => (string) $s['description'], 'lien_paiement' => (string) $s['lien_paiement'],
-                    'adresse' => (string) $s['adresse'], 'whatsapp' => (string) $s['whatsapp']];
+                    'description' => (string) $s['description'],
+                    'adresse' => (string) $s['adresse']];
             }
         }
         return self::REGLAGE_VIDE;
     }
 
-    public const REGLAGE_VIDE = ['ouvert' => false, 'essai' => false, 'reprise' => null, 'essai_des' => null, 'description' => '', 'lien_paiement' => '', 'adresse' => '', 'whatsapp' => ''];
+    public const REGLAGE_VIDE = ['ouvert' => false, 'essai' => false, 'reprise' => null, 'essai_des' => null, 'description' => '', 'adresse' => ''];
 
-    /** Contrôle des réglages en ligne d'une activité. @return array<string,string> erreurs, clés « reprise », « essai_des », « lien » */
+    /** Contrôle des réglages en ligne d'une activité. @return array<string,string> erreurs, clés « reprise », « essai_des » */
     public static function erreursSection(array $r): array
     {
         $err = [];
@@ -207,27 +214,19 @@ final class EnLigne
                 $err[$k] = $lib . ' invalide.';
             }
         }
-        $lien = trim((string) ($r['lien_paiement'] ?? ''));
-        if ($lien !== '' && !preg_match('#^https://[^\s"<>]+$#i', $lien)) {
-            $err['lien'] = 'Lien de paiement invalide (il doit commencer par https://).';
-        }
-        $wa = trim((string) ($r['whatsapp'] ?? ''));
-        if ($wa !== '' && !self::lienWhatsappValide($wa)) {
-            $err['whatsapp'] = 'Lien WhatsApp invalide (https://chat.whatsapp.com/… ou https://wa.me/…).';
-        }
         return $err;
     }
 
     /** Enregistre les réglages en ligne d'une activité (dates : saison des inscriptions en ligne). */
     public function enregistrerSection(int $sectionId, array $r): void
     {
-        \Ascs\Db::upsertStatement($this->pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id'])
-            ->execute([$sectionId, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500), Input::str($r, 'lien_paiement', 255)]);
+        \Ascs\Db::upsertStatement($this->pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description'], ['section_id'])
+            ->execute([$sectionId, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500)]);
         \Ascs\Db::upsertStatement($this->pdo, 'section_essai', ['section_id', 'ouvert'], ['section_id'])->execute([$sectionId, !empty($r['essai']) ? 1 : 0]);
         \Ascs\Db::upsertStatement($this->pdo, 'section_reprise', ['section_id', 'saison_id', 'reprise', 'essai_des'], ['section_id', 'saison_id'])
             ->execute([$sectionId, $this->saisonId(), Input::date($r, 'reprise'), Input::date($r, 'essai_des')]);
-        \Ascs\Db::upsertStatement($this->pdo, 'section_lieu', ['section_id', 'adresse', 'whatsapp'], ['section_id'])
-            ->execute([$sectionId, Input::text($r, 'adresse', 255), Input::str($r, 'whatsapp', 255)]);
+        \Ascs\Db::upsertStatement($this->pdo, 'section_lieu', ['section_id', 'adresse'], ['section_id'])
+            ->execute([$sectionId, Input::text($r, 'adresse', 255)]);
     }
 
     /** Cours d'essai ouvert pour une activité : réglage enregistré, sinon comme l'inscription en ligne (sauf couture). */

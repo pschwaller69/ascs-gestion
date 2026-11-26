@@ -23,11 +23,12 @@ if ($etat === 'inconnu'): ?>
     <p class="flash flash-info garantie-aide"><?php foreach ($garanties as $g): ?>Garantie de votre <?= e(mb_strtolower($g['libelle'])) ?> : <?= e(money($g['montant'])) ?> seront programmés sur la même carte le <?= e(dfr($g['date'])) ?>, en plus. Ce prélèvement est annulé dès que l'aide est confirmée par la mairie ; il n'est fait que si elle est refusée.<br><?php endforeach; ?></p>
 <?php endif; ?>
 
+    <div class="note-contribution" role="note"><strong>Pas de frais à payer à HelloAsso.</strong> Au moment de payer, HelloAsso ajoute une « contribution volontaire » à son fonctionnement, souvent cochée d'office. Elle n'est pas obligatoire et ne va pas à l'association : modifiez-la et mettez 0 € pour ne payer que la cotisation.</div>
     <ul class="liens-paiement">
         <li><a class="btn btn-principal" href="<?= e(url('/paiement/' . $jeton . '/payer', ['fois' => 1])) ?>" rel="nofollow">Payer <?= e(money($montant)) ?> en 1 fois</a></li>
         <?php if ($fois > 1): $c = (int) round($montant * 100); $part = intdiv($c, $fois); ?>
         <li><a class="btn" href="<?= e(url('/paiement/' . $jeton . '/payer', ['fois' => $fois])) ?>" rel="nofollow">Payer en <?= $fois ?> fois (<?= e(money(($c - ($fois - 1) * $part) / 100)) ?> aujourd'hui, puis <?= $fois - 1 ?> × <?= e(money($part / 100)) ?> par mois)</a></li>
         <?php endif; ?>
     </ul>
-    <p class="aide">HelloAsso propose à la fin du paiement une contribution volontaire à son fonctionnement : elle est facultative, vous pouvez la mettre à 0. En plusieurs fois, les échéances suivantes sont prélevées sur la même carte, à un mois d'intervalle, la dernière au plus tard le 31 décembre.</p>
+    <p class="aide">En plusieurs fois, les échéances suivantes sont prélevées sur la même carte, à un mois d'intervalle, la dernière au plus tard le 31 décembre.</p>
 <?php endif; ?>

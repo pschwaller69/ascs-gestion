@@ -162,8 +162,8 @@ final class PublicController
             } else {
                 $quand = $s['reprise'] ? 'reprise des cours le ' . dfr($s['reprise']) : '';
             }
-            if ($quand !== '' || $s['adresse'] || $s['whatsapp']) {
-                $dates[] = ['titre' => $titre, 'quand' => $quand, 'adresse' => $s['adresse'], 'whatsapp' => $s['whatsapp']];
+            if ($quand !== '' || $s['adresse']) {
+                $dates[] = ['titre' => $titre, 'quand' => $quand, 'adresse' => $s['adresse']];
             }
         }
         $pieces = $c !== null ? $bulletin->pieces($d, $c) : [];
@@ -172,7 +172,7 @@ final class PublicController
         $this->confirmer($type, $d, (string) $ref, $c, $pieces, $bureau, $horaires, $auto, $dates);
         unset($_SESSION['form_affiche'][$type]);
         $_SESSION['demande_envoyee'] = ['ref' => $ref, 'type' => $type, 'sections' => json_decode($d['sections'], true), 'prenom' => $d['prenom'],
-            'recap' => $c['recap'] ?? null, 'essai_valide' => $auto, 'dates' => $dates, 'pieces' => $pieces, 'bureau' => $bureau, 'horaires' => $horaires];
+            'recap' => $c['recap'] ?? null, 'essai_valide' => $auto, 'dates' => $dates, 'whatsapp' => $this->el->whatsapp(), 'pieces' => $pieces, 'bureau' => $bureau, 'horaires' => $horaires];
         $this->app->redirect('/merci');
     }
 
@@ -197,13 +197,14 @@ final class PublicController
                 . ($noms ? ' pour : ' . implode(', ', $noms) : '') . ".\nRéférence : " . $ref . "\n\n"
                 . ($type === 'essai' ? ($essaiValide ? 'Votre cours d\'essai est enregistré : l\'animateur a votre nom sur sa liste. Présentez-vous à l\'heure du cours.' : 'Le bureau vous recontacte pour vous confirmer le jour du cours.') : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
                 . ($dates ? "\n\nÀ retenir :" . implode('', array_map(static fn ($x) => "\n- " . $x['titre'] . ($x['quand'] !== '' ? ' : ' . $x['quand'] : '')
-                    . ($x['adresse'] ? "\n  Adresse : " . $x['adresse'] . "\n  Plan : " . EnLigne::lienPlan($x['adresse']) : '')
-                    . ($x['whatsapp'] ? "\n  Vous ne trouvez pas ? WhatsApp : " . $x['whatsapp'] : ''), $dates)) : '')
+                    . ($x['adresse'] ? "\n  Adresse : " . $x['adresse'] . "\n  Plan : " . EnLigne::lienPlan($x['adresse']) : ''), $dates)) : '')
+                . (($wa = $this->el->whatsapp()) ? "\n\nVous ne trouvez pas le cours, une question ? Rejoignez la communauté WhatsApp de l'association : " . $wa : '')
                 . ($c ? "\n\n" . self::texteRecap($c['recap']) : '')
                 . ($bureau ? "\n\nÀ déposer au bureau de l'association (ouvert " . $horaires . ") :\n- " . implode("\n- ", $bureau) : '')
                 . ($pieces ? "\n\nÀ apporter au premier cours :\n- " . implode("\n- ", $pieces) : '')
                 . (($pl = $type === 'inscription' ? $this->paiementEnLigne($ref) : null)
-                    ? "\n\nPayer en ligne par carte bancaire (HelloAsso) : " . \Ascs\Web\App::urlAbsolue('/paiement/' . $pl['jeton']) : '')
+                    ? "\n\nPayer en ligne par carte bancaire (HelloAsso) : " . \Ascs\Web\App::urlAbsolue('/paiement/' . $pl['jeton'])
+                        . "\nHelloAsso propose une « contribution volontaire » à son fonctionnement : elle n'est pas obligatoire et ne va pas à l'association. Vous pouvez la modifier et la mettre à 0 €." : '')
                 . ($c ? "\n\nVous avez accepté le règlement intérieur (signé en ligne par " . $c['soussigne'] . ' le ' . date('d/m/Y') . ').' : '')
                 . "\n\nÀ bientôt,\n" . $asso . ($r['telephone'] ? "\n" . $r['telephone'] : '') . ($r['site'] ? "\n" . $r['site'] : '');
             (new \Ascs\Mail\Envoi($this->app->pdo))->envoyer($r['expediteur'], $asso, (string) $d['mail'],
@@ -235,16 +236,7 @@ final class PublicController
         if (!$m) {
             $this->app->redirect('/inscription');
         }
-        // Liens de paiement en ligne des activités demandées (réglés par le bureau)
-        $paiements = [];
-        if ($m['type'] === 'inscription') {
-            foreach ($this->el->sectionsOuvertes(false) as $s) {
-                if (in_array((int) $s['id'], $m['sections'], true) && $s['lien_paiement']) {
-                    $paiements[] = $s;
-                }
-            }
-        }
-        return $this->app->renderPublic('public/merci', ['m' => $m, 'paiements' => $paiements, 'message' => $this->el->message(),
+        return $this->app->renderPublic('public/merci', ['m' => $m, 'message' => $this->el->message(),
             'enLigne' => $m['type'] === 'inscription' ? $this->paiementEnLigne((string) $m['ref']) : null], 'Demande envoyée');
     }
 

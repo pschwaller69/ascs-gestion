@@ -27,8 +27,6 @@
             <div class="ar-textes">
                 <label>Texte affiché (horaires, public…)<input type="text" name="s[<?= $sid ?>][description]" value="<?= e($s['description']) ?>" maxlength="500" placeholder="Ex. : lundi 18 h 30 – 20 h, dès 8 ans"></label>
                 <label>Adresse du cours<input type="text" name="s[<?= $sid ?>][adresse]" value="<?= e($s['adresse']) ?>" maxlength="255" placeholder="Salle, rue, ville"></label>
-                <label>WhatsApp (« vous ne trouvez pas ? »)<input type="url" name="s[<?= $sid ?>][whatsapp]" value="<?= e($s['whatsapp']) ?>" maxlength="255" placeholder="https://chat.whatsapp.com/… ou https://wa.me/336…"<?= isset($err['whatsapp_' . $sid]) ? ' aria-invalid="true"' : '' ?>></label>
-                <label>Lien de paiement HelloAsso<input type="url" name="s[<?= $sid ?>][lien_paiement]" value="<?= e($s['lien_paiement']) ?>" maxlength="255" placeholder="https://www.helloasso.com/…"<?= isset($err['lien_' . $sid]) ? ' aria-invalid="true"' : '' ?>></label>
             </div>
         </li>
     <?php endforeach; ?>
