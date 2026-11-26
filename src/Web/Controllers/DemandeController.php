@@ -36,9 +36,17 @@ final class DemandeController
             return $this->app->render('erreur', ['titre' => 'Demande introuvable', 'message' => 'Cette demande n\'existe pas.'], 'Introuvable', 'accueil', 404);
         }
         $candidats = $d['statut'] === 'a_traiter' ? $this->dem->candidats($d) : [];
+        // Demande venue d'un lien de réinscription : sa fiche en tête, choisie d'office
+        $ri = new \Ascs\Domain\Reinscription($this->app->pdo);
+        $lien = $ri->ficheDeLaDemande((int) $d['id']);
+        $changements = $lien ? \Ascs\Domain\Reinscription::changements($lien, $d) : [];
+        if ($lien && $d['statut'] === 'a_traiter') {
+            $candidats = array_values(array_filter($candidats, static fn ($c) => (int) $c['id'] !== (int) $lien['id']));
+            array_unshift($candidats, ['id' => (int) $lien['id'], 'niveau' => 'A', 'raisons' => ['lien de réinscription de cette fiche'], 'fiche' => $lien, 'lien' => true]);
+        }
         $niveauA = array_values(array_filter($candidats, static fn ($c) => $c['niveau'] === 'A'));
         $post = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : [];
-        $choix = (string) ($post['adherent'] ?? (count($niveauA) === 1 ? $niveauA[0]['id'] : ($candidats ? '' : 'nouveau')));
+        $choix = (string) ($post['adherent'] ?? ($lien ? $lien['id'] : (count($niveauA) === 1 ? $niveauA[0]['id'] : ($candidats ? '' : 'nouveau'))));
         $fiche = $post ? array_merge(Demandes::ficheDepuis($d), array_intersect_key($post, Adherents::vide())) : Demandes::ficheDepuis($d);
         $inscriptions = [];
         if ($d['inscriptions']) {
@@ -51,7 +59,7 @@ final class DemandeController
             'paiements' => (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->historique((int) $d['id']),
             'd' => $d, 'candidats' => $candidats, 'choix' => $choix, 'fiche' => $fiche, 'err' => $err, 'post' => $post,
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
-            'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions,
+            'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions, 'lien' => $lien, 'changements' => $changements,
         ], 'Demande ' . $d['reference'], 'accueil', $err ? 422 : 200);
     }
 

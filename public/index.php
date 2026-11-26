@@ -101,6 +101,7 @@ $router->post('/adherents', [AdherentController::class, 'creer']);
 $router->get('/adherents/{id}', [AdherentController::class, 'fiche']);
 $router->get('/adherents/{id}/fusion/{autre}', [AdherentController::class, 'fusion']);
 $router->post('/adherents/{id}/fusion/{autre}', [AdherentController::class, 'fusionner']);
+$router->post('/adherents/{id}/reinscription', [AdherentController::class, 'reinscription']);
 $router->post('/adherents/{id}', [AdherentController::class, 'modifier']);
 
 $router->get('/inscriptions', [InscriptionController::class, 'index']);
@@ -138,6 +139,7 @@ $router->post('/inscription', [PublicController::class, 'envoyerInscription'], t
 $router->get('/essai', [PublicController::class, 'essai'], true);
 $router->post('/essai', [PublicController::class, 'envoyerEssai'], true);
 $router->get('/merci', [PublicController::class, 'merci'], true);
+$router->get('/r/{jeton}', [PublicController::class, 'reinscription'], true);
 // Paiement en ligne HelloAsso d'une inscription (lien signé)
 $router->get('/paiement/{jeton}', [PaiementController::class, 'afficher'], true);
 $router->get('/paiement/{jeton}/payer', [PaiementController::class, 'payer'], true);

@@ -42,7 +42,7 @@ $exclus = ['refus' => $sms ? 'ont refusé les SMS' : 'ont refusé les mails', 's
     </fieldset>
     <?php if (!$sms): ?><?= champ('Objet', 'objet', $d['objet'], ['required' => true, 'maxlength' => 200, 'error' => $err['objet'] ?? null]) ?><?php endif; ?>
     <?= champ('Message', 'texte', $d['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 12, 'required' => true, 'error' => $err['texte'] ?? null,
-        'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.' . ($sms ? '' : ' En bas de chaque mail sont ajoutés le lien de désinscription (mail d\'information) ou, pour un message important de section, la raison de l\'envoi.')]) ?>
+        'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire ; {lien_reinscription} par son lien de réinscription personnel (formulaire déjà rempli ; un lien par enfant quand la famille partage l\'adresse).' . ($sms ? '' : ' En bas de chaque mail sont ajoutés le lien de désinscription (mail d\'information) ou, pour un message important de section, la raison de l\'envoi.')]) ?>
     <?php if ($sms): ?><p class="aide" id="compteur-sms" aria-live="polite"></p><?php endif; ?>
     <div class="actions">
         <button type="submit" class="btn btn-principal"><?= icon('check') ?> Préparer l'envoi</button>

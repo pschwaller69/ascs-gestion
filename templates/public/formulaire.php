@@ -14,6 +14,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
 <p class="intro"><?= $essai
     ? 'Le cours d\'essai est gratuit. Remplissez ce formulaire : le bureau vous recontacte pour confirmer la date.'
     : 'Remplissez ce formulaire pour vous inscrire, ou inscrire votre enfant. Le bureau valide l\'inscription et vous indique comment régler si ce n\'est pas déjà fait.' ?></p>
+<?php if (!empty($reinscription)): ?><p class="flash flash-ok" role="status">Bonjour <?= e($reinscription) ?> ! Vos informations de l'an dernier sont déjà remplies : vérifiez-les, corrigez ce qui a changé et choisissez vos activités.</p><?php endif; ?>
 <?php if ($message): ?><p class="flash flash-info"><?= nl2br(e($message)) ?></p><?php endif; ?>
 
 <?php if ($err): ?>

@@ -245,12 +245,18 @@ final class Mailing
     }
 
     /**
-     * Texte personnalisé : {prenom} et {nom} remplacés. Pour un mail d'information, lien de désinscription ajouté ;
+     * Texte personnalisé : {prenom}, {nom} et {lien_reinscription} remplacés. Pour un mail d'information, lien de désinscription ajouté ;
      * pour un message important de section ($section = nom de la section), simple rappel de la raison de l'envoi.
      */
     public static function personnaliser(string $texte, array $d, string $canal, ?string $section = null): string
     {
         $t = strtr($texte, ['{prenom}' => (string) $d['prenom'], '{nom}' => (string) $d['nom']]);
+        if (str_contains($t, '{lien_reinscription}')) {
+            // Lien de réinscription personnel (par mail : un lien par membre de la famille qui partage l'adresse)
+            $ri = new Reinscription(\Ascs\Db::connect());
+            $id = (int) ($d['adherent_id'] ?? $d['id'] ?? 0);
+            $t = str_replace('{lien_reinscription}', $id > 0 ? ($canal === 'mail' ? $ri->texteMailing($id) : $ri->lien($id)) : '', $t);
+        }
         if ($canal === 'mail') {
             $t .= $section !== null
                 ? "\n\n--\nVous recevez ce message car vous êtes inscrit(e) à la section " . $section . ' cette saison.'

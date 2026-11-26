@@ -155,6 +155,14 @@ final class Demandes
                 $adherentId = $adh->creer($fiche);
             } else {
                 $adherentId = (int) $choix;
+                // Lien de réinscription de cette fiche : coordonnées modifiées par la personne reprises si le bureau le veut
+                if (!empty($in['maj_fiche'])) {
+                    $ri = new Reinscription($this->pdo);
+                    $lien = $ri->ficheDeLaDemande($id);
+                    if ($lien && (int) $lien['id'] === $adherentId) {
+                        $ri->mettreAJour($adherentId, Reinscription::changements($lien, $d));
+                    }
+                }
                 if (!empty($in['completer'])) {
                     $this->completer($adherentId, $d);
                 }
@@ -204,7 +212,7 @@ final class Demandes
                     'montant' => $montant, 'remarques' => mb_substr($rem, 0, 5000),
                 ]);
             }
-            $garde = array_intersect_key($in, array_flip(['adherent', 'completer', 'saison_id', 'creer', 'montant', ...array_keys(Adherents::vide())]));
+            $garde = array_intersect_key($in, array_flip(['adherent', 'completer', 'maj_fiche', 'saison_id', 'creer', 'montant', ...array_keys(Adherents::vide())]));
             if ($fiche !== null) {
                 $garde['adherent'] = 'nouveau';
             }

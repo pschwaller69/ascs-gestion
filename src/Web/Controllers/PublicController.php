@@ -48,16 +48,32 @@ final class PublicController
             'saison' => $this->el->saisonTitre(), 'message' => $this->el->message(),
             'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => \Ascs\Domain\Bulletin::aides(),
             'apercu' => $apercu,
+            'reinscription' => $type === 'inscription' ? ($_SESSION['reinscription']['prenom'] ?? null) : null,
         ], $type === 'essai' ? 'Cours d\'essai' : 'Inscription', $status);
     }
 
     public function inscription(array $p): string
     {
+        unset($_SESSION['reinscription']);
         $s = $this->vide();
         if (isset($_GET['section']) && ctype_digit((string) $_GET['section'])) {
             $s['sections'] = [(string) $_GET['section']];
         }
         return $this->formulaire('inscription', $s, []);
+    }
+
+    /** Lien de réinscription personnel : formulaire d'inscription rempli avec la fiche, demande rattachée à cette fiche. */
+    public function reinscription(array $p): string
+    {
+        $r = new \Ascs\Domain\Reinscription($this->app->pdo);
+        $a = $r->adherentDuJeton((string) ($p['jeton'] ?? ''));
+        if (!$a) {
+            unset($_SESSION['reinscription']);
+            return $this->app->renderPublic('public/lien_perime', [], 'Lien de réinscription', 404);
+        }
+        $_SESSION['reinscription'] = ['id' => (int) $a['id'], 'prenom' => (string) $a['prenom'], 'le' => time()];
+        $ouvertes = array_map('intval', array_column($this->el->sectionsOuvertes(false), 'id'));
+        return $this->formulaire('inscription', $r->saisie($a, $this->vide(), $ouvertes), []);
     }
 
     public function essai(array $p): string
@@ -111,7 +127,14 @@ final class PublicController
         if ($c !== null) {
             $st = $this->app->pdo->prepare('SELECT id FROM demande WHERE reference = ?');
             $st->execute([$ref]);
-            $bulletin->enregistrer((int) $st->fetchColumn(), $c);
+            $demandeId = (int) $st->fetchColumn();
+            $bulletin->enregistrer($demandeId, $c);
+            // Venue d'un lien de réinscription (dans les 12 dernières heures) : demande rattachée à la fiche
+            $ri = $_SESSION['reinscription'] ?? null;
+            if (is_array($ri) && time() - (int) $ri['le'] < 12 * 3600) {
+                (new \Ascs\Domain\Reinscription($this->app->pdo))->rattacher($demandeId, (int) $ri['id']);
+            }
+            unset($_SESSION['reinscription']);
         }
         $pieces = $c !== null ? $bulletin->pieces($d, $c) : [];
         $this->confirmer($type, $d, (string) $ref, $c, $pieces);

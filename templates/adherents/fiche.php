@@ -17,6 +17,18 @@ $tabs = ['adherent' => 'Adhérent', 'inscriptions' => 'Inscriptions (' . count($
     </ul>
 </details>
 <?php endif; ?>
+<?php if (!empty($reinscription['lien'])): ?>
+<details class="lien-reinscription"><summary>Lien de réinscription<?= $reinscription['coupe'] ? ' (coupé)' : '' ?></summary>
+    <?php if (!$reinscription['coupe']): ?>
+        <p>Formulaire d'inscription déjà rempli avec cette fiche, pour la saison des inscriptions en ligne ; la demande arrive rattachée à la fiche. À envoyer par SMS ou par mail (dans un mailing : <code>{lien_reinscription}</code>).</p>
+        <p><input type="text" readonly value="<?= e($reinscription['lien']) ?>" aria-label="Lien de réinscription" class="lien-copie"></p>
+    <?php endif; ?>
+    <form method="post" action="<?= e(url('/adherents/' . $a['id'] . '/reinscription')) ?>"><?= csrf_field() ?>
+        <input type="hidden" name="action" value="<?= $reinscription['coupe'] ? 'retablir' : 'couper' ?>">
+        <button type="submit" class="btn btn-petit"><?= $reinscription['coupe'] ? 'Rétablir le lien' : 'Couper le lien' ?></button>
+    </form>
+</details>
+<?php endif; ?>
 <?php require __DIR__ . '/_parcours.php'; ?>
 <nav class="sous-onglets" aria-label="Sections de la fiche">
     <?php foreach ($tabs as $k => $lib): ?>

@@ -23,7 +23,7 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
 <form class="fiche" method="post" action="<?= e(url('/mailing/' . $c['id'] . '/modifier')) ?>">
     <?= csrf_field() ?>
     <?php if (!$sms): ?><?= champ('Objet', 'objet', $c['objet'], ['required' => true, 'maxlength' => 200]) ?><?php endif; ?>
-    <?= champ('Message', 'texte', $c['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 10, 'required' => true, 'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire.' . ($sms ? '' : ($important ? ' Le rappel de la section est ajouté en bas.' : ' Le lien de désinscription est ajouté en bas.'))]) ?>
+    <?= champ('Message', 'texte', $c['texte'], ['type' => 'textarea', 'rows' => $sms ? 4 : 10, 'required' => true, 'hint' => '{prenom} et {nom} sont remplacés pour chaque destinataire ; {lien_reinscription} par son lien de réinscription personnel (formulaire déjà rempli ; un lien par enfant quand la famille partage l\'adresse).' . ($sms ? '' : ($important ? ' Le rappel de la section est ajouté en bas.' : ' Le lien de désinscription est ajouté en bas.'))]) ?>
     <?php if ($sms): ?><p class="aide" id="compteur-sms" aria-live="polite"></p><?php endif; ?>
     <button type="submit" class="btn">Enregistrer le message</button>
 </form>
@@ -72,13 +72,13 @@ $etat = ['brouillon' => 'Brouillon : à vérifier puis valider', 'validee' => 'V
         <form method="post" action="<?= e(url('/mailing/' . $c['id'] . '/marquer')) ?>" class="paquet-sms">
             <?= csrf_field() ?>
             <?php foreach ($paquet as $d): ?><input type="hidden" name="ids[]" value="<?= (int) $d['id'] ?>"><?php endforeach; ?>
-            <a class="btn btn-principal" data-sms-numeros="<?= e(implode(',', $nums)) ?>" data-sms-texte="<?= e((string) $c['texte']) ?>" href="sms:<?= e(implode(',', $nums)) ?>?body=<?= e(rawurlencode(str_replace(" ,", ",", strtr((string) $c['texte'], ['{prenom}' => '', '{nom}' => ''])))) ?>">Ouvrir Messages (<?= $k * 10 + 1 ?> à <?= $k * 10 + count($paquet) ?>)</a>
+            <a class="btn btn-principal" data-sms-numeros="<?= e(implode(',', $nums)) ?>" data-sms-texte="<?= e((string) $c['texte']) ?>" href="sms:<?= e(implode(',', $nums)) ?>?body=<?= e(rawurlencode(str_replace(" ,", ",", strtr((string) $c['texte'], ['{prenom}' => '', '{nom}' => '', '{lien_reinscription}' => ''])))) ?>">Ouvrir Messages (<?= $k * 10 + 1 ?> à <?= $k * 10 + count($paquet) ?>)</a>
             <button type="submit" class="btn">Paquet envoyé</button>
             <small class="aide"><?= e(implode(', ', array_map(static fn ($d) => trim($d['prenom'] . ' ' . $d['nom']), $paquet))) ?></small>
         </form>
     <?php endforeach; ?>
-    <?php if (str_contains((string) $c['texte'], '{prenom}') || str_contains((string) $c['texte'], '{nom}')): ?>
-        <p class="aide">Envoi par paquet : un même texte pour tous, {prenom} et {nom} sont retirés. Pour un texte personnalisé, utilisez l'envoi un par un ci-dessous.</p>
+    <?php if (str_contains((string) $c['texte'], '{prenom}') || str_contains((string) $c['texte'], '{nom}') || str_contains((string) $c['texte'], '{lien_reinscription}')): ?>
+        <p class="aide">Envoi par paquet : un même texte pour tous, {prenom}, {nom} et {lien_reinscription} sont retirés. Pour un texte personnalisé, utilisez l'envoi un par un ci-dessous.</p>
     <?php endif; ?>
 </section>
 <?php endif; ?>

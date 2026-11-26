@@ -17,7 +17,7 @@ use Ascs\Config;
 final class Hotes
 {
     /** Débuts de chemin des pages publiques (adhérents, animateurs, contrôleurs). */
-    public const CHEMINS_PUBLICS = ['/inscription', '/essai', '/merci', '/paiement/', '/desinscription/', '/presence/', '/animateur/', '/controle/'];
+    public const CHEMINS_PUBLICS = ['/inscription', '/essai', '/merci', '/r/', '/paiement/', '/desinscription/', '/presence/', '/animateur/', '/controle/'];
     /** Toujours servis sur les deux sous-domaines (fichiers de l'application, appel de serveur à serveur). */
     private const CHEMINS_COMMUNS = ['/assets/', '/manifest.webmanifest', '/sw.js', '/hors-ligne.html', '/helloasso/notification/'];
 

@@ -130,7 +130,21 @@ final class AdherentController
             'inscriptions' => (new Inscriptions($this->app->pdo))->deAdherent($id),
             'venues' => (new \Ascs\Domain\Participants($this->app->pdo))->venuesDe($id, $this->app->saisonId()),
             'reglements' => (new Reglements($this->app->pdo))->deAdherent($id),
+            'reinscription' => (static function ($pdo, int $id): array {
+                $ri = new \Ascs\Domain\Reinscription($pdo);
+                return ['lien' => $ri->saison() ? $ri->lien($id) : null, 'coupe' => $ri->coupe($id)];
+            })($this->app->pdo, $id),
         ], trim(($a['nom'] ?? '') . ' ' . ($a['prenom'] ?? '')) ?: 'Fiche sans nom', 'accueil', $status);
+    }
+
+    /** Lien de réinscription de la fiche : couper ou rétablir. */
+    public function reinscription(array $p): void
+    {
+        $id = (int) $p['id'];
+        $couper = ($_POST['action'] ?? '') === 'couper';
+        (new \Ascs\Domain\Reinscription($this->app->pdo))->couper($id, $couper, (string) ($this->app->user['email'] ?? ''));
+        $this->app->flash('ok', $couper ? 'Lien de réinscription coupé pour cette fiche.' : 'Lien de réinscription rétabli.');
+        $this->app->redirect('/adherents/' . $id);
     }
 
     /** Écran de fusion : la fiche {id} est gardée, la fiche {autre} disparaît après avoir tout transmis. */

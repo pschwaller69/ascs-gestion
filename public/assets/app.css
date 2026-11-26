@@ -569,3 +569,8 @@ input, select, textarea { max-width: 100%; }
 .bloc-essais h2 { margin-top: 0; color: #4e3592; }
 .pastille-essai { background: #7a5bc4; color: #fff; }
 .essai-jour { font-weight: 700; color: #4e3592; }
+
+/* Lien de réinscription (0.15.0) */
+.lien-reinscription { margin: .5rem 0; }
+.lien-reinscription .lien-copie { width: 100%; max-width: 40rem; font-family: monospace; }
+.changements-fiche { margin-top: .75rem; padding: .5rem .75rem; border-left: 4px solid #00908a; background: #eef8f7; }

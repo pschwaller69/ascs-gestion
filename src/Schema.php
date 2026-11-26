@@ -289,6 +289,15 @@ final class Schema
                 'cols' => ['echeance_id' => 'int', 'inscription_id' => 'int', 'montant' => 'dec:10,2', 'reglement_id' => 'int?'],
                 'pk' => ['echeance_id', 'inscription_id'],
             ],
+            // Lien de réinscription : demande faite depuis le lien personnel d'une fiche ; liens coupés par le bureau
+            'demande_reinscription' => [
+                'cols' => ['demande_id' => 'int', 'adherent_id' => 'int'],
+                'pk' => ['demande_id'],
+            ],
+            'reinscription_coupee' => [
+                'cols' => ['adherent_id' => 'int', 'coupe_le' => 'datetime', 'coupe_par' => 'str:150?'],
+                'pk' => ['adherent_id'],
+            ],
             'demande_complement' => [
                 'cols' => ['demande_id' => 'int', 'donnees' => 'text'],
                 'pk' => ['demande_id'],

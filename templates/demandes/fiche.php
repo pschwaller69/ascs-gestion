@@ -82,6 +82,13 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <?php endforeach; ?>
             <label class="choix"><input type="radio" name="adherent" value="nouveau"<?= attr($choix === 'nouveau', 'checked') ?> data-choix-adherent> <span><strong>Nouvelle fiche</strong> (personne absente de la base)</span></label>
             <?php if ($candidats): ?><?= coche('Compléter la fiche choisie avec ces informations (seulement les champs vides)', 'completer', true) ?><?php endif; ?>
+            <?php if (!empty($lien) && $changements): $libs = ['mail' => 'Mail', 'telephone1' => 'Téléphone', 'telephone2' => 'Tél. domicile', 'adresse' => 'Adresse', 'code_postal' => 'Code postal', 'ville' => 'Ville', 'nom_parent' => 'Nom du parent', 'prenom_parent' => 'Prénom du parent']; ?>
+                <div class="changements-fiche">
+                    <p><strong>Coordonnées modifiées par la personne</strong> (fiche de <?= e(trim($lien['prenom'] . ' ' . $lien['nom'])) ?>) :</p>
+                    <ul><?php foreach ($changements as $k => [$avant, $apres]): ?><li><?= e($libs[$k] ?? $k) ?> : <s><?= e($avant !== '' ? $avant : '(vide)') ?></s> → <strong><?= e($apres) ?></strong></li><?php endforeach; ?></ul>
+                    <?= coche('Mettre à jour la fiche avec ces nouvelles coordonnées', 'maj_fiche', true) ?>
+                </div>
+            <?php endif; ?>
         </fieldset>
         <fieldset id="nouvelle-fiche"<?= $choix === 'nouveau' ? '' : ' hidden' ?>>
             <legend>Nouvelle fiche</legend>

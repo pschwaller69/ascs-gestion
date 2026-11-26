@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.15.0
+
+- Lien de réinscription personnel (inscription.ascs.fr/r/…) : le formulaire d'inscription s'ouvre déjà rempli avec la fiche (identité, contacts, adresse, parent) et les activités de la dernière saison encore ouvertes, pré-cochées. Lien signé, valable pour la saison des inscriptions en ligne seulement ; expiré : page d'explication avec le formulaire normal.
+- Mailings : balise {lien_reinscription}. Par mail, une ligne « Prénom : lien » par membre de la famille qui partage l'adresse et n'est pas encore réinscrit ; par SMS, le lien de la fiche. Retirée de l'envoi SMS par paquet.
+- La demande arrive rattachée à la fiche : à la validation, la fiche est choisie d'office (« lien de réinscription de cette fiche »), les coordonnées modifiées sont listées (ancien → nouveau) avec la case « Mettre à jour la fiche avec ces nouvelles coordonnées ». Plus de doublon.
+- Fiche adhérent : lien de réinscription à copier (pour un SMS) et bouton « Couper le lien ».
+
 ## 0.14.3
 
 - Paiement en ligne en plusieurs fois : la dernière échéance ne dépasse jamais le 31 décembre de l'année où commence la saison. Jusqu'à fin octobre : 3 fois ; en novembre : 2 fois ; à partir de décembre : 1 fois seulement. Le bouton affiche le bon nombre d'échéances (« Payer en 2 fois… »).
