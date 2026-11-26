@@ -60,6 +60,47 @@ final class EnLigne
 
     public function sectionsOuvertes(bool $essai): array
     {
+        return $this->avecDates($this->sectionsOuvertesBrutes($essai));
+    }
+
+    /**
+     * Dates de la saison en ligne par activité : reprise des cours, et début des cours d'essai (réglé, sinon la reprise).
+     * @return array<int,array{reprise:?string,essai_des:?string,essai_debut:?string}>
+     */
+    public function dates(): array
+    {
+        $st = $this->pdo->prepare('SELECT section_id, reprise, essai_des FROM section_reprise WHERE saison_id = ?');
+        $st->execute([$this->saisonId()]);
+        $out = [];
+        foreach ($st->fetchAll() as $r) {
+            $rep = $r['reprise'] ? substr((string) $r['reprise'], 0, 10) : null;
+            $ess = $r['essai_des'] ? substr((string) $r['essai_des'], 0, 10) : null;
+            $out[(int) $r['section_id']] = ['reprise' => $rep, 'essai_des' => $ess, 'essai_debut' => $ess ?? $rep];
+        }
+        return $out;
+    }
+
+    /** @param list<array<string,mixed>> $l @return list<array<string,mixed>> */
+    private function avecDates(array $l): array
+    {
+        $d = $this->dates();
+        foreach ($l as &$s) {
+            $s += $d[(int) $s['id']] ?? ['reprise' => null, 'essai_des' => null, 'essai_debut' => null];
+        }
+        unset($s);
+        return $l;
+    }
+
+    /** Premier jour où un cours d'essai est possible pour cette activité (aujourd'hui si aucune date ou date passée). */
+    public function debutEssai(int $sectionId): string
+    {
+        $d = $this->dates()[$sectionId]['essai_debut'] ?? null;
+        return $d !== null && $d > date('Y-m-d') ? $d : date('Y-m-d');
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function sectionsOuvertesBrutes(bool $essai): array
+    {
         if ($this->apercu) {
             $arretees = (new Arrets($this->pdo))->sections();
             $ouvertes = $this->sectionsOuvertesSeules($essai);
@@ -114,7 +155,8 @@ final class EnLigne
         foreach ($l as &$s) {
             $s['essai_ouvert'] = self::essaiOuvert($s);
         }
-        return $l;
+        unset($s);
+        return $this->avecDates($l);
     }
 
     /** Cours d'essai ouvert pour une activité : réglage enregistré, sinon comme l'inscription en ligne (sauf couture). */
@@ -188,12 +230,19 @@ final class EnLigne
         }
 
         $dateEssai = null;
+        // Cours d'essai : pas avant le premier jour possible de l'activité (sans date choisie : ce jour-là s'il est à venir)
+        $debut = $type === 'essai' && $choisies ? $this->debutEssai($choisies[0]) : date('Y-m-d');
         if ($type === 'essai' && Input::str($in, 'date_essai', 10) !== null) {
             $dateEssai = Input::date($in, 'date_essai');
-            if ($dateEssai === null || $dateEssai < date('Y-m-d') || $dateEssai > date('Y-m-d', strtotime('+6 months'))) {
+            if ($dateEssai === null || $dateEssai < date('Y-m-d') || $dateEssai > date('Y-m-d', strtotime($debut . ' +6 months'))) {
                 $err['date_essai'] = 'Choisissez une date dans les six prochains mois.';
                 $dateEssai = null;
+            } elseif ($dateEssai < $debut) {
+                $err['date_essai'] = 'Les cours d\'essai de cette activité commencent le ' . date('d/m/Y', strtotime($debut)) . ' : choisissez cette date ou une date suivante.';
+                $dateEssai = null;
             }
+        } elseif ($type === 'essai' && $debut > date('Y-m-d')) {
+            $dateEssai = $debut;
         }
         $canal = Input::int($in, 'canal_id');
         if ($canal !== null && (int) $this->pdo->query('SELECT COUNT(*) FROM canal WHERE id = ' . $canal)->fetchColumn() === 0) {

@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.20.0
+
+- Dates par activité et par saison (Accueil > QR codes, tableau des activités) : « Reprise des cours » et « Essais à partir du » (vide : la date de reprise).
+- Formulaire d'inscription : « Reprise des cours le … » sous chaque activité. Formulaire de cours d'essai : « Essai possible à partir du … » ; une date souhaitée plus tôt est refusée, et sans date choisie l'essai est noté au premier jour possible.
+- Page de fin et mail de confirmation : bloc « À retenir » (reprise des cours de chaque activité choisie, ou jour du cours d'essai).
+
 ## 0.19.0
 
 - Cours d'essai validés automatiquement dès l'envoi du formulaire, sans action du bureau, quand la fiche ne fait pas de doute : une seule fiche avec même nom et même date de naissance (ou, à défaut, même nom et même mail ou téléphone), complétée si des champs sont vides ; aucune fiche approchante : nouvelle fiche. Nom proche à une lettre près ou plusieurs fiches possibles : la demande attend dans Demandes comme avant.

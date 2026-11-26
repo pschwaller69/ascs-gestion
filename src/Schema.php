@@ -309,6 +309,11 @@ final class Schema
                 'cols' => ['section_id' => 'int', 'ouvert' => 'bool'],
                 'pk' => ['section_id'],
             ],
+            // Dates de la saison par activité (depuis 0.20.0) : reprise des cours, et premier jour possible pour un cours d'essai
+            'section_reprise' => [
+                'cols' => ['section_id' => 'int', 'saison_id' => 'int', 'reprise' => 'date?', 'essai_des' => 'date?'],
+                'pk' => ['section_id', 'saison_id'],
+            ],
             // Cours d'essai validés (depuis 0.18.0) : plus d'inscription gratuite dans une section « Z ESSAI »
             'cours_essai' => [
                 'cols' => [

@@ -45,6 +45,11 @@ final class EnLigneController
         }
         $sections = (array) ($_POST['s'] ?? []);
         foreach ($sections as $sid => $r) {
+            foreach (['reprise' => 'Date de reprise', 'essai_des' => 'Date de début des essais'] as $k => $lib) {
+                if (is_array($r) && trim((string) ($r[$k] ?? '')) !== '' && Input::date($r, $k) === null) {
+                    $err[$k . '_' . (int) $sid] = $lib . ' invalide.';
+                }
+            }
             $lien = trim((string) ($r['lien_paiement'] ?? ''));
             if ($lien !== '' && !preg_match('#^https://[^\s"<>]+$#i', $lien)) {
                 $err['lien_' . (int) $sid] = 'Lien invalide (il doit commencer par https://).';
@@ -72,6 +77,7 @@ final class EnLigneController
         Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));
         $up = \Ascs\Db::upsertStatement($pdo, 'section_en_ligne', ['section_id', 'ouvert', 'description', 'lien_paiement'], ['section_id']);
         $upEssai = \Ascs\Db::upsertStatement($pdo, 'section_essai', ['section_id', 'ouvert'], ['section_id']);
+        $upDates = \Ascs\Db::upsertStatement($pdo, 'section_reprise', ['section_id', 'saison_id', 'reprise', 'essai_des'], ['section_id', 'saison_id']);
         $existe = $pdo->prepare('SELECT COUNT(*) FROM section WHERE id = ?');
         foreach ($sections as $sid => $r) {
             $existe->execute([(int) $sid]);
@@ -80,6 +86,7 @@ final class EnLigneController
             }
             $up->execute([(int) $sid, !empty($r['ouvert']) ? 1 : 0, Input::text($r, 'description', 500), Input::str($r, 'lien_paiement', 255)]);
             $upEssai->execute([(int) $sid, !empty($r['essai']) ? 1 : 0]);
+            $upDates->execute([(int) $sid, $saison, Input::date($r, 'reprise'), Input::date($r, 'essai_des')]);
         }
 
         $pdo->commit();

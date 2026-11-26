@@ -186,6 +186,7 @@ body.public main { max-width: 760px; }
 .carte-activite input { width: 1.2rem; height: 1.2rem; margin-top: .15rem; flex: none; }
 .carte-texte { display: flex; flex-direction: column; gap: .1rem; }
 .carte-texte .prix { color: var(--teal-dd); font-variant-numeric: tabular-nums; }
+.carte-texte .reprise { display: block; font-weight: 600; color: var(--teal-dd); }
 .carte-texte .desc { color: var(--muted); font-size: .85rem; }
 .en-erreur > .cartes-activites .carte-activite { border-color: #e4a5a1; }
 .piege { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

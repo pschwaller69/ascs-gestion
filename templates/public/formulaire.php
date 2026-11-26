@@ -49,6 +49,8 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
                 <span class="carte-texte">
                     <strong><?= e(preg_replace('/^Z\s+ESSAI\s+/i', '', $sec['titre'])) ?></strong>
                     <?php if (!$essai && (float) $sec['montant'] > 0): $rill = Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true); ?><span class="prix"><?= e(money($sec['montant'])) ?><?= $rill < (float) $sec['montant'] ? ' · ' . e(money($rill)) . ' pour les habitants de Rillieux' : '' ?></span><?php endif; ?>
+                    <?php if ($essai && ($sec['essai_debut'] ?? null) && $sec['essai_debut'] > date('Y-m-d')): ?><span class="reprise">Essai possible à partir du <?= e(dfr($sec['essai_debut'])) ?></span>
+                    <?php elseif (!$essai && ($sec['reprise'] ?? null)): ?><span class="reprise">Reprise des cours le <?= e(dfr($sec['reprise'])) ?></span><?php endif; ?>
                     <?php if ($sec['description']): ?><span class="desc"><?= nl2br(e($sec['description'])) ?></span><?php endif; ?>
                 </span>
             </label>
@@ -56,7 +58,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
         </div>
         <?php if (isset($err['sections'])): ?><p class="msg-erreur"><?= e($err['sections']) ?></p><?php endif; ?>
         <?php if ($essai): ?>
-            <?= champ('Date souhaitée (facultatif)', 'date_essai', $s['date_essai'], ['type' => 'date', 'min' => date('Y-m-d'), 'error' => $err['date_essai'] ?? null]) ?>
+            <?= champ('Date souhaitée (facultatif)', 'date_essai', $s['date_essai'], ['type' => 'date', 'min' => date('Y-m-d'), 'error' => $err['date_essai'] ?? null, 'hint' => 'Sans date : au premier cours possible (date indiquée sous l\'activité).']) ?>
         <?php endif; ?>
     </fieldset>
 

@@ -54,15 +54,17 @@
     <?= champ('Règlement intérieur (accepté et signé en ligne à l\'inscription)', 'reglement_interieur', $reglement, ['type' => 'textarea', 'rows' => 12, 'hint' => 'Un article par ligne, comme sur le bulletin papier. Vide : texte du bulletin 2026/2027.']) ?>
 
     <h3>Activités en ligne</h3>
-    <p class="aide">Pour chaque activité : proposée dans le formulaire d'inscription, et/ou dans le formulaire de cours d'essai. Les sections « Z ESSAI » ne servent plus : un cours d'essai validé est noté sur l'activité elle-même (listes de présence des animateurs, fiche de l'adhérent), sans inscription.</p>
+    <p class="aide">Pour chaque activité : proposée dans le formulaire d'inscription, et/ou dans le formulaire de cours d'essai. Les sections « Z ESSAI » ne servent plus : un cours d'essai validé est noté sur l'activité elle-même (listes de présence des animateurs, fiche de l'adhérent), sans inscription. Dates pour la saison choisie plus haut : la reprise est affichée aux adhérents (formulaire, page de fin, mail) ; les cours d'essai ne peuvent pas être demandés avant la date « Essais à partir du » (vide : la date de reprise).</p>
     <div class="table-cadre"><table class="table-reglages">
-        <thead><tr><th>Inscription en ligne</th><th>Cours d'essai</th><th>Section</th><th class="num">Tarif</th><th>Texte affiché (horaires, public…)</th><th>Lien de paiement HelloAsso</th></tr></thead>
+        <thead><tr><th>Inscription en ligne</th><th>Cours d'essai</th><th>Section</th><th>Reprise des cours</th><th>Essais à partir du</th><th class="num">Tarif</th><th>Texte affiché (horaires, public…)</th><th>Lien de paiement HelloAsso</th></tr></thead>
         <tbody>
         <?php foreach ($sections as $s): $sid = (int) $s['id']; ?>
             <tr>
                 <td><input type="checkbox" id="ouv-<?= $sid ?>" name="s[<?= $sid ?>][ouvert]" value="1"<?= attr((bool) $s['ouvert'], 'checked') ?> aria-label="Inscription en ligne pour <?= e($s['titre']) ?>"></td>
                 <td><input type="checkbox" id="ess-<?= $sid ?>" name="s[<?= $sid ?>][essai]" value="1"<?= attr((bool) $s['essai_ouvert'], 'checked') ?> aria-label="Cours d'essai pour <?= e($s['titre']) ?>"></td>
                 <td><label for="ouv-<?= $sid ?>"><?= e($s['titre']) ?></label></td>
+                <td><input type="date" name="s[<?= $sid ?>][reprise]" value="<?= e($s['reprise']) ?>" aria-label="Reprise des cours de <?= e($s['titre']) ?>"<?= isset($err['reprise_' . $sid]) ? ' aria-invalid="true"' : '' ?>></td>
+                <td><input type="date" name="s[<?= $sid ?>][essai_des]" value="<?= e($s['essai_des']) ?>" placeholder="comme la reprise" aria-label="Cours d'essai possibles à partir du, pour <?= e($s['titre']) ?>"<?= isset($err['essai_des_' . $sid]) ? ' aria-invalid="true"' : '' ?>></td>
                 <td class="num"><?= e(money($s['montant'])) ?></td>
                 <td><input type="text" name="s[<?= $sid ?>][description]" value="<?= e($s['description']) ?>" maxlength="500" aria-label="Texte affiché pour <?= e($s['titre']) ?>"></td>
                 <td><input type="url" name="s[<?= $sid ?>][lien_paiement]" value="<?= e($s['lien_paiement']) ?>" maxlength="255" placeholder="https://www.helloasso.com/…" aria-label="Lien de paiement pour <?= e($s['titre']) ?>"<?= isset($err['lien_' . $sid]) ? ' aria-invalid="true"' : '' ?>></td>
