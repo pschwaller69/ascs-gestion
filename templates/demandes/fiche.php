@@ -39,6 +39,9 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
                     <?php if ($pl['statut'] === 'paye'): ?>
                         <span class="pastille pastille-ok">payé</span> <?= e(money($pl['montant'])) ?><?= (int) $pl['fois'] > 1 ? ' en ' . (int) $pl['fois'] . ' fois' : '' ?> le <?= e(dfr(substr((string) $pl['paye_le'], 0, 10))) ?> — commande HelloAsso <?= e((string) $pl['commande_id']) ?>
                         <?php foreach ($pl['echeances'] as $ec): ?><br><small><?= e(dfr(substr((string) $ec['date_paiement'], 0, 10))) ?> : <?= e(money($ec['montant'])) ?> — <?= e(in_array($ec['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'encaissé' : (in_array($ec['etat'], Ascs\HelloAsso\Sync::A_VENIR, true) ? 'prélèvement prévu' : 'refusé ou annulé')) ?></small><?php endforeach; ?>
+                        <?php foreach ((new Ascs\HelloAsso\PaiementEnLigne($app_pdo ?? Ascs\Db::connect()))->listeGaranties((int) $d['id'], true) as $ga): ?>
+                            <br><small>Garantie <?= e($ga['libelle']) ?> : <?= e(money($ga['montant'])) ?> le <?= e(dfr((string) $ga['date_prevue'])) ?> — <?= e(['prevue' => 'prévue', 'a_annuler' => 'annulation programmée', 'annulee' => 'annulée', 'prelevee' => 'prélevée', 'remboursee' => 'remboursée'][$ga['statut']] ?? $ga['statut']) ?> (<a href="<?= e(url('/garanties')) ?>">suivi des garanties</a>)</small>
+                        <?php endforeach; ?>
                         <?php if ($d['statut'] === 'a_traiter'): ?><br><small class="aide">Les règlements HelloAsso seront créés à la validation, partagés entre les activités retenues au prorata de leur montant.</small><?php endif; ?>
                     <?php elseif ($pl['statut'] === 'rembourse'): ?>
                         <span class="pastille">remboursé</span> <?= e(money($pl['montant'])) ?> — <?= e((string) $pl['erreur']) ?><br>

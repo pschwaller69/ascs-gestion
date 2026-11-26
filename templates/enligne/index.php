@@ -36,6 +36,18 @@
             </select>
         </div>
     </div>
+    <h3>Aides : dates limites et garantie par carte</h3>
+    <p class="aide">Dates au format jj/mm, rapportées à la saison (septembre à décembre : année de début ; janvier à août : année suivante). Date limite dépassée : l'aide n'est plus proposée dans le formulaire. Garantie : quand la personne paie par carte sur HelloAsso, le montant de l'aide est programmé à cette date et annulé dès que vous confirmez l'aide (Règlement &gt; Garanties par carte). Vide : pas de limite, pas de garantie.</p>
+    <div class="table-cadre"><table class="table-reglages">
+        <thead><tr><th>Aide</th><th>Demande possible jusqu'au</th><th>Garantie par carte le</th></tr></thead>
+        <tbody>
+        <?php foreach ($aidesDates as $ad): ?>
+            <tr><td><?= e($ad['libelle']) ?></td>
+                <td><input type="text" name="aide_limite[<?= e($ad['cle']) ?>]" value="<?= e($ad['limite']) ?>" maxlength="5" placeholder="jj/mm" inputmode="numeric" pattern="\d{1,2}/\d{1,2}" aria-label="Date limite pour <?= e($ad['libelle']) ?>"></td>
+                <td><input type="text" name="aide_garantie[<?= e($ad['cle']) ?>]" value="<?= e($ad['garantie']) ?>" maxlength="5" placeholder="jj/mm" inputmode="numeric" pattern="\d{1,2}/\d{1,2}" aria-label="Date de garantie pour <?= e($ad['libelle']) ?>"></td></tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table></div>
     <?= champ('Horaires du bureau (dépôt des chèques)', 'horaires_bureau', $horaires, ['maxlength' => 120, 'hint' => 'Affiché sur le formulaire, la page de fin et le mail de confirmation : « Le bureau est ouvert … ». Vide : ' . Ascs\Domain\Bulletin::HORAIRES_DEFAUT . '.']) ?>
     <?= champ('Message affiché sur les formulaires (facultatif)', 'message', $message, ['type' => 'textarea', 'rows' => 2, 'hint' => 'Par exemple : chèques à l\'ordre de l\'ASCS, certificat médical, dates du forum…']) ?>
     <?= champ('Règlement intérieur (accepté et signé en ligne à l\'inscription)', 'reglement_interieur', $reglement, ['type' => 'textarea', 'rows' => 12, 'hint' => 'Un article par ligne, comme sur le bulletin papier. Vide : texte du bulletin 2026/2027.']) ?>

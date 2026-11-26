@@ -284,6 +284,16 @@ final class Schema
                 'pk' => ['id'],
                 'index' => [['paiement_id']],
             ],
+            // Garantie par carte d'une aide (coupon mairie…) : échéance HelloAsso programmée, annulée quand l'aide est confirmée.
+            // statut : prevue | a_annuler (annulation programmée) | annulee | prelevee | remboursee
+            'paiement_en_ligne_garantie' => [
+                'cols' => [
+                    'id' => 'auto', 'paiement_id' => 'int', 'aide' => 'str:30', 'libelle' => 'str:80', 'montant' => 'dec:10,2',
+                    'date_prevue' => 'date', 'echeance_id' => 'int?', 'statut' => 'str:12', 'maj_le' => 'datetime', 'par' => 'str:150?', 'note' => 'text?',
+                ],
+                'pk' => ['id'],
+                'index' => [['paiement_id'], ['statut']],
+            ],
             // Remboursements faits depuis l'application (un par paiement HelloAsso remboursé)
             'paiement_en_ligne_remboursement' => [
                 'cols' => ['echeance_id' => 'int', 'paiement_id' => 'int', 'montant' => 'dec:10,2', 'le' => 'datetime', 'par' => 'str:150?', 'resultat' => 'text?'],

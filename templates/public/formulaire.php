@@ -150,7 +150,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
         <?php foreach ($aides as $a): ?>
             <div class="aide-choix">
                 <label for="aide-<?= e($a['cle']) ?>"><input type="checkbox" id="aide-<?= e($a['cle']) ?>" name="aides[]" value="<?= e($a['cle']) ?>"<?= attr($coche('aides', $a['cle']), 'checked') ?> data-aide-montant="<?= e(number_format($a['montant'], 2, '.', '')) ?>" data-aide-libelle="<?= e($a['libelle']) ?>"> <strong><?= e($a['libelle']) ?></strong> · <?= e(money($a['montant'])) ?></label>
-                <p class="aide"><?= e($a['condition']) ?></p>
+                <p class="aide"><?= e($a['condition']) ?><?= !empty($a['limite']) ? ' Demande possible jusqu\'au ' . e(dfr($a['limite'])) . '.' : '' ?><?= !empty($a['garantie']) ? ' En paiement par carte, pas de chèque de caution : ' . e(money($a['montant'])) . ' sont programmés le ' . e(dfr($a['garantie'])) . ' en garantie, et annulés dès que l\'aide est confirmée.' : '' ?></p>
                 <?php if ($a['cle'] === 'pass_sport'): ?><div id="bloc-code-pass"<?= $coche('aides', 'pass_sport') ? '' : ' hidden' ?>><?= champ('Code Pass\'Sport', 'code_pass_sport', $s['code_pass_sport'], ['maxlength' => 30, 'error' => $err['code_pass_sport'] ?? null]) ?></div><?php endif; ?>
             </div>
         <?php endforeach; ?>

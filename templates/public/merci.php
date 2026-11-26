@@ -34,6 +34,9 @@
         <li><a class="btn" href="<?= e(url('/paiement/' . $enLigne['jeton'] . '/payer', ['fois' => $f])) ?>" rel="nofollow">Payer en <?= $f ?> fois (<?= e(money(($c - ($f - 1) * $part) / 100)) ?> aujourd'hui, puis <?= $f - 1 ?> × <?= e(money($part / 100)) ?> par mois)</a></li>
         <?php endif; ?>
     </ul>
+<?php if (!empty($enLigne['garanties'])): ?>
+    <p class="flash flash-info garantie-aide"><?php foreach ($enLigne['garanties'] as $g): ?>Garantie de votre <?= e(mb_strtolower($g['libelle'])) ?> : <?= e(money($g['montant'])) ?> seront programmés sur la même carte le <?= e(dfr($g['date'])) ?>, en plus. Ce prélèvement est annulé dès que l'aide est confirmée par la mairie ; il n'est fait que si elle est refusée.<br><?php endforeach; ?></p>
+<?php endif; ?>
     <p class="aide">Vous pouvez aussi payer plus tard avec le lien reçu par mail.</p>
 <?php elseif ($paiements): ?>
     <h2>Régler en ligne</h2>

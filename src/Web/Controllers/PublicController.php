@@ -46,7 +46,7 @@ final class PublicController
         return $this->app->renderPublic('public/formulaire', [
             'type' => $type, 's' => $saisie, 'err' => $err, 'sections' => $sections, 'canaux' => $this->el->canaux(),
             'saison' => $this->el->saisonTitre(), 'message' => $this->el->message(),
-            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => \Ascs\Domain\Bulletin::aides(),
+            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => (new \Ascs\Domain\Bulletin($this->app->pdo))->aidesOuvertes(),
             'horaires' => (new \Ascs\Domain\Bulletin($this->app->pdo))->horairesBureau(),
             'apercu' => $apercu,
             'reinscription' => $type === 'inscription' ? ($_SESSION['reinscription']['prenom'] ?? null) : null,
@@ -230,7 +230,7 @@ final class PublicController
                 return null;
             }
             return ['jeton' => \Ascs\HelloAsso\PaiementEnLigne::jeton($ref), 'montant' => $montant,
-                'fois' => $pel->foisPossible($d)];
+                'fois' => $pel->foisPossible($d), 'garanties' => $pel->garanties($d)];
         } catch (\Throwable) {
             return null;
         }

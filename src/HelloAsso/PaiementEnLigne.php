@@ -154,6 +154,32 @@ final class PaiementEnLigne
         return $reste > 0 ? $reste : null;
     }
 
+    /**
+     * Garanties par carte des aides demandées (coupon mairie…) : montant de l'aide programmé en dernière échéance
+     * à la date réglée (Inscriptions en ligne > Réglages), annulé quand l'aide est confirmée.
+     * Seulement pour un paiement par carte, et si la date est encore à venir.
+     * @return list<array{aide:string,libelle:string,montant:float,date:string}>
+     */
+    public function garanties(array $d, ?string $aujourdhui = null): array
+    {
+        if (self::montantDu($d) === null) {
+            return [];
+        }
+        $auj = $aujourdhui ?? date('Y-m-d');
+        $b = new Bulletin($this->pdo);
+        $out = [];
+        foreach (Bulletin::aides() as $a) {
+            if (!in_array($a['cle'], (array) ($d['complement']['aides'] ?? []), true)) {
+                continue;
+            }
+            $date = $b->garantieAide($a['cle']);
+            if ($date !== null && $date > $auj && (float) $a['montant'] > 0) {
+                $out[] = ['aide' => $a['cle'], 'libelle' => $a['libelle'], 'montant' => (float) $a['montant'], 'date' => $date];
+            }
+        }
+        return $out;
+    }
+
     /** Paiement déjà fait pour cette demande (le plus récent), sinon null. */
     public function paye(int $demandeId): ?array
     {
@@ -212,16 +238,31 @@ final class PaiementEnLigne
         $centimes = (int) round($montant * 100);
         $terms = self::echeancier($centimes, $fois);
         $initial = $centimes - array_sum(array_column($terms, 'amount'));
+        // Garanties des aides : échéances supplémentaires (une par date), après les échéances du reste à régler
+        $garanties = $this->garanties($d);
+        $parDate = [];
+        foreach ($garanties as $g) {
+            $parDate[$g['date']] = ($parDate[$g['date']] ?? 0) + (int) round($g['montant'] * 100);
+        }
+        ksort($parDate);
+        foreach ($parDate as $date => $c) {
+            $terms[] = ['amount' => $c, 'date' => (new DateTimeImmutable($date))->format('Y-m-d\T12:00:00P')];
+        }
+        $total = $centimes + array_sum($parDate);
 
         $now = date('Y-m-d H:i:s');
         $this->pdo->prepare("INSERT INTO paiement_en_ligne (demande_id, fois, montant, statut, cree_le, maj_le) VALUES (?,?,?,'cree',?,?)")
             ->execute([(int) $d['id'], $fois, number_format($montant, 2, '.', ''), $now, $now]);
         $pid = (int) $this->pdo->lastInsertId();
+        foreach ($garanties as $g) {
+            $this->pdo->prepare("INSERT INTO paiement_en_ligne_garantie (paiement_id, aide, libelle, montant, date_prevue, statut, maj_le) VALUES (?,?,?,?,?,'prevue',?)")
+                ->execute([$pid, $g['aide'], $g['libelle'], number_format($g['montant'], 2, '.', ''), $g['date'], $now]);
+        }
 
         $titres = $this->titresSections($d);
         $saison = (string) $this->pdo->query('SELECT titre FROM saison WHERE id = ' . (int) $d['saison_id'])->fetchColumn();
         $corps = [
-            'totalAmount' => $centimes, 'initialAmount' => $initial,
+            'totalAmount' => $total, 'initialAmount' => $initial,
             'itemName' => mb_substr('Inscription ' . trim($d['prenom'] . ' ' . $d['nom']) . ($saison ? ' ' . $saison : '') . ($titres ? ' – ' . implode(', ', $titres) : ''), 0, 250),
             'backUrl' => $urls['back'], 'errorUrl' => $urls['erreur'], 'returnUrl' => $urls['retour'],
             'containsDonation' => false,
@@ -336,6 +377,7 @@ final class PaiementEnLigne
                 $payes[] = $date ?? $now;
             }
         }
+        $this->rattacherGaranties($paiementId);
         $st = $this->pdo->prepare('SELECT statut, demande_id FROM paiement_en_ligne WHERE id = ?');
         $st->execute([$paiementId]);
         $p = $st->fetch();
@@ -382,6 +424,7 @@ final class PaiementEnLigne
             }
         }
         $this->reglementsManquants();
+        $this->tenterAnnulations();
         return $this->compte;
     }
 
@@ -426,6 +469,9 @@ final class PaiementEnLigne
         );
         $ech->execute([$demandeId]);
         $liens = $this->pdo->prepare('SELECT * FROM paiement_en_ligne_reglement WHERE echeance_id = ?');
+        $ge = $this->pdo->prepare('SELECT g.echeance_id FROM paiement_en_ligne_garantie g JOIN paiement_en_ligne p ON p.id = g.paiement_id WHERE p.demande_id = ? AND g.echeance_id IS NOT NULL');
+        $ge->execute([$demandeId]);
+        $garantiesEch = array_flip(array_map('intval', $ge->fetchAll(PDO::FETCH_COLUMN)));
         // Partage cumulé : la somme des échéances retombe exactement sur le prorata du total (arrondis compensés)
         $cumul = 0.0;
         $avantParts = $inscriptions ? array_fill_keys(array_keys($inscriptions), 0.0) : [];
@@ -437,6 +483,10 @@ final class PaiementEnLigne
             }
             $paye = in_array($e['etat'], Sync::PAYE, true);
             $prevu = in_array($e['etat'], Sync::A_VENIR, true);
+            // Échéance de garantie d'une aide : pas un règlement tant qu'elle n'est pas prélevée
+            if (isset($garantiesEch[(int) $e['id']]) && !$paye) {
+                $prevu = false;
+            }
             $parts = [];
             if (($paye || $prevu) && $inscriptions) {
                 $cumul += (float) $e['montant'];
@@ -457,7 +507,7 @@ final class PaiementEnLigne
             foreach ($parts as $iid => $montant) {
                 $l = $existants[$iid] ?? null;
                 $rid = $l && $l['reglement_id'] !== null && $this->reglementExiste((int) $l['reglement_id'], $iid) ? (int) $l['reglement_id'] : null;
-                $remarque = self::PREFIXE . ', demande ' . $d['reference'] . ($e['echeance'] && (int) $e['echeance'] > 0 ? ' – échéance ' . $e['echeance'] : '') . ($prevu ? self::PREVU : '');
+                $remarque = self::PREFIXE . ', demande ' . $d['reference'] . (isset($garantiesEch[(int) $e['id']]) ? ' – garantie d\'aide prélevée (aide non confirmée)' : ($e['echeance'] && (int) $e['echeance'] > 0 ? ' – échéance ' . $e['echeance'] : '')) . ($prevu ? self::PREVU : '');
                 $date = substr((string) ($e['date_paiement'] ?? date('Y-m-d')), 0, 10);
                 if ($rid !== null) {
                     $this->pdo->prepare('UPDATE reglement SET remarques = ?, date_reglement = ?, date_modification = ? WHERE id = ? AND remarques LIKE ? AND (remarques <> ? OR date_reglement <> ?)')
@@ -572,6 +622,8 @@ final class PaiementEnLigne
             if ($ok) {
                 $this->pdo->prepare("UPDATE paiement_en_ligne SET statut = 'rembourse', erreur = ?, maj_le = ? WHERE id = ?")
                     ->execute(['remboursé le ' . date('d/m/Y H:i') . ' par ' . $par, date('Y-m-d H:i:s'), (int) $p['id']]);
+                $this->pdo->prepare("UPDATE paiement_en_ligne_garantie SET statut = 'annulee', note = 'paiement remboursé', maj_le = ? WHERE paiement_id = ? AND statut IN ('prevue','a_annuler')")
+                    ->execute([date('Y-m-d H:i:s'), (int) $p['id']]);
                 // Règlements créés à partir de ce paiement (s'il y en a) retirés
                 $ls = $this->pdo->prepare('SELECT l.echeance_id, l.inscription_id, l.reglement_id FROM paiement_en_ligne_reglement l JOIN paiement_en_ligne_echeance e ON e.id = l.echeance_id WHERE e.paiement_id = ?');
                 $ls->execute([(int) $p['id']]);
@@ -592,6 +644,172 @@ final class PaiementEnLigne
             }
         }
         return ['rembourse' => round($rembourse, 2), 'erreurs' => $erreurs];
+    }
+
+    // ------------------------------------------------------------------ garanties des aides
+
+    /** Relie chaque garantie à son échéance HelloAsso (même date, même montant) et note celles prélevées. */
+    private function rattacherGaranties(int $paiementId): void
+    {
+        $gs = $this->pdo->prepare('SELECT * FROM paiement_en_ligne_garantie WHERE paiement_id = ? ORDER BY id');
+        $gs->execute([$paiementId]);
+        $garanties = $gs->fetchAll();
+        if (!$garanties) {
+            return;
+        }
+        $es = $this->pdo->prepare('SELECT * FROM paiement_en_ligne_echeance WHERE paiement_id = ?');
+        $es->execute([$paiementId]);
+        $echeances = $es->fetchAll();
+        // Garanties d'une même date regroupées dans une seule échéance
+        $parDate = [];
+        foreach ($garanties as $g) {
+            $parDate[(string) $g['date_prevue']][] = $g;
+        }
+        foreach ($parDate as $date => $groupe) {
+            $somme = round(array_sum(array_map(static fn ($g) => (float) $g['montant'], $groupe)), 2);
+            foreach ($echeances as $e) {
+                if (substr((string) $e['date_paiement'], 0, 10) === $date && abs((float) $e['montant'] - $somme) < 0.005) {
+                    foreach ($groupe as $g) {
+                        $statut = (string) $g['statut'];
+                        if (in_array($e['etat'], Sync::PAYE, true) && in_array($statut, ['prevue', 'a_annuler'], true)) {
+                            $statut = 'prelevee';
+                        } elseif (!in_array($e['etat'], Sync::PAYE, true) && !in_array($e['etat'], Sync::A_VENIR, true) && in_array($statut, ['prevue', 'a_annuler'], true)) {
+                            $statut = 'annulee';
+                        }
+                        $this->pdo->prepare('UPDATE paiement_en_ligne_garantie SET echeance_id = ?, statut = ?, maj_le = ? WHERE id = ?')
+                            ->execute([(int) $e['id'], $statut, date('Y-m-d H:i:s'), (int) $g['id']]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    /** Garanties à suivre (page Règlement > Garanties par carte, fiche de la demande). */
+    public function listeGaranties(?int $demandeId = null, bool $toutes = false): array
+    {
+        $sql = 'SELECT g.*, p.demande_id, p.commande_id, d.reference, d.nom, d.prenom, d.mail, d.statut AS statut_demande
+                FROM paiement_en_ligne_garantie g JOIN paiement_en_ligne p ON p.id = g.paiement_id JOIN demande d ON d.id = p.demande_id
+                WHERE p.statut IN (\'paye\', \'rembourse\')' . ($demandeId ? ' AND p.demande_id = ' . (int) $demandeId : '')
+            . ($toutes ? '' : " AND g.statut IN ('prevue','a_annuler','prelevee')") . ' ORDER BY g.date_prevue, d.nom';
+        return $this->pdo->query($sql)->fetchAll();
+    }
+
+    /**
+     * L'aide est confirmée (la mairie a validé le coupon) : la garantie ne doit pas être prélevée.
+     * HelloAsso n'annule que toutes les échéances futures d'une commande : si une échéance normale reste à venir,
+     * l'annulation est programmée et faite par la tâche automatique dès qu'elle est passée.
+     * @return string message pour le bureau
+     */
+    public function confirmerAide(int $garantieId, string $par): string
+    {
+        $st = $this->pdo->prepare('SELECT * FROM paiement_en_ligne_garantie WHERE id = ?');
+        $st->execute([$garantieId]);
+        $g = $st->fetch();
+        if (!$g) {
+            return 'Garantie introuvable.';
+        }
+        if ($g['statut'] === 'prelevee') {
+            return 'La garantie a déjà été prélevée : remboursez-la avec le bouton « Rembourser ».';
+        }
+        if (!in_array($g['statut'], ['prevue', 'a_annuler'], true)) {
+            return 'Rien à annuler.';
+        }
+        $this->pdo->prepare("UPDATE paiement_en_ligne_garantie SET statut = 'a_annuler', par = ?, maj_le = ? WHERE id = ?")
+            ->execute([mb_substr($par, 0, 150), date('Y-m-d H:i:s'), $garantieId]);
+        $r = $this->tenterAnnulations((int) $g['paiement_id']);
+        $st->execute([$garantieId]);
+        $g = $st->fetch();
+        return match ($g['statut']) {
+            'annulee' => 'Prélèvement de garantie annulé sur HelloAsso.',
+            'a_annuler' => $r !== '' ? 'Annulation programmée : ' . $r : 'Annulation programmée : une autre échéance reste à venir sur ce paiement ; le prélèvement de garantie sera annulé automatiquement dès qu\'elle sera passée, avant le ' . date('d/m/Y', strtotime((string) $g['date_prevue'])) . '.',
+            default => 'État : ' . $g['statut'] . '.',
+        };
+    }
+
+    /**
+     * Annule sur HelloAsso les commandes dont toutes les échéances à venir sont des garanties à annuler.
+     * @return string dernière erreur HelloAsso (vide si aucune)
+     */
+    public function tenterAnnulations(?int $paiementId = null): string
+    {
+        $erreur = '';
+        $sql = "SELECT DISTINCT p.id, p.commande_id FROM paiement_en_ligne_garantie g JOIN paiement_en_ligne p ON p.id = g.paiement_id
+                WHERE g.statut = 'a_annuler' AND p.statut = 'paye' AND p.commande_id IS NOT NULL" . ($paiementId ? ' AND p.id = ' . $paiementId : '');
+        foreach ($this->pdo->query($sql)->fetchAll() as $p) {
+            try {
+                // État à jour des échéances
+                $this->enregistrerCommande((int) $p['id'], $this->client()->commande((int) $p['commande_id']));
+            } catch (\Throwable $e) {
+                $erreur = $e->getMessage();
+                continue;
+            }
+            $es = $this->pdo->prepare('SELECT e.id, e.etat, g.statut AS garantie FROM paiement_en_ligne_echeance e
+                LEFT JOIN paiement_en_ligne_garantie g ON g.echeance_id = e.id WHERE e.paiement_id = ?');
+            $es->execute([(int) $p['id']]);
+            $bloque = false;
+            $aAnnuler = false;
+            foreach ($es->fetchAll() as $e) {
+                if (!in_array($e['etat'], Sync::A_VENIR, true)) {
+                    continue;
+                }
+                if ($e['garantie'] === 'a_annuler') {
+                    $aAnnuler = true;
+                } else {
+                    $bloque = true; // échéance normale (ou garantie d'une autre aide non confirmée) encore à venir
+                }
+            }
+            if (!$aAnnuler || $bloque) {
+                continue;
+            }
+            try {
+                [$code, $r] = $this->client()->annulerCommande((int) $p['commande_id']);
+            } catch (\Throwable $e) {
+                $erreur = $e->getMessage();
+                continue;
+            }
+            if ($code < 200 || $code >= 300) {
+                $erreur = "HelloAsso a refusé l'annulation (HTTP $code)" . self::detailErreur($r);
+                continue;
+            }
+            $this->pdo->prepare("UPDATE paiement_en_ligne_garantie SET statut = 'annulee', note = ?, maj_le = ? WHERE paiement_id = ? AND statut = 'a_annuler'")
+                ->execute(['annulée le ' . date('d/m/Y'), date('Y-m-d H:i:s'), (int) $p['id']]);
+            try {
+                $this->enregistrerCommande((int) $p['id'], $this->client()->commande((int) $p['commande_id']));
+            } catch (\Throwable) {
+            }
+        }
+        return $erreur;
+    }
+
+    /** Garantie prélevée alors que l'aide est confirmée : remboursement de cette échéance seulement. */
+    public function rembourserGarantie(int $garantieId, string $par): ?string
+    {
+        $st = $this->pdo->prepare('SELECT g.*, p.demande_id FROM paiement_en_ligne_garantie g JOIN paiement_en_ligne p ON p.id = g.paiement_id WHERE g.id = ?');
+        $st->execute([$garantieId]);
+        $g = $st->fetch();
+        if (!$g || $g['statut'] !== 'prelevee' || !$g['echeance_id']) {
+            return 'Cette garantie n\'a pas été prélevée.';
+        }
+        // Plusieurs aides dans la même échéance : remboursement de l'échéance entière seulement si toutes sont confirmées
+        $autres = $this->pdo->prepare("SELECT COUNT(*) FROM paiement_en_ligne_garantie WHERE echeance_id = ? AND id <> ?");
+        $autres->execute([(int) $g['echeance_id'], $garantieId]);
+        if ((int) $autres->fetchColumn() > 0) {
+            return 'Cette échéance regroupe plusieurs aides : remboursez-la depuis l\'espace HelloAsso.';
+        }
+        try {
+            [$code, $r] = $this->client()->rembourser((int) $g['echeance_id'], 'Aide confirmée (' . $g['libelle'] . ') - ASCS', false);
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        }
+        if ($code < 200 || $code >= 300) {
+            return "HelloAsso a refusé (HTTP $code)" . self::detailErreur($r);
+        }
+        $this->pdo->prepare("UPDATE paiement_en_ligne_garantie SET statut = 'remboursee', par = ?, note = ?, maj_le = ? WHERE id = ?")
+            ->execute([mb_substr($par, 0, 150), 'remboursée le ' . date('d/m/Y'), date('Y-m-d H:i:s'), $garantieId]);
+        $this->pdo->prepare("UPDATE paiement_en_ligne_echeance SET etat = 'Refunded', maj_le = ? WHERE id = ?")->execute([date('Y-m-d H:i:s'), (int) $g['echeance_id']]);
+        $this->creerReglements((int) $g['demande_id']);
+        return null;
     }
 
     /**

@@ -19,6 +19,10 @@ if ($etat === 'inconnu'): ?>
     <?php if ($erreur): ?><p class="flash flash-erreur" role="alert"><?= e($erreur) ?></p><?php endif; ?>
     <p class="recap-total"><span>Reste à régler</span><strong><?= e(money($montant)) ?></strong></p>
     <p>Paiement par carte bancaire sur la page sécurisée de HelloAsso, la plateforme de paiement de l'association.</p>
+<?php if (!empty($garanties)): ?>
+    <p class="flash flash-info garantie-aide"><?php foreach ($garanties as $g): ?>Garantie de votre <?= e(mb_strtolower($g['libelle'])) ?> : <?= e(money($g['montant'])) ?> seront programmés sur la même carte le <?= e(dfr($g['date'])) ?>, en plus. Ce prélèvement est annulé dès que l'aide est confirmée par la mairie ; il n'est fait que si elle est refusée.<br><?php endforeach; ?></p>
+<?php endif; ?>
+
     <ul class="liens-paiement">
         <li><a class="btn btn-principal" href="<?= e(url('/paiement/' . $jeton . '/payer', ['fois' => 1])) ?>" rel="nofollow">Payer <?= e(money($montant)) ?> en 1 fois</a></li>
         <?php if ($fois > 1): $c = (int) round($montant * 100); $part = intdiv($c, $fois); ?>

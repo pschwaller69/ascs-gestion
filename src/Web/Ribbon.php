@@ -46,6 +46,7 @@ final class Ribbon
                     ['Règlements', 'wallet', '/reglements', null],
                     ['Remise de chèques', 'cheque', '/remises', null],
                     ['Chèques de caution', 'cheque', '/cautions', null],
+                    ['Garanties par carte', 'wallet', '/garanties', null],
                     ['Par type', 'chart', '/reglements/par-type', null],
                 ],
                 'En ligne' => [

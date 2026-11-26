@@ -249,6 +249,9 @@ $router->post('/helloasso/{id}/ignorer', [HelloAssoController::class, 'ignorer']
 $router->post('/helloasso/{id}/retablir', [HelloAssoController::class, 'retablir']);
 
 $router->get('/cautions', [CautionController::class, 'index']);
+$router->get('/garanties', [Ascs\Web\Controllers\GarantieController::class, 'index']);
+$router->post('/garanties/{id}/confirmer', [Ascs\Web\Controllers\GarantieController::class, 'confirmer']);
+$router->post('/garanties/{id}/rembourser', [Ascs\Web\Controllers\GarantieController::class, 'rembourser']);
 $router->post('/cautions', [CautionController::class, 'enregistrer']);
 $router->post('/cautions/envoyer', [CautionController::class, 'envoyer']);
 $router->get('/remises', [RemiseController::class, 'index']);

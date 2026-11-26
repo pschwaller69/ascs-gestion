@@ -65,6 +65,65 @@ TXT;
         ];
     }
 
+    // ------------------------------------------------------------------ dates des aides (Inscriptions en ligne > Réglages)
+
+    /** Date limite de demande (jj/mm) : après, l'aide n'est plus proposée dans le formulaire. Vide : pas de limite. */
+    public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '', 'pass_region' => ''];
+    /**
+     * Garantie par carte (jj/mm) : quand la personne paie par carte sur HelloAsso, le montant de l'aide est programmé
+     * en dernière échéance à cette date, et annulé quand l'aide est confirmée (mairie). Vide : pas de garantie.
+     */
+    public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '', 'pass_region' => ''];
+
+    public function reglageAide(string $cle, string $type): string
+    {
+        $defaut = ($type === 'limite' ? self::LIMITES_DEFAUT : self::GARANTIES_DEFAUT)[$cle] ?? '';
+        $v = Parametres::get($this->pdo, 'aide_' . $cle . '_' . $type);
+        return $v === null ? $defaut : trim($v);
+    }
+
+    /** Année où commence la saison des inscriptions en ligne. */
+    public function anneeSaison(): int
+    {
+        $d = $this->pdo->query('SELECT date_debut FROM saison WHERE id = ' . (int) Parametres::get($this->pdo, 'en_ligne_saison'))->fetchColumn();
+        return $d ? (int) substr((string) $d, 0, 4) : (int) date('Y');
+    }
+
+    /** « jj/mm » -> date de la saison : septembre à décembre dans l'année de début, janvier à août dans la suivante. */
+    public static function dateDansSaison(string $jjmm, int $anneeDebut): ?string
+    {
+        if (!preg_match('/^(\d{1,2})\/(\d{1,2})$/', trim($jjmm), $m) || !checkdate((int) $m[2], (int) $m[1], 2024)) {
+            return null;
+        }
+        $annee = (int) $m[2] >= 9 ? $anneeDebut : $anneeDebut + 1;
+        return sprintf('%04d-%02d-%02d', $annee, (int) $m[2], (int) $m[1]);
+    }
+
+    public function limiteAide(string $cle): ?string
+    {
+        return self::dateDansSaison($this->reglageAide($cle, 'limite'), $this->anneeSaison());
+    }
+
+    public function garantieAide(string $cle): ?string
+    {
+        return self::dateDansSaison($this->reglageAide($cle, 'garantie'), $this->anneeSaison());
+    }
+
+    /** Aides proposées dans le formulaire aujourd'hui (date limite non dépassée), avec leur date limite. */
+    public function aidesOuvertes(?string $aujourdhui = null): array
+    {
+        $auj = $aujourdhui ?? date('Y-m-d');
+        $out = [];
+        foreach (self::aides() as $a) {
+            $lim = $this->limiteAide($a['cle']);
+            if ($lim !== null && $auj > $lim) {
+                continue;
+            }
+            $out[] = $a + ['limite' => $lim, 'garantie' => $this->garantieAide($a['cle'])];
+        }
+        return $out;
+    }
+
     /**
      * Lit et contrôle la partie « bulletin » du formulaire d'inscription.
      * @return array{0:array<string,mixed>,1:array<string,string>}
@@ -92,7 +151,8 @@ TXT;
 
         $c['moyens'] = array_values(array_intersect(array_keys(self::MOYENS), (array) ($in['moyens'] ?? [])));
         $c['nb_cheques'] = in_array('cheque', $c['moyens'], true) ? max(1, min(10, (int) ($in['nb_cheques'] ?? 1))) : null;
-        $c['aides'] = array_values(array_intersect(array_column(self::aides(), 'cle'), (array) ($in['aides'] ?? [])));
+        // Aides dont la date limite est passée : refusées même si le formulaire a été ouvert avant
+        $c['aides'] = array_values(array_intersect(array_column($this->aidesOuvertes(), 'cle'), (array) ($in['aides'] ?? [])));
         $c['code_pass_sport'] = in_array('pass_sport', $c['aides'], true) ? mb_substr(trim((string) ($in['code_pass_sport'] ?? '')), 0, 30) : null;
         if (in_array('pass_sport', $c['aides'], true) && !$c['code_pass_sport']) {
             $err['code_pass_sport'] = 'Indiquez le code Pass\'Sport (ou présentez le QR code au bureau et décochez l\'aide).';
@@ -154,7 +214,9 @@ TXT;
                 $p[] = 'Un certificat médical (activité sportive, danse, Pilates et musculation compris)';
             }
         }
-        if (array_intersect(['coupon_sport', 'coupon_culture'], $c['aides'] ?? [])) {
+        $coupons = array_intersect(['coupon_sport', 'coupon_culture'], $c['aides'] ?? []);
+        $garantieCarte = ($c['moyens'] ?? []) === ['cb'] && array_filter(array_map(fn ($k) => $this->garantieAide($k), $coupons));
+        if ($coupons && !$garantieCarte) {
             $p[] = 'Le coupon de la mairie et un chèque de caution du même montant';
         }
         if (in_array('pass_region', $c['aides'] ?? [], true)) {

@@ -38,6 +38,7 @@ final class PaiementController
             'etat' => $etat, 'd' => $d, 'montant' => $montant, 'erreur' => $erreur, 'paye' => $this->pel->paye((int) $d['id']),
             'jeton' => PaiementEnLigne::jeton((string) $d['reference']),
             'fois' => $montant !== null ? $this->pel->foisPossible($d) : 1,
+            'garanties' => $montant !== null ? $this->pel->garanties($d) : [],
         ], 'Paiement en ligne', $status);
     }
 

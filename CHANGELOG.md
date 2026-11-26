@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.17.0
+
+- Aides : date limite de demande et date de garantie par carte, réglables par aide (Inscriptions en ligne > Réglages, format jj/mm rapporté à la saison). Après la date limite, l'aide n'est plus proposée dans le formulaire (coupons de la mairie : 08/11 par défaut). Date limite et garantie affichées sous chaque aide.
+- Garantie par carte : quand la personne paie par carte sur HelloAsso en demandant un coupon de la mairie, le montant du coupon est ajouté en dernière échéance programmée (15/01 par défaut), au lieu du chèque de caution. Expliqué sur la page de paiement et la page de fin.
+- Règlement > Garanties par carte : « Aide confirmée : annuler le prélèvement » (annulation sur HelloAsso ; si une échéance normale reste à venir, annulation programmée et faite par la tâche automatique dès qu'elle est passée). Sans confirmation, la garantie est prélevée et devient un règlement ; « Rembourser » si l'aide est confirmée après coup. Garanties affichées sur la demande.
+- La garantie ne crée pas de règlement « à venir » tant qu'elle n'est pas prélevée ; remboursement d'une demande : garanties annulées.
+
 ## 0.16.0
 
 - Devis « coupon sport et/ou coupon culture » de la ville de Rillieux-la-Pape, en PDF pré-rempli (modèle 2026-2027) : partie famille (nom, prénom, date de naissance, sexe, représentant légal, adresse, mail, téléphone ; date et signature laissées à la famille) et partie association (enfant, nom de l'association, activité, cotisation, date, signature et tampon de Paramétrage > Facture). Une page par inscription.
