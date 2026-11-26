@@ -20,13 +20,13 @@
     <h2>À apporter au premier cours</h2>
     <ul class="pieces"><?php foreach ($m['pieces'] as $pc): ?><li><?= e($pc) ?></li><?php endforeach; ?></ul>
 <?php endif; ?>
-<?php if (!empty($enLigne)): $c = (int) round($enLigne['montant'] * 100); $part = intdiv($c, 3); ?>
+<?php if (!empty($enLigne)): $c = (int) round($enLigne['montant'] * 100); $part = intdiv($c, max(1, $enLigne['fois'])); ?>
     <h2>Payer maintenant</h2>
     <p>Réglez le reste, <strong><?= e(money($enLigne['montant'])) ?></strong>, par carte bancaire sur la page sécurisée de HelloAsso :</p>
     <ul class="liens-paiement">
         <li><a class="btn btn-principal" href="<?= e(url('/paiement/' . $enLigne['jeton'] . '/payer', ['fois' => 1])) ?>" rel="nofollow">Payer <?= e(money($enLigne['montant'])) ?></a></li>
-        <?php if ($enLigne['troisFois']): ?>
-        <li><a class="btn" href="<?= e(url('/paiement/' . $enLigne['jeton'] . '/payer', ['fois' => 3])) ?>" rel="nofollow">Payer en 3 fois (<?= e(money(($c - 2 * $part) / 100)) ?> aujourd'hui, puis 2 × <?= e(money($part / 100)) ?>)</a></li>
+        <?php if ($enLigne['fois'] > 1): $f = (int) $enLigne['fois']; ?>
+        <li><a class="btn" href="<?= e(url('/paiement/' . $enLigne['jeton'] . '/payer', ['fois' => $f])) ?>" rel="nofollow">Payer en <?= $f ?> fois (<?= e(money(($c - ($f - 1) * $part) / 100)) ?> aujourd'hui, puis <?= $f - 1 ?> × <?= e(money($part / 100)) ?> par mois)</a></li>
         <?php endif; ?>
     </ul>
     <p class="aide">Vous pouvez aussi payer plus tard avec le lien reçu par mail.</p>

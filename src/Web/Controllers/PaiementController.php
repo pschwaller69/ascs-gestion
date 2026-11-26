@@ -37,7 +37,7 @@ final class PaiementController
         return $this->app->renderPublic('public/paiement', [
             'etat' => $etat, 'd' => $d, 'montant' => $montant, 'erreur' => $erreur, 'paye' => $this->pel->paye((int) $d['id']),
             'jeton' => PaiementEnLigne::jeton((string) $d['reference']),
-            'troisFois' => $montant !== null && $this->pel->troisFoisPermis() && $montant >= PaiementEnLigne::SEUIL_3_FOIS,
+            'fois' => $montant !== null ? $this->pel->foisPossible($d) : 1,
         ], 'Paiement en ligne', $status);
     }
 

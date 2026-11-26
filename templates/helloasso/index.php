@@ -54,7 +54,7 @@ $annule = Ascs\HelloAsso\Sync::ANNULE;
     </p>
     <p>
         <label><input type="checkbox" name="actif" value="1"<?= attr($pel, 'checked') ?>> Proposer le paiement en ligne</label><br>
-        <label><input type="checkbox" name="trois_fois" value="1"<?= attr($pel3, 'checked') ?>> Permettre le paiement en 3 fois (à partir de <?= e(money(Ascs\HelloAsso\PaiementEnLigne::SEUIL_3_FOIS)) ?>, échéances mensuelles)</label>
+        <label><input type="checkbox" name="trois_fois" value="1"<?= attr($pel3, 'checked') ?>> Permettre le paiement en plusieurs fois (à partir de <?= e(money(Ascs\HelloAsso\PaiementEnLigne::SEUIL_3_FOIS)) ?> : jusqu'à 3 échéances mensuelles, la dernière au plus tard le 31/12 de l'année où commence la saison)</label>
     </p>
     <button type="submit" class="btn btn-petit">Enregistrer</button>
 </form>

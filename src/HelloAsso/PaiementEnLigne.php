@@ -14,7 +14,8 @@ use RuntimeException;
  * Paiement en ligne par HelloAsso Checkout à la fin d'une inscription en ligne.
  *
  *  1. La personne a choisi « Carte bancaire » comme seul moyen de paiement : la page de confirmation
- *     (et le mail) proposent de payer tout de suite le reste à régler, en 1 fois ou en 3 fois.
+ *     (et le mail) proposent de payer tout de suite le reste à régler, en 1 fois ou en 2–3 fois
+ *     (échéances mensuelles, la dernière au plus tard le 31/12).
  *  2. L'application ouvre une intention de paiement HelloAsso et y envoie la personne.
  *  3. Au retour (puis par la notification HelloAsso et la tâche automatique), la commande est relue sur l'API.
  *  4. Les paiements deviennent des règlements « HelloAsso » dès que le bureau a validé la demande
@@ -60,6 +61,37 @@ final class PaiementEnLigne
     public function troisFoisPermis(): bool
     {
         return Parametres::get($this->pdo, 'paiement_en_ligne_3fois') !== '0';
+    }
+
+    /** Dernière échéance possible d'un paiement en plusieurs fois : 31/12 de l'année où commence la saison de la demande. */
+    public function dateLimite(array $d): DateTimeImmutable
+    {
+        $st = $this->pdo->prepare('SELECT date_debut FROM saison WHERE id = ?');
+        $st->execute([(int) ($d['saison_id'] ?? 0)]);
+        $debut = $st->fetchColumn();
+        $annee = $debut ? (int) substr((string) $debut, 0, 4) : (int) date('Y');
+        return new DateTimeImmutable($annee . '-12-31 23:59:59');
+    }
+
+    /**
+     * Nombre d'échéances possible (1 à 3) : mensuelles, la dernière au plus tard le 31/12 (dateLimite).
+     * Inscription en novembre : 2 fois ; en décembre ou après le 31/12 : 1 fois.
+     */
+    public function foisPossible(array $d, ?DateTimeImmutable $aujourdhui = null): int
+    {
+        $montant = self::montantDu($d);
+        if ($montant === null || !$this->troisFoisPermis() || $montant < self::SEUIL_3_FOIS) {
+            return 1;
+        }
+        $aujourdhui ??= new DateTimeImmutable('today');
+        $limite = $this->dateLimite($d);
+        $n = 1;
+        foreach (self::echeancier(300, 3, $aujourdhui) as $t) {
+            if (new DateTimeImmutable($t['date']) <= $limite) {
+                $n++;
+            }
+        }
+        return $n;
     }
 
     // ------------------------------------------------------------------ lien signé
@@ -175,7 +207,8 @@ final class PaiementEnLigne
         if ($this->paye((int) $d['id'])) {
             throw new RuntimeException('Cette inscription est déjà réglée en ligne.');
         }
-        $fois = $fois === 3 && $this->troisFoisPermis() && $montant >= self::SEUIL_3_FOIS ? 3 : 1;
+        // En plusieurs fois : la dernière échéance ne dépasse pas le 31/12 (sinon moins d'échéances)
+        $fois = max(1, min($fois, $this->foisPossible($d)));
         $centimes = (int) round($montant * 100);
         $terms = self::echeancier($centimes, $fois);
         $initial = $centimes - array_sum(array_column($terms, 'amount'));

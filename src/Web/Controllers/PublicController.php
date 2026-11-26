@@ -189,7 +189,7 @@ final class PublicController
             'enLigne' => $m['type'] === 'inscription' ? $this->paiementEnLigne((string) $m['ref']) : null], 'Demande envoyée');
     }
 
-    /** Paiement HelloAsso proposé pour cette demande : jeton du lien, montant, 3 fois possible ; null sinon. */
+    /** Paiement HelloAsso proposé pour cette demande : jeton du lien, montant, nombre d'échéances possible ; null sinon. */
     private function paiementEnLigne(string $ref): ?array
     {
         try {
@@ -203,7 +203,7 @@ final class PublicController
                 return null;
             }
             return ['jeton' => \Ascs\HelloAsso\PaiementEnLigne::jeton($ref), 'montant' => $montant,
-                'troisFois' => $pel->troisFoisPermis() && $montant >= \Ascs\HelloAsso\PaiementEnLigne::SEUIL_3_FOIS];
+                'fois' => $pel->foisPossible($d)];
         } catch (\Throwable) {
             return null;
         }

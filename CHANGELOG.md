@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.14.3
+
+- Paiement en ligne en plusieurs fois : la dernière échéance ne dépasse jamais le 31 décembre de l'année où commence la saison. Jusqu'à fin octobre : 3 fois ; en novembre : 2 fois ; à partir de décembre : 1 fois seulement. Le bouton affiche le bon nombre d'échéances (« Payer en 2 fois… »).
+
 ## 0.14.2
 
 - Cours d'essai en ligne proposés pour toutes les sections « Z ESSAI … » (hors sections arrêtées), sans avoir à les ouvrir une par une. Inscriptions en ligne : case « Bloquer » par section d'essai (ex. couture). Les sections de mailing marquées « essai » (Z MAIRIE, Z ASSOCIATIONS…) ne sont jamais proposées.
