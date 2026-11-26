@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.15.2
+
+- Tarif bénévole : 10 € pour tous, sans la réduction Rillieux (comme le jogging et la marche).
+
 ## 0.15.1
 
 - Demande payée en ligne : avertissement avant et après le refus (« la refuser ne rembourse pas »).

@@ -50,7 +50,7 @@ final class Referentiel
                 'champs' => [
                     'titre' => ['libelle' => 'Titre', 'type' => 'text', 'requis' => true, 'max' => 80, 'aide' => 'Activité et créneau, par exemple « PILATES MERCREDI ».'],
                     'section_principale_id' => ['libelle' => 'Section principale', 'type' => 'select', 'requis' => true, 'source' => ['section_principale', 'titre']],
-                    'montant' => ['libelle' => 'Tarif extérieurs (€)', 'type' => 'number', 'requis' => true, 'aide' => 'Les habitants de Rillieux ont 10 € de réduction, sauf jogging et marche.'],
+                    'montant' => ['libelle' => 'Tarif extérieurs (€)', 'type' => 'number', 'requis' => true, 'aide' => 'Les habitants de Rillieux ont 10 € de réduction, sauf jogging, marche et bénévole.'],
                     'essai' => ['libelle' => 'Section de cours d\'essai (gratuite)', 'court' => 'Essai', 'type' => 'bool'],
                     'mail_animateur1' => ['libelle' => 'Mail de l\'animateur', 'type' => 'emails', 'max' => 150, 'aide' => 'Pour lui envoyer le lien de sa liste de présence. Plusieurs animateurs : séparez les mails par un point-virgule.'],
                     'nom_campagne_helloasso' => ['libelle' => 'Campagne HelloAsso', 'type' => 'text', 'max' => 120],
