@@ -32,7 +32,7 @@ final class PublicController
             'remarques' => '', 'sections' => [], 'section' => '', 'date_essai' => '', 'consentement' => '',
             // bulletin d'inscription
             'telephone2' => '', 'attestation_ce' => '', 'canaux' => [], 'canal_autre' => '', 'assurance' => '', 'assurance_option' => '',
-            'moyens' => [], 'nb_cheques' => '1', 'aides' => [], 'code_pass_sport' => '', 'soussigne' => '', 'reglement_lu' => '', 'fait_a' => ''];
+            'moyens' => [], 'nb_cheques' => '1', 'aides' => [], 'code_pass_sport' => '', 'carte_region_code' => '', 'soussigne' => '', 'reglement_lu' => '', 'fait_a' => ''];
     }
 
     private function formulaire(string $type, array $saisie, array $err, int $status = 200): string
@@ -117,6 +117,12 @@ final class PublicController
         if ($type === 'inscription') {
             [$c, $e2] = $bulletin->nettoyer($_POST, $d);
             $err += $e2;
+            [$carte, $e3] = \Ascs\Domain\CartesPass::controler($_FILES, $_POST, $c['aides'] ?? []);
+            $err += $e3;
+            $c['carte_region'] = ['photo' => $carte['fichier'] !== null, 'code' => $carte['code'] !== null];
+            if ($err && $carte['fichier'] !== null) {
+                $err['carte_region_photo'] = $err['carte_region_photo'] ?? 'Corrigez les autres champs puis choisissez à nouveau la photo de la carte.';
+            }
         }
         if ($err) {
             return $this->formulaire($type, $saisie, $err, 422);
@@ -130,6 +136,7 @@ final class PublicController
             $st->execute([$ref]);
             $demandeId = (int) $st->fetchColumn();
             $bulletin->enregistrer($demandeId, $c);
+            (new \Ascs\Domain\CartesPass($this->app->pdo))->enregistrer($demandeId, $carte);
             // Venue d'un lien de réinscription (dans les 12 dernières heures) : demande rattachée à la fiche
             $ri = $_SESSION['reinscription'] ?? null;
             if (is_array($ri) && time() - (int) $ri['le'] < 12 * 3600) {

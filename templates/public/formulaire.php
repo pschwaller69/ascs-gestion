@@ -5,7 +5,7 @@ $libelles = ['sections' => 'Activité', 'nom' => 'Nom', 'prenom' => 'Prénom', '
     'mail' => 'Mail', 'telephone1' => 'Téléphone', 'adresse' => 'Adresse', 'code_postal' => 'Code postal', 'ville' => 'Ville',
     'nom_parent' => 'Nom du parent', 'prenom_parent' => 'Prénom du parent', 'date_essai' => 'Date souhaitée',
     'droit_image' => 'Droit à l\'image', 'consentement' => 'Accord', 'telephone2' => 'Tél. domicile', 'assurance' => 'Assurance',
-    'moyens' => 'Règlement', 'code_pass_sport' => 'Code Pass\'Sport', 'soussigne' => 'Signature', 'reglement_lu' => 'Règlement intérieur'];
+    'moyens' => 'Règlement', 'code_pass_sport' => 'Code Pass\'Sport', 'carte_region_photo' => 'Photo de la carte PASS\'Région', 'carte_region_code' => 'Code de la carte PASS\'Région', 'soussigne' => 'Signature', 'reglement_lu' => 'Règlement intérieur'];
 $cibles = ['sections' => 'sec-0', 'genre' => 'genre-0', 'droit_image' => 'di-1', 'consentement' => 'f_consentement', 'assurance' => 'ass-oui',
     'moyens' => 'moy-cheque', 'reglement_lu' => 'f_reglement_lu'];
 $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? []), true);
@@ -31,7 +31,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
 <?php if (!$sections): ?>
     <p class="vide">Aucune activité n'est ouverte en ligne pour le moment. Adressez-vous au bureau de l'association.</p>
 <?php else: ?>
-<form method="post" action="<?= e(url($essai ? '/essai' : '/inscription')) ?>" class="form-public" novalidate>
+<form method="post" action="<?= e(url($essai ? '/essai' : '/inscription')) ?>" class="form-public" novalidate<?= $essai ? '' : ' enctype="multipart/form-data"' ?>>
     <?= csrf_field() ?>
     <div class="piege" aria-hidden="true"><label for="site_web">Ne pas remplir</label><input type="text" id="site_web" name="site_web" tabindex="-1" autocomplete="off"></div>
 
@@ -135,7 +135,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
         </fieldset>
     </fieldset>
 
-    <fieldset id="bloc-reglement" class="<?= isset($err['moyens']) || isset($err['code_pass_sport']) ? 'en-erreur' : '' ?>">
+    <fieldset id="bloc-reglement" class="<?= isset($err['moyens']) || isset($err['code_pass_sport']) || isset($err['carte_region_photo']) || isset($err['carte_region_code']) ? 'en-erreur' : '' ?>">
         <legend>Règlement <span class="oblig">*</span></legend>
         <p class="aide">Comment comptez-vous régler ? Vous pouvez combiner plusieurs moyens et aides. Le paiement se fait auprès du bureau<?= '' ?> (ou en ligne si un lien vous est proposé après l'envoi).</p>
         <div class="cases-moyens">
@@ -157,7 +157,18 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
                 <label for="aide-<?= e($a['cle']) ?>"><input type="checkbox" id="aide-<?= e($a['cle']) ?>" name="aides[]" value="<?= e($a['cle']) ?>"<?= attr($coche('aides', $a['cle']), 'checked') ?> data-aide-montant="<?= e(number_format($a['montant'], 2, '.', '')) ?>" data-aide-libelle="<?= e($a['libelle']) ?>"> <strong><?= e($a['libelle']) ?></strong> · <?= e(money($a['montant'])) ?></label>
                 <?php if (!empty($a['droit'])): ?><p class="aide-droit"><strong>Qui y a droit :</strong> <?= e($a['droit']) ?></p><?php endif; ?>
                 <p class="aide"><?= e($a['condition']) ?><?= !empty($a['limite']) ? ' Demande possible jusqu\'au ' . e(dfr($a['limite'])) . '.' : '' ?><?= !empty($a['garantie']) ? ' En paiement par carte, pas de chèque de caution : ' . e(money($a['montant'])) . ' sont programmés le ' . e(dfr($a['garantie'])) . ' en garantie, et annulés dès que l\'aide est confirmée.' : '' ?></p>
-                <?php if ($a['cle'] === 'pass_sport'): ?><div id="bloc-code-pass"<?= $coche('aides', 'pass_sport') ? '' : ' hidden' ?>><?= champ('Code Pass\'Sport', 'code_pass_sport', $s['code_pass_sport'], ['maxlength' => 30, 'error' => $err['code_pass_sport'] ?? null]) ?></div><?php endif; ?>
+                <?php if ($a['cle'] === 'pass_sport'): ?><div id="bloc-code-pass"<?= $coche('aides', 'pass_sport') ? '' : ' hidden' ?>><?= champ('Code Pass\'Sport reçu par mail', 'code_pass_sport', $s['code_pass_sport'], ['maxlength' => 14, 'autocomplete' => 'off', 'error' => $err['code_pass_sport'] ?? null, 'hint' => 'Forme XX-XXXX-XXXX.']) ?></div><?php endif; ?>
+                <?php if ($a['cle'] === 'pass_senior'): ?>
+                <div id="bloc-carte-region"<?= ($coche('aides', 'pass_region') || $coche('aides', 'pass_senior')) ? '' : ' hidden' ?> class="bloc-carte">
+                    <p class="aide-droit"><strong>Carte PASS'Région :</strong> prenez en photo le côté avec le numéro de carte et indiquez votre code à 4 chiffres. Sinon, montrez la carte au bureau.</p>
+                    <div class="champ<?= isset($err['carte_region_photo']) ? ' en-erreur' : '' ?>">
+                        <label for="f_carte_region_photo">Photo de la carte (côté numéro)</label>
+                        <input type="file" id="f_carte_region_photo" name="carte_region_photo" accept="image/*,application/pdf"<?= isset($err['carte_region_photo']) ? ' aria-invalid="true" aria-describedby="f_carte_region_photo-err"' : '' ?>>
+                        <?php if (isset($err['carte_region_photo'])): ?><p class="msg-erreur" id="f_carte_region_photo-err"><?= e($err['carte_region_photo']) ?></p><?php endif; ?>
+                    </div>
+                    <?= champ('Code de la carte (4 chiffres)', 'carte_region_code', $s['carte_region_code'] ?? '', ['maxlength' => 4, 'inputmode' => 'numeric', 'autocomplete' => 'off', 'error' => $err['carte_region_code'] ?? null]) ?>
+                </div>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
         <?php if (isset($err['moyens'])): ?><p class="msg-erreur"><?= e($err['moyens']) ?></p><?php endif; ?>

@@ -233,6 +233,7 @@ $router->get('/demandes', [DemandeController::class, 'index']);
 $router->get('/demandes/{id}', [DemandeController::class, 'fiche']);
 $router->post('/demandes/{id}', [DemandeController::class, 'valider']);
 $router->post('/demandes/{id}/refuser', [DemandeController::class, 'refuser']);
+$router->get('/demandes/{id}/carte', [DemandeController::class, 'carte']);
 $router->post('/demandes/{id}/rembourser', [DemandeController::class, 'rembourser']);
 $router->post('/demandes/{id}/retablir', [DemandeController::class, 'retablir']);
 $router->get('/en-ligne', [EnLigneController::class, 'index']);

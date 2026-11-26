@@ -29,6 +29,12 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <tr><th>Attestation CE</th><td><?= $c['attestation_ce'] ? '<strong>oui</strong>' : 'non' ?></td></tr>
             <?php if ($c['canal_autre']): ?><tr><th>Connu aussi par</th><td><?= e($c['canal_autre']) ?></td></tr><?php endif; ?>
             <tr><th>Assurance</th><td><?= $c['assurance'] === 'oui' ? '<strong>souscrit</strong>' . ($c['assurance_option'] ? ', option ' . e($c['assurance_option']) : '') : 'ne souscrit pas' ?></td></tr>
+            <?php if (!empty($carte) || \Ascs\Domain\CartesPass::concernee((array) ($c['aides'] ?? []))): ?>
+            <tr><th>Carte PASS'Région</th><td>
+                <?php if (!empty($carte['fichier'])): ?><a href="<?= e(url('/demandes/' . $d['id'] . '/carte')) ?>" target="_blank" rel="noopener"><?php if (str_starts_with((string) $carte['mime'], 'image/') && !in_array($carte['mime'], ['image/heic', 'image/heif'], true)): ?><img src="<?= e(url('/demandes/' . $d['id'] . '/carte')) ?>" alt="Carte PASS'Région envoyée" class="vignette-carte"><?php else: ?>Voir la carte envoyée<?php endif; ?></a><br><?php else: ?>Pas de photo : carte à montrer au bureau.<br><?php endif; ?>
+                Code : <?= !empty($carte['code']) ? '<strong class="code-carte">' . e($carte['code']) . '</strong>' : 'non indiqué' ?>
+            </td></tr>
+            <?php endif; ?>
             <tr><th>Règlement prévu</th><td><?= e(preg_replace('/^Règlement prévu : | ; assurance.*$/u', '', Ascs\Domain\Bulletin::resumeReglement($c))) ?>
                 <?php $r = $c['recap']; ?><br><small>Total <?= e(money($r['total'])) ?><?= $r['aides'] ? ', aides ' . e(money(array_sum(array_column($r['aides'], 'montant')))) : '' ?><?= $r['frais'] ? ', frais ANCV ' . e(money($r['frais'])) : '' ?> : reste annoncé <strong><?= e(money($r['reste'])) ?></strong></small></td></tr>
             <?php if (!empty($paiements)): ?>

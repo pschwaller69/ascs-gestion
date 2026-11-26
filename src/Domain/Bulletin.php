@@ -59,11 +59,11 @@ TXT;
             ['cle' => 'coupon_culture', 'libelle' => 'Coupon culture (mairie)', 'montant' => $m['coupon_culture'] ?? 90.0,
                 'condition' => 'Comme le coupon sport, pour une activité culturelle.'],
             ['cle' => 'pass_region', 'libelle' => 'Carte Pass\'Région', 'montant' => $m['pass_region'] ?? 30.0,
-                'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Copie de la carte à fournir.'],
+                'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Photo de la carte et code à 4 chiffres ci-dessous, ou carte à montrer au bureau.'],
             ['cle' => 'pass_sport', 'libelle' => 'Pass\'Sport', 'montant' => $m['pass_sport'] ?? 50.0,
-                'condition' => 'Activités sportives uniquement. Indiquez le code Pass\'Sport reçu par mail (CAF, MSA ou Crous).'],
+                'condition' => 'Activités sportives uniquement. Indiquez le code reçu par mail (CAF, MSA ou Crous).'],
             ['cle' => 'pass_senior', 'libelle' => 'Pass\'Région Senior', 'montant' => $m['pass_senior'] ?? 15.0, 'age_min' => 65,
-                'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Copie de la carte à fournir.'],
+                'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Photo de la carte et code à 4 chiffres ci-dessous, ou carte à montrer au bureau.'],
         ];
     }
 
@@ -225,9 +225,17 @@ TXT;
         // Pass'Région Senior : plus de 65 ans
         $age = !empty($d['date_naissance']) ? EnLigne::age((string) $d['date_naissance']) : null;
         $c['aides'] = array_values(array_filter($c['aides'], static fn ($k) => !isset(self::AGE_MIN[$k]) || ($age !== null && $age >= self::AGE_MIN[$k])));
-        $c['code_pass_sport'] = in_array('pass_sport', $c['aides'], true) ? mb_substr(trim((string) ($in['code_pass_sport'] ?? '')), 0, 30) : null;
-        if (in_array('pass_sport', $c['aides'], true) && !$c['code_pass_sport']) {
-            $err['code_pass_sport'] = 'Indiquez le code Pass\'Sport (ou présentez le QR code au bureau et décochez l\'aide).';
+        $c['code_pass_sport'] = null;
+        if (in_array('pass_sport', $c['aides'], true)) {
+            // Code reçu par mail, de la forme XX-XXXX-XXXX (tirets et espaces facultatifs à la saisie)
+            $brut = strtoupper((string) preg_replace('/[\s\-]+/', '', (string) ($in['code_pass_sport'] ?? '')));
+            if ($brut === '') {
+                $err['code_pass_sport'] = 'Indiquez le code Pass\'Sport reçu par mail (XX-XXXX-XXXX).';
+            } elseif (!preg_match('/^[A-Z0-9]{10}$/', $brut)) {
+                $err['code_pass_sport'] = 'Le code Pass\'Sport a la forme XX-XXXX-XXXX (10 caractères).';
+            } else {
+                $c['code_pass_sport'] = substr($brut, 0, 2) . '-' . substr($brut, 2, 4) . '-' . substr($brut, 6, 4);
+            }
         }
         if (!$c['moyens'] && !$c['aides']) {
             $err['moyens'] = 'Indiquez comment vous comptez régler.';
@@ -291,11 +299,8 @@ TXT;
         if ($coupons && !$garantieCarte) {
             $p[] = 'Le coupon de la mairie et un chèque de caution du même montant';
         }
-        if (array_intersect(['pass_region', 'pass_senior'], $c['aides'] ?? [])) {
-            $p[] = 'Une copie de la carte Pass\'Région';
-        }
-        if (in_array('pass_sport', $c['aides'] ?? [], true)) {
-            $p[] = 'Le QR code ou le courrier Pass\'Sport';
+        if (array_intersect(['pass_region', 'pass_senior'], $c['aides'] ?? []) && empty($c['carte_region']['photo'])) {
+            $p[] = 'La carte PASS\'Région (ou sa copie, côté numéro)';
         }
         return $p;
     }

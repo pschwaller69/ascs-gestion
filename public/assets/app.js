@@ -357,6 +357,7 @@
             b.classList.toggle('aide-indisponible', !ok);
         });
         montrer('bloc-code-pass', coche('#aide-pass_sport'));
+        montrer('bloc-carte-region', coche('#aide-pass_region') || coche('#aide-pass_senior'));
         montrer('bloc-option', coche('#ass-oui'));
         // Signature proposée : le parent pour un mineur, sinon l'adhérent (tant qu'elle n'a pas été modifiée à la main)
         if (signature && (signature.value === '' || signature.value === signatureAuto)) {

@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.24.0
+
+- Pass'Région et Pass'Région Senior : dans le formulaire d'inscription, photo de la carte (côté numéro ; appareil photo du téléphone ou fichier, JPEG/PNG/HEIC/PDF, 10 Mo au plus) et code à 4 chiffres, facultatifs (sinon carte à montrer au bureau, rappelée dans les pièces). Photo rangée hors du site (storage/cartes), code chiffré ; visibles sur la demande par le bureau connecté seulement ; effacés si la demande est refusée.
+- Pass'Sport : code reçu par mail obligatoire, de la forme XX-XXXX-XXXX (tirets et espaces facultatifs, remis en forme) ; plus de QR code ou courrier à apporter.
+
 ## 0.23.0
 
 - Aides selon la famille de l'activité : coupon sport et Pass'Sport proposés seulement avec une activité d'une famille « Sport », coupon culture avec une famille « Culture » (grisés sinon, et refusés à l'enregistrement). Nature de chaque famille dans Paramétrage > Aides (par défaut d'après le nom : Sport et Bien-être -> sport, Culture et Musique -> culture).

@@ -61,6 +61,7 @@ final class DemandeController
             'd' => $d, 'candidats' => $candidats, 'choix' => $choix, 'fiche' => $fiche, 'err' => $err, 'post' => $post,
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
             'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions, 'lien' => $lien, 'changements' => $changements,
+            'carte' => (new \Ascs\Domain\CartesPass($this->app->pdo))->lire((int) $d['id']),
         ], 'Demande ' . $d['reference'], 'accueil', $err ? 422 : 200);
     }
 
@@ -100,9 +101,28 @@ final class DemandeController
         $this->app->redirect('/adherents/' . $adh, ['onglet' => 'inscriptions']);
     }
 
+    /** Photo de la carte PASS'Région jointe à la demande (bureau connecté seulement). */
+    public function carte(array $p): string
+    {
+        $c = (new \Ascs\Domain\CartesPass($this->app->pdo))->lire((int) $p['id']);
+        if (!$c || !$c['fichier']) {
+            http_response_code(404);
+            return '';
+        }
+        header('Content-Type: ' . $c['mime']);
+        header('Content-Disposition: inline; filename="carte-pass-region-' . (int) $p['id'] . '.' . pathinfo($c['fichier'], PATHINFO_EXTENSION) . '"');
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        return (string) file_get_contents($c['fichier']);
+    }
+
     public function refuser(array $p): void
     {
         $ok = $this->dem->refuser((int) $p['id'], $this->par());
+        if ($ok) {
+            // Demande refusée : la photo et le code de la carte ne sont pas gardés
+            (new \Ascs\Domain\CartesPass($this->app->pdo))->supprimer((int) $p['id']);
+        }
         $encaisse = (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->encaisse((int) $p['id']);
         if ($ok && $encaisse > 0) {
             $this->app->flash('erreur', 'Demande refusée, mais elle a été payée en ligne (' . money($encaisse) . ') : la personne n\'est pas remboursée automatiquement. Utilisez « Rembourser sur HelloAsso » ci-dessous.');
