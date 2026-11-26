@@ -91,7 +91,7 @@ final class DemandeController
                 $devis = $e ? ' Devis coupon NON envoyé : ' . $e : ' Devis coupon et procédure envoyés à ' . $dm['mail'] . '.';
             }
         }
-        $this->app->flash($devis !== '' && str_contains($devis, 'NON') ? 'erreur' : 'ok', ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.') . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : '') . $devis);
+        $this->app->flash($devis !== '' && str_contains($devis, 'NON') ? 'erreur' : 'ok', (!empty($r['essais']) ? 'Cours d\'essai enregistré : il apparaît sur la liste de présence de l\'animateur.' : ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.')) . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : '') . $devis);
         $suivante = $this->app->pdo->query("SELECT id FROM demande WHERE statut = 'a_traiter' ORDER BY cree_le LIMIT 1")->fetchColumn();
         if (($_POST['suite'] ?? '') === 'suivante' && $suivante !== false) {
             $this->app->redirect('/demandes/' . $suivante);

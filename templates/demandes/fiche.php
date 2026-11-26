@@ -116,12 +116,13 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <?php foreach ($d['liste_sections'] as $s): $sid = (int) $s['id']; $m = $montants[$sid] ?? number_format($essai ? 0 : Ascs\Domain\Tarifs::montant((float) $s['montant'], (string) $s['titre'], $rillieuxDemande), 2, ',', ''); ?>
                 <div class="ligne-insc<?= isset($err['montant_' . $sid]) ? ' en-erreur' : '' ?>">
                     <label class="coche" for="cr-<?= $sid ?>"><input type="checkbox" id="cr-<?= $sid ?>" name="creer[]" value="<?= $sid ?>"<?= attr(in_array((string) $sid, $creer, true), 'checked') ?>> <span><?= e($s['titre']) ?></span></label>
+                    <?php if ($essai): ?><input type="hidden" name="montant[<?= $sid ?>]" value="0"><?= $d['date_essai'] ? '<span class="aide">essai souhaité le ' . e(dfr($d['date_essai'])) . '</span>' : '' ?><?php else: ?>
                     <label class="visuellement-cache" for="m-<?= $sid ?>">Montant pour <?= e($s['titre']) ?></label>
-                    <input type="text" id="m-<?= $sid ?>" name="montant[<?= $sid ?>]" value="<?= e($m) ?>" inputmode="decimal" class="montant-court"> €
+                    <input type="text" id="m-<?= $sid ?>" name="montant[<?= $sid ?>]" value="<?= e($m) ?>" inputmode="decimal" class="montant-court"> €<?php endif; ?>
                     <?php if (isset($err['montant_' . $sid])): ?><p class="msg-erreur"><?= e($err['montant_' . $sid]) ?></p><?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <p class="aide"><?= $essai ? 'Le cours d\'essai est enregistré comme une inscription gratuite dans la section « essai ».' : 'Montant = tarif complet de la section' . ($rillieuxDemande ? ', avec la réduction Rillieux de 10 € (sauf jogging, marche, bénévole et conseil d\'administration)' : ', tarif extérieur (adresse hors Rillieux)') . '. Les règlements se saisissent ensuite sur chaque inscription (ou arrivent par HelloAsso).' ?></p>
+            <p class="aide"><?= $essai ? 'Le cours d\'essai est noté sur l\'activité (liste de présence de l\'animateur, fiche de l\'adhérent), sans inscription.' : 'Montant = tarif complet de la section' . ($rillieuxDemande ? ', avec la réduction Rillieux de 10 € (sauf jogging, marche, bénévole et conseil d\'administration)' : ', tarif extérieur (adresse hors Rillieux)') . '. Les règlements se saisissent ensuite sur chaque inscription (ou arrivent par HelloAsso).' ?></p>
         </fieldset>
         <?php $couponDemande = array_intersect(['coupon_sport', 'coupon_culture'], (array) ($d['complement']['aides'] ?? [])); ?>
         <?php if (!$essai && $couponDemande): ?>

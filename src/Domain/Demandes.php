@@ -195,6 +195,16 @@ final class Demandes
             }
             $insc = new Inscriptions($this->pdo);
             $creees = [];
+            $essais = 0;
+            if ($d['type'] === 'essai') {
+                // Cours d'essai : noté sur l'activité (listes de présence, fiche), sans inscription ni montant
+                $up = \Ascs\Db::upsertStatement($this->pdo, 'cours_essai', ['demande_id', 'adherent_id', 'section_id', 'saison_id', 'date_essai', 'cree_le', 'par'], ['demande_id', 'section_id']);
+                foreach (array_keys($retenues) as $sid) {
+                    $up->execute([$id, $adherentId, (int) $sid, (int) $saison, $d['date_essai'] ?: null, date('Y-m-d H:i:s'), mb_substr($par, 0, 150)]);
+                    $essais++;
+                }
+                $retenues = [];
+            }
             foreach ($retenues as $sid => $montant) {
                 $exist = $insc->existante($adherentId, $sid, (int) $saison);
                 if ($exist) {
@@ -229,7 +239,7 @@ final class Demandes
             }
             throw $e;
         }
-        return ['ok' => true, 'erreurs' => [], 'inscriptions' => $creees, 'reglements' => $reglements];
+        return ['ok' => true, 'erreurs' => [], 'inscriptions' => $creees, 'reglements' => $reglements, 'essais' => $essais];
     }
 
     private function completer(int $adherentId, array $d): void

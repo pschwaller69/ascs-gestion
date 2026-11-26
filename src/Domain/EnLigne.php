@@ -68,16 +68,10 @@ final class EnLigne
             }
             $st = $this->pdo->prepare('SELECT s.id, s.titre, s.montant, NULL AS description, NULL AS lien_paiement FROM section s
                 WHERE s.essai = ?' . ($essai ? '' : ' AND s.montant > 0') . ' AND EXISTS (SELECT 1 FROM inscription i WHERE i.section_id = s.id AND i.saison_id = ?) ORDER BY s.titre');
-            $st->execute([$essai ? 1 : 0, $this->saisonId()]);
+            $st->execute([0, $this->saisonId()]);
             return array_values(array_filter($st->fetchAll(), static fn ($s) => !in_array((int) $s['id'], $arretees, true)));
         }
         return $this->sectionsOuvertesSeules($essai);
-    }
-
-    /** Sections « Z ESSAI … » sans cours d'essai en ligne (case « Bloquer » des réglages). @return list<int> */
-    public function essaisBloques(): array
-    {
-        return array_values(array_map('intval', json_decode((string) Parametres::get($this->pdo, 'essai_bloquees'), true) ?: []));
     }
 
     /** Une section de cours d'essai : drapeau « essai » et titre « Z ESSAI … » (les autres, Z MAIRIE, Z ASSOCIATIONS…, servent aux mailings). */
@@ -90,15 +84,14 @@ final class EnLigne
     private function sectionsOuvertesSeules(bool $essai): array
     {
         if ($essai) {
-            // Cours d'essai : toutes les sections « Z ESSAI … » sauf celles bloquées et les sections arrêtées
-            $bloques = $this->essaisBloques();
+            // Cours d'essai : activités normales cochées « Cours d'essai » (les sections « Z ESSAI » ne sont plus proposées)
             $arretees = (new Arrets($this->pdo))->sections();
             $lignes = $this->pdo->query(
-                'SELECT s.id, s.titre, s.montant, s.essai, e.description, e.lien_paiement
-                 FROM section s LEFT JOIN section_en_ligne e ON e.section_id = s.id WHERE s.essai = 1 ORDER BY s.titre'
+                'SELECT s.id, s.titre, s.montant, s.essai, COALESCE(e.ouvert, 0) AS ouvert, e.description, e.lien_paiement, se.ouvert AS essai_ouvert
+                 FROM section s LEFT JOIN section_en_ligne e ON e.section_id = s.id LEFT JOIN section_essai se ON se.section_id = s.id
+                 WHERE s.essai = 0 ORDER BY s.titre'
             )->fetchAll();
-            return array_values(array_filter($lignes, static fn ($s) => self::estSectionEssai($s)
-                && !in_array((int) $s['id'], $bloques, true) && !in_array((int) $s['id'], $arretees, true)));
+            return array_values(array_filter($lignes, static fn ($s) => self::essaiOuvert($s) && !in_array((int) $s['id'], $arretees, true)));
         }
         $st = $this->pdo->prepare(
             'SELECT s.id, s.titre, s.montant, e.description, e.lien_paiement
@@ -110,13 +103,27 @@ final class EnLigne
         return array_values(array_filter($st->fetchAll(), static fn ($s) => !in_array((int) $s['id'], $arretees, true)));
     }
 
-    /** Toutes les sections avec leurs réglages, pour la page du bureau. @return list<array<string,mixed>> */
+    /** Activités (hors sections « essai ») avec leurs réglages, pour la page du bureau. @return list<array<string,mixed>> */
     public function toutesSections(): array
     {
-        return $this->pdo->query(
-            'SELECT s.id, s.titre, s.montant, s.essai, COALESCE(e.ouvert, 0) AS ouvert, e.description, e.lien_paiement
-             FROM section s LEFT JOIN section_en_ligne e ON e.section_id = s.id ORDER BY s.essai, s.titre'
+        $l = $this->pdo->query(
+            'SELECT s.id, s.titre, s.montant, s.essai, COALESCE(e.ouvert, 0) AS ouvert, e.description, e.lien_paiement, se.ouvert AS essai_ouvert
+             FROM section s LEFT JOIN section_en_ligne e ON e.section_id = s.id LEFT JOIN section_essai se ON se.section_id = s.id
+             WHERE s.essai = 0 ORDER BY s.titre'
         )->fetchAll();
+        foreach ($l as &$s) {
+            $s['essai_ouvert'] = self::essaiOuvert($s);
+        }
+        return $l;
+    }
+
+    /** Cours d'essai ouvert pour une activité : réglage enregistré, sinon comme l'inscription en ligne (sauf couture). */
+    public static function essaiOuvert(array $s): bool
+    {
+        if (isset($s['essai_ouvert']) && $s['essai_ouvert'] !== null && $s['essai_ouvert'] !== '') {
+            return (bool) (int) $s['essai_ouvert'];
+        }
+        return (int) ($s['ouvert'] ?? 0) === 1 && !str_contains(DuplicateFinder::norm((string) $s['titre']), 'couture');
     }
 
     public function canaux(): array

@@ -304,6 +304,21 @@ final class Schema
                 'cols' => ['echeance_id' => 'int', 'inscription_id' => 'int', 'montant' => 'dec:10,2', 'reglement_id' => 'int?'],
                 'pk' => ['echeance_id', 'inscription_id'],
             ],
+            // Cours d'essai en ligne ouvert par section (sans ligne : ouvert si l'activité est ouverte à l'inscription, sauf couture)
+            'section_essai' => [
+                'cols' => ['section_id' => 'int', 'ouvert' => 'bool'],
+                'pk' => ['section_id'],
+            ],
+            // Cours d'essai validés (depuis 0.18.0) : plus d'inscription gratuite dans une section « Z ESSAI »
+            'cours_essai' => [
+                'cols' => [
+                    'id' => 'auto', 'demande_id' => 'int?', 'adherent_id' => 'int', 'section_id' => 'int', 'saison_id' => 'int',
+                    'date_essai' => 'date?', 'cree_le' => 'datetime', 'par' => 'str:150?',
+                ],
+                'pk' => ['id'],
+                'unique' => [['demande_id', 'section_id']],
+                'index' => [['section_id', 'saison_id'], ['adherent_id']],
+            ],
             // Lien de réinscription : demande faite depuis le lien personnel d'une fiche ; liens coupés par le bureau
             'demande_reinscription' => [
                 'cols' => ['demande_id' => 'int', 'adherent_id' => 'int'],

@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.18.0
+
+- Cours d'essai sur les activités elles-mêmes : les sections « Z ESSAI … » ne sont plus proposées en ligne (elles restent en base pour l'historique et WinDev).
+- Inscriptions en ligne > Réglages : un seul tableau des activités avec deux cases par ligne, « Inscription en ligne » et « Cours d'essai », indépendantes (une activité peut être ouverte à l'essai sans inscription en ligne, et inversement). Par défaut, essai ouvert si l'inscription en ligne l'est, sauf la couture. Remplace la case « Bloquer » de la 0.14.2.
+- Validation d'une demande de cours d'essai : la personne est notée en essai sur l'activité (date souhaitée), sans inscription ni cotisation.
+- Liste de présence de l'animateur : bloc « Cours d'essai » alimenté par ces essais (14 derniers jours) et par les anciens Z ESSAI de la saison, une seule ligne par personne, retirée dès qu'elle est inscrite au cours.
+
 ## 0.17.0
 
 - Aides : date limite de demande et date de garantie par carte, réglables par aide (Inscriptions en ligne > Réglages, format jj/mm rapporté à la saison). Après la date limite, l'aide n'est plus proposée dans le formulaire (coupons de la mairie : 08/11 par défaut). Date limite et garantie affichées sous chaque aide.

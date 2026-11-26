@@ -73,8 +73,8 @@ final class Presences
     }
 
     /**
-     * Personnes en cours d'essai pour ce cours (bloc séparé de la liste de présence) : inscriptions de la saison dans une
-     * section « Z ESSAI … » de la même activité (même section principale, ou titre de l'essai contenu dans celui du cours).
+     * Personnes en cours d'essai pour ce cours (bloc séparé de la liste de présence) : cours d'essai validés sur l'activité,
+     * et anciens essais (inscriptions dans une section « Z ESSAI … » de la même activité : même section principale, ou même nom).
      * Essais d'il y a plus de 14 jours écartés. Date d'essai = date de l'inscription d'essai.
      * @return list<array<string,mixed>>
      */
@@ -98,18 +98,36 @@ final class Presences
                 $essaisIds[] = (int) $e['id'];
             }
         }
-        if (!$essaisIds) {
-            return [];
+        $depuis = date('Y-m-d', strtotime('-14 days'));
+        $lignes = [];
+        // Cours d'essai validés depuis 0.18.0 : sur l'activité elle-même (ou une ancienne section « Z ESSAI » de l'activité)
+        $sections = array_merge([$sectionId], $essaisIds);
+        $st = $this->pdo->prepare('SELECT NULL AS inscription_id, COALESCE(c.date_essai, SUBSTR(c.cree_le, 1, 10)) AS date_inscription, s.titre AS section,
+                a.id, a.nom, a.prenom, a.date_naissance, a.telephone1, a.telephone2, a.nom_parent, a.prenom_parent
+            FROM cours_essai c JOIN adherent a ON a.id = c.adherent_id JOIN section s ON s.id = c.section_id
+            WHERE c.section_id IN (' . implode(',', array_map('intval', $sections)) . ') AND c.saison_id = ? AND COALESCE(c.date_essai, SUBSTR(c.cree_le, 1, 10)) >= ?');
+        $st->execute([$saisonId, $depuis]);
+        $lignes = $st->fetchAll();
+        // Anciens essais : inscriptions gratuites dans une section « Z ESSAI » de l'activité
+        if ($essaisIds) {
+            $st = $this->pdo->prepare('SELECT i.id AS inscription_id, i.date_inscription, s.titre AS section, a.id, a.nom, a.prenom, a.date_naissance,
+                    a.telephone1, a.telephone2, a.nom_parent, a.prenom_parent
+                FROM inscription i JOIN adherent a ON a.id = i.adherent_id JOIN section s ON s.id = i.section_id
+                WHERE i.section_id IN (' . implode(',', $essaisIds) . ') AND i.saison_id = ? AND i.date_inscription >= ?');
+            $st->execute([$saisonId, $depuis]);
+            $lignes = array_merge($lignes, $st->fetchAll());
         }
-        $st = $this->pdo->prepare('SELECT i.id AS inscription_id, i.date_inscription, s.titre AS section, a.id, a.nom, a.prenom, a.date_naissance,
-                a.telephone1, a.telephone2, a.nom_parent, a.prenom_parent
-            FROM inscription i JOIN adherent a ON a.id = i.adherent_id JOIN section s ON s.id = i.section_id
-            WHERE i.section_id IN (' . implode(',', $essaisIds) . ') AND i.saison_id = ? AND i.date_inscription >= ?
-            ORDER BY i.date_inscription, a.nom, a.prenom');
-        $st->execute([$saisonId, date('Y-m-d', strtotime('-14 days'))]);
-        // Déjà inscrit au cours : ce n'est plus un essai
+        usort($lignes, static fn ($x, $y) => [(string) $x['date_inscription'], (string) $x['nom']] <=> [(string) $y['date_inscription'], (string) $y['nom']]);
+        // Déjà inscrit au cours : ce n'est plus un essai ; une personne une seule fois
         $inscrits = array_flip(array_map('intval', array_column($this->inscrits($sectionId, $saisonId), 'id')));
-        return array_values(array_filter($st->fetchAll(), static fn ($r) => !isset($inscrits[(int) $r['id']])));
+        $vus = [];
+        return array_values(array_filter($lignes, static function ($r) use ($inscrits, &$vus) {
+            $id = (int) $r['id'];
+            if (isset($inscrits[$id]) || isset($vus[$id])) {
+                return false;
+            }
+            return $vus[$id] = true;
+        }));
     }
 
     /** @return list<string> libellés des créneaux (« Mardi 18:30 ») */
