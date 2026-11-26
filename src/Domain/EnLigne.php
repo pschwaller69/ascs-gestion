@@ -294,7 +294,10 @@ final class EnLigne
         $choisies = [];
         if ($type === 'essai') {
             $sid = Input::int($in, 'section');
-            if ($sid !== null && in_array($sid, $ouvertes, true)) {
+            $pleines = array_map('intval', array_column(array_filter($this->sectionsOuvertes(true), static fn ($s) => $s['complet']), 'id'));
+            if ($sid !== null && in_array($sid, $pleines, true)) {
+                $err['sections'] = 'Ce cours est complet : pas de cours d\'essai possible pour le moment. Contactez le bureau.';
+            } elseif ($sid !== null && in_array($sid, $ouvertes, true)) {
                 $choisies = [$sid];
             } else {
                 $err['sections'] = 'Choisissez l\'activité à essayer.';

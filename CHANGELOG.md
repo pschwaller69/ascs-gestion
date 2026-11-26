@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.25.1
+
+- Cours d'essai bloqués quand l'activité est complète (nombre de places atteint) : grisée dans le formulaire avec « Complet : pas de cours d'essai pour le moment », et refusée à l'envoi. Le bureau garde la main sur les demandes déjà reçues.
+
 ## 0.25.0
 
 - Nombre de places par activité (capacité de la salle), sur la fiche de la section ou dans Paramétrage > Activités en ligne ; vide : pas de limite.
