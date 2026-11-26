@@ -284,6 +284,11 @@ final class Schema
                 'pk' => ['id'],
                 'index' => [['paiement_id']],
             ],
+            // Remboursements faits depuis l'application (un par paiement HelloAsso remboursé)
+            'paiement_en_ligne_remboursement' => [
+                'cols' => ['echeance_id' => 'int', 'paiement_id' => 'int', 'montant' => 'dec:10,2', 'le' => 'datetime', 'par' => 'str:150?', 'resultat' => 'text?'],
+                'pk' => ['echeance_id'],
+            ],
             // Part d'une échéance affectée à une inscription de la demande -> règlement créé
             'paiement_en_ligne_reglement' => [
                 'cols' => ['echeance_id' => 'int', 'inscription_id' => 'int', 'montant' => 'dec:10,2', 'reglement_id' => 'int?'],

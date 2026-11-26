@@ -40,6 +40,8 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
                         <span class="pastille pastille-ok">payé</span> <?= e(money($pl['montant'])) ?><?= (int) $pl['fois'] > 1 ? ' en ' . (int) $pl['fois'] . ' fois' : '' ?> le <?= e(dfr(substr((string) $pl['paye_le'], 0, 10))) ?> — commande HelloAsso <?= e((string) $pl['commande_id']) ?>
                         <?php foreach ($pl['echeances'] as $ec): ?><br><small><?= e(dfr(substr((string) $ec['date_paiement'], 0, 10))) ?> : <?= e(money($ec['montant'])) ?> — <?= e(in_array($ec['etat'], Ascs\HelloAsso\Sync::PAYE, true) ? 'encaissé' : (in_array($ec['etat'], Ascs\HelloAsso\Sync::A_VENIR, true) ? 'prélèvement prévu' : 'refusé ou annulé')) ?></small><?php endforeach; ?>
                         <?php if ($d['statut'] === 'a_traiter'): ?><br><small class="aide">Les règlements HelloAsso seront créés à la validation, partagés entre les activités retenues au prorata de leur montant.</small><?php endif; ?>
+                    <?php elseif ($pl['statut'] === 'rembourse'): ?>
+                        <span class="pastille">remboursé</span> <?= e(money($pl['montant'])) ?> — <?= e((string) $pl['erreur']) ?><br>
                     <?php elseif ($pl['statut'] === 'cree'): ?>
                         <span class="pastille pastille-reste">commencé</span> paiement ouvert le <?= e(dfr(substr((string) $pl['cree_le'], 0, 10))) ?>, pas encore confirmé par HelloAsso<br>
                     <?php else: ?>
@@ -123,9 +125,20 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <button type="submit" class="btn">Valider et voir la fiche</button>
         </div>
     </form>
+    <?php if (!empty($encaisse)): ?><p class="flash flash-info">Cette demande a été payée en ligne (<?= e(money($encaisse)) ?>). La refuser ne rembourse pas : remboursez ensuite avec le bouton « Rembourser sur HelloAsso ».</p><?php endif; ?>
     <form method="post" action="<?= e(url('/demandes/' . $d['id'] . '/refuser')) ?>" class="zone-danger">
         <?= csrf_field() ?><button type="submit" class="btn btn-danger">Refuser cette demande</button>
         <span class="aide">Demande fantaisiste, en double ou déjà traitée autrement.</span>
+    </form>
+<?php endif; ?>
+<?php if (!empty($encaisse) && $d['statut'] !== 'valide'): ?>
+    <form method="post" action="<?= e(url('/demandes/' . $d['id'] . '/rembourser')) ?>" class="zone-danger remboursement">
+        <?= csrf_field() ?>
+        <h2>Rembourser sur HelloAsso</h2>
+        <p>Rembourse à la personne les <strong><?= e(money($encaisse)) ?></strong> payés en ligne (sur sa carte, sous quelques jours) et annule les échéances à venir. HelloAsso lui envoie un mail. <strong>Irréversible.</strong></p>
+        <label class="coche" for="confirme-remb"><input type="checkbox" id="confirme-remb" name="confirme" value="<?= e(number_format($encaisse, 2, '.', '')) ?>" required> <span>Je confirme le remboursement de <?= e(money($encaisse)) ?> à <?= e(trim($d['prenom'] . ' ' . $d['nom'])) ?></span></label>
+        <button type="submit" class="btn btn-danger">Rembourser <?= e(money($encaisse)) ?></button>
+        <p class="aide">Si l'argent a déjà été versé sur le compte de l'association, HelloAsso peut refuser (solde insuffisant) : le remboursement se fait alors depuis l'espace HelloAsso.</p>
     </form>
 <?php endif; ?>
 </section>

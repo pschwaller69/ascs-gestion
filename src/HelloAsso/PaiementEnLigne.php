@@ -500,6 +500,100 @@ final class PaiementEnLigne
         return (int) $st->fetchColumn() > 0;
     }
 
+    /** Montant encaissé (échéances payées, non remboursées) des paiements en ligne d'une demande. */
+    public function encaisse(int $demandeId): float
+    {
+        $st = $this->pdo->prepare(
+            "SELECT e.montant, e.etat FROM paiement_en_ligne_echeance e JOIN paiement_en_ligne p ON p.id = e.paiement_id
+             WHERE p.demande_id = ? AND p.statut = 'paye'"
+        );
+        $st->execute([$demandeId]);
+        $t = 0.0;
+        foreach ($st->fetchAll() as $e) {
+            if (in_array($e['etat'], Sync::PAYE, true)) {
+                $t += (float) $e['montant'];
+            }
+        }
+        return round($t, 2);
+    }
+
+    /**
+     * Rembourse sur HelloAsso tous les paiements encaissés d'une demande non validée et annule les échéances futures.
+     * Les règlements éventuellement créés sont retirés. @return array{rembourse:float,erreurs:list<string>}
+     */
+    public function rembourser(int $demandeId, string $par): array
+    {
+        $st = $this->pdo->prepare('SELECT reference, statut FROM demande WHERE id = ?');
+        $st->execute([$demandeId]);
+        $d = $st->fetch();
+        if (!$d || $d['statut'] === 'valide') {
+            return ['rembourse' => 0.0, 'erreurs' => ['Remboursement possible seulement pour une demande à traiter ou refusée.']];
+        }
+        $rembourse = 0.0;
+        $erreurs = [];
+        $ps = $this->pdo->prepare("SELECT * FROM paiement_en_ligne WHERE demande_id = ? AND statut = 'paye' AND commande_id IS NOT NULL");
+        $ps->execute([$demandeId]);
+        foreach ($ps->fetchAll() as $p) {
+            $es = $this->pdo->prepare('SELECT * FROM paiement_en_ligne_echeance WHERE paiement_id = ? ORDER BY date_paiement, id');
+            $es->execute([(int) $p['id']]);
+            $payees = array_values(array_filter($es->fetchAll(), static fn ($e) => in_array($e['etat'], Sync::PAYE, true)));
+            $ok = true;
+            foreach ($payees as $k => $e) {
+                try {
+                    // Le dernier remboursement annule aussi la commande (échéances futures)
+                    [$code, $r] = $this->client()->rembourser((int) $e['id'], 'Inscription non retenue - ASCS, demande ' . $d['reference'], $k === count($payees) - 1);
+                } catch (\Throwable $ex) {
+                    $code = 0;
+                    $r = ['errors' => [['message' => $ex->getMessage()]]];
+                }
+                $detail = $code >= 200 && $code < 300 ? 'ok' : "HTTP $code" . self::detailErreur($r);
+                \Ascs\Db::upsertStatement($this->pdo, 'paiement_en_ligne_remboursement', ['echeance_id', 'paiement_id', 'montant', 'le', 'par', 'resultat'], ['echeance_id'])
+                    ->execute([(int) $e['id'], (int) $p['id'], $e['montant'], date('Y-m-d H:i:s'), mb_substr($par, 0, 150), mb_substr($detail, 0, 2000)]);
+                if ($detail === 'ok') {
+                    $rembourse += (float) $e['montant'];
+                } else {
+                    $ok = false;
+                    $erreurs[] = 'Échéance de ' . number_format((float) $e['montant'], 2, ',', ' ') . ' € : ' . ($code === 0 ? ltrim(self::detailErreur($r), ' :') : $detail);
+                }
+            }
+            if (!$payees) {
+                // Rien d'encaissé : seulement annuler les échéances à venir
+                try {
+                    [$code, $r] = $this->client()->annulerCommande((int) $p['commande_id']);
+                    if ($code < 200 || $code >= 300) {
+                        $ok = false;
+                        $erreurs[] = "Annulation de la commande : HTTP $code" . self::detailErreur($r);
+                    }
+                } catch (\Throwable $ex) {
+                    $ok = false;
+                    $erreurs[] = 'Annulation de la commande : ' . $ex->getMessage();
+                }
+            }
+            if ($ok) {
+                $this->pdo->prepare("UPDATE paiement_en_ligne SET statut = 'rembourse', erreur = ?, maj_le = ? WHERE id = ?")
+                    ->execute(['remboursé le ' . date('d/m/Y H:i') . ' par ' . $par, date('Y-m-d H:i:s'), (int) $p['id']]);
+                // Règlements créés à partir de ce paiement (s'il y en a) retirés
+                $ls = $this->pdo->prepare('SELECT l.echeance_id, l.inscription_id, l.reglement_id FROM paiement_en_ligne_reglement l JOIN paiement_en_ligne_echeance e ON e.id = l.echeance_id WHERE e.paiement_id = ?');
+                $ls->execute([(int) $p['id']]);
+                foreach ($ls->fetchAll() as $l) {
+                    $this->retirer((int) $l['echeance_id'], (int) $l['inscription_id'], $l['reglement_id'] !== null ? (int) $l['reglement_id'] : null);
+                }
+            }
+            // État des échéances relu (remboursé, annulé)
+            try {
+                $order = $this->client()->commande((int) $p['commande_id']);
+                $up = $this->pdo->prepare('UPDATE paiement_en_ligne_echeance SET etat = ?, maj_le = ? WHERE id = ?');
+                foreach ((array) ($order['payments'] ?? []) as $pay) {
+                    if (isset($pay['id'], $pay['state'])) {
+                        $up->execute([(string) $pay['state'], date('Y-m-d H:i:s'), (int) $pay['id']]);
+                    }
+                }
+            } catch (\Throwable) {
+            }
+        }
+        return ['rembourse' => round($rembourse, 2), 'erreurs' => $erreurs];
+    }
+
     /**
      * Partage d'un montant entre inscriptions au prorata de leur montant (à parts égales si tout est à 0),
      * au centime près : l'arrondi va à la dernière. @param array<int,float> $poids @return array<int,float>

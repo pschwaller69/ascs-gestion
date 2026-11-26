@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.15.1
+
+- Demande payée en ligne : avertissement avant et après le refus (« la refuser ne rembourse pas »).
+- Bouton « Rembourser sur HelloAsso » sur une demande payée en ligne, à traiter ou refusée : remboursement de toutes les échéances encaissées par l'API (POST /payments/{id}/refund, mail de HelloAsso à la personne) et annulation des échéances à venir (cancelOrder). Confirmation obligatoire du montant. Erreurs HelloAsso affichées (ex. solde insuffisant si l'argent est déjà versé : remboursement alors depuis l'espace HelloAsso). Paiement noté « remboursé », règlements éventuels retirés.
+
 ## 0.15.0
 
 - Lien de réinscription personnel (inscription.ascs.fr/r/…) : le formulaire d'inscription s'ouvre déjà rempli avec la fiche (identité, contacts, adresse, parent) et les activités de la dernière saison encore ouvertes, pré-cochées. Lien signé, valable pour la saison des inscriptions en ligne seulement ; expiré : page d'explication avec le formulaire normal.

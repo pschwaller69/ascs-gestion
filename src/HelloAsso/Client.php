@@ -140,7 +140,9 @@ final class Client
                 continue;
             }
             if ($code === 403) {
-                throw new RuntimeException('HelloAsso refuse le paiement en ligne (HTTP 403) : le client API doit avoir le droit « Checkout » et l\'association doit être vérifiée par HelloAsso pour recevoir des paiements.');
+                throw new RuntimeException(str_contains($chemin, '/refund') || str_contains($chemin, '/cancel')
+                    ? 'HelloAsso refuse l\'opération (HTTP 403) : le client API doit avoir le rôle administrateur de l\'association.'
+                    : 'HelloAsso refuse le paiement en ligne (HTTP 403) : le client API doit avoir le droit « Checkout » et l\'association doit être vérifiée par HelloAsso pour recevoir des paiements.');
             }
             if ($code === 429) {
                 throw new RuntimeException('HelloAsso limite le nombre d\'appels (HTTP 429) : réessayez dans quelques minutes.');
@@ -161,6 +163,23 @@ final class Client
     public function checkout(int $id): array
     {
         return $this->get('/organizations/' . rawurlencode($this->organisation) . '/checkout-intents/' . $id);
+    }
+
+    /**
+     * Rembourse entièrement un paiement ; cancelOrder annule aussi les échéances futures de la commande.
+     * @return array{0:int,1:array<string,mixed>}
+     */
+    public function rembourser(int $paymentId, string $commentaire, bool $annulerCommande): array
+    {
+        return $this->post('/payments/' . $paymentId . '/refund?' . http_build_query([
+            'comment' => mb_substr($commentaire, 0, 250), 'cancelOrder' => $annulerCommande ? 'true' : 'false', 'sendRefundMail' => 'true',
+        ]), []);
+    }
+
+    /** Annule les paiements futurs d'une commande (sans remboursement). @return array{0:int,1:array<string,mixed>} */
+    public function annulerCommande(int $orderId): array
+    {
+        return $this->post('/orders/' . $orderId . '/cancel', []);
     }
 
     /** Commande (suivi des échéances d'un paiement en plusieurs fois). */

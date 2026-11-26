@@ -57,6 +57,7 @@ final class DemandeController
         }
         return $this->app->render('demandes/fiche', [
             'paiements' => (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->historique((int) $d['id']),
+            'encaisse' => (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->encaisse((int) $d['id']),
             'd' => $d, 'candidats' => $candidats, 'choix' => $choix, 'fiche' => $fiche, 'err' => $err, 'post' => $post,
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
             'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions, 'lien' => $lien, 'changements' => $changements,
@@ -88,8 +89,33 @@ final class DemandeController
     public function refuser(array $p): void
     {
         $ok = $this->dem->refuser((int) $p['id'], $this->par());
+        $encaisse = (new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo))->encaisse((int) $p['id']);
+        if ($ok && $encaisse > 0) {
+            $this->app->flash('erreur', 'Demande refusée, mais elle a été payée en ligne (' . money($encaisse) . ') : la personne n\'est pas remboursée automatiquement. Utilisez « Rembourser sur HelloAsso » ci-dessous.');
+            $this->app->redirect('/demandes/' . (int) $p['id']);
+        }
         $this->app->flash($ok ? 'ok' : 'erreur', $ok ? 'Demande refusée : rien n\'a été créé.' : 'Cette demande n\'est plus à traiter.');
         $this->app->redirect('/demandes');
+    }
+
+    /** Remboursement HelloAsso d'une demande payée en ligne et non validée (confirmation obligatoire). */
+    public function rembourser(array $p): void
+    {
+        $id = (int) $p['id'];
+        $pel = new \Ascs\HelloAsso\PaiementEnLigne($this->app->pdo);
+        $montant = $pel->encaisse($id);
+        if (($_POST['confirme'] ?? '') !== number_format($montant, 2, '.', '') || $montant <= 0) {
+            $this->app->flash('erreur', 'Remboursement non fait : cochez la confirmation du montant (le montant a peut-être changé, vérifiez).');
+            $this->app->redirect('/demandes/' . $id);
+        }
+        $r = $pel->rembourser($id, $this->par());
+        if ($r['erreurs']) {
+            $this->app->flash('erreur', ($r['rembourse'] > 0 ? money($r['rembourse']) . ' remboursé(s), mais ' : '') . 'HelloAsso a refusé : ' . implode(' ; ', $r['erreurs'])
+                . ' (solde insuffisant si l\'argent a déjà été versé sur le compte : remboursez alors depuis l\'espace HelloAsso).');
+        } else {
+            $this->app->flash('ok', money($r['rembourse']) . ' remboursé(s) sur HelloAsso, échéances à venir annulées. La personne reçoit un mail de HelloAsso.');
+        }
+        $this->app->redirect('/demandes/' . $id);
     }
 
     public function retablir(array $p): void
