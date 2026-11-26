@@ -3,6 +3,10 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.24.1
+
+- Photo de la carte PASS'Région réduite automatiquement : dans le téléphone avant l'envoi (1600 px, JPEG ; une photo de 12 Mo part en moins de 1 Mo), puis par le serveur si besoin (même taille, sens de la photo corrigé). HEIC et PDF lus ailleurs que sur iPhone : gardés tels quels. Taille acceptée portée à 20 Mo.
+
 ## 0.24.0
 
 - Pass'Région et Pass'Région Senior : dans le formulaire d'inscription, photo de la carte (côté numéro ; appareil photo du téléphone ou fichier, JPEG/PNG/HEIC/PDF, 10 Mo au plus) et code à 4 chiffres, facultatifs (sinon carte à montrer au bureau, rappelée dans les pièces). Photo rangée hors du site (storage/cartes), code chiffré ; visibles sur la demande par le bureau connecté seulement ; effacés si la demande est refusée.

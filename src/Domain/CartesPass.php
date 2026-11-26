@@ -14,7 +14,10 @@ use PDO;
 final class CartesPass
 {
     public const AIDES = ['pass_region', 'pass_senior'];
-    public const TAILLE_MAX = 10 * 1024 * 1024;
+    public const TAILLE_MAX = 20 * 1024 * 1024;
+    /** Photo réduite : plus grand côté en pixels, qualité JPEG. */
+    public const COTE_MAX = 1600;
+    public const QUALITE = 82;
     public const TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/heic' => 'heic', 'image/heif' => 'heif', 'application/pdf' => 'pdf'];
 
     public function __construct(private readonly PDO $pdo)
@@ -53,7 +56,7 @@ final class CartesPass
         $f = $files['carte_region_photo'] ?? null;
         if (is_array($f) && ($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
             if ($f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE || (int) $f['size'] > self::TAILLE_MAX) {
-                $err['carte_region_photo'] = 'Photo trop lourde (10 Mo au plus).';
+                $err['carte_region_photo'] = 'Photo trop lourde (20 Mo au plus).';
             } elseif ($f['error'] !== UPLOAD_ERR_OK || !is_uploaded_file((string) $f['tmp_name'])) {
                 $err['carte_region_photo'] = 'La photo n\'a pas pu être envoyée, réessayez.';
             } else {
@@ -82,14 +85,65 @@ final class CartesPass
                 @mkdir($dir, 0750, true);
                 @file_put_contents($dir . '/.htaccess', "Require all denied\n");
             }
-            $nom = $demandeId . '-' . bin2hex(random_bytes(8)) . '.' . self::TYPES[$r['mime']];
-            if (!move_uploaded_file($r['fichier'], $dir . '/' . $nom) && !@rename($r['fichier'], $dir . '/' . $nom)) {
-                $nom = null;
+            $reduite = self::reduire($r['fichier'], (string) $r['mime']);
+            if ($reduite !== null) {
+                $nom = $demandeId . '-' . bin2hex(random_bytes(8)) . '.jpg';
+                $r['mime'] = 'image/jpeg';
+                if (@file_put_contents($dir . '/' . $nom, $reduite) === false) {
+                    $nom = null;
+                }
+            } else {
+                $nom = $demandeId . '-' . bin2hex(random_bytes(8)) . '.' . self::TYPES[$r['mime']];
+                if (!move_uploaded_file($r['fichier'], $dir . '/' . $nom) && !@rename($r['fichier'], $dir . '/' . $nom)) {
+                    $nom = null;
+                }
             }
         }
         $this->supprimer($demandeId);
         $this->pdo->prepare('INSERT INTO demande_carte (demande_id, fichier, mime, code_chiffre, cree_le) VALUES (?,?,?,?,?)')
             ->execute([$demandeId, $nom, $nom ? $r['mime'] : null, $r['code'] !== null ? $this->chiffrer($r['code']) : null, date('Y-m-d H:i:s')]);
+    }
+
+    /**
+     * Photo réduite en JPEG (plus grand côté COTE_MAX, sens corrigé d'après l'EXIF du téléphone), ou null si
+     * le format ne se lit pas ici (HEIC, PDF, GD absent) : le fichier est alors gardé tel quel.
+     */
+    public static function reduire(string $chemin, string $mime): ?string
+    {
+        if (!function_exists('imagecreatefromstring') || !in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return null;
+        }
+        $img = @imagecreatefromstring((string) file_get_contents($chemin));
+        if ($img === false) {
+            return null;
+        }
+        if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+            $o = (int) ((@exif_read_data($chemin) ?: [])['Orientation'] ?? 1);
+            $angle = [3 => 180, 6 => -90, 8 => 90][$o] ?? 0;
+            if ($angle !== 0 && ($t = imagerotate($img, $angle, 0)) !== false) {
+                imagedestroy($img);
+                $img = $t;
+            }
+        }
+        [$l, $h] = [imagesx($img), imagesy($img)];
+        $k = min(1, self::COTE_MAX / max($l, $h));
+        if ($k < 1) {
+            $n = imagescale($img, max(1, (int) round($l * $k)), max(1, (int) round($h * $k)), IMG_BICUBIC);
+            if ($n !== false) {
+                imagedestroy($img);
+                $img = $n;
+            }
+        }
+        // Fond blanc pour les PNG transparents, puis JPEG
+        $fond = imagecreatetruecolor(imagesx($img), imagesy($img));
+        imagefill($fond, 0, 0, imagecolorallocate($fond, 255, 255, 255));
+        imagecopy($fond, $img, 0, 0, 0, 0, imagesx($img), imagesy($img));
+        imagedestroy($img);
+        ob_start();
+        imagejpeg($fond, null, self::QUALITE);
+        imagedestroy($fond);
+        $out = (string) ob_get_clean();
+        return $out !== '' ? $out : null;
     }
 
     /** @return array{fichier:?string,mime:?string,code:?string}|null */

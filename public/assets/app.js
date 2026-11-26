@@ -517,3 +517,27 @@
     });
     afficher();
 }());
+
+// Photo de la carte PASS'Région : réduite dans le navigateur avant l'envoi (1600 px, JPEG), pour les téléphones aux photos très lourdes
+(function () {
+    'use strict';
+    var champ = document.getElementById('f_carte_region_photo');
+    if (!champ || !window.createImageBitmap || !window.DataTransfer || !HTMLCanvasElement.prototype.toBlob) { return; }
+    champ.addEventListener('change', function () {
+        var f = champ.files && champ.files[0];
+        if (!f || !/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type)) { return; }
+        createImageBitmap(f).then(function (img) {
+            var k = Math.min(1, 1600 / Math.max(img.width, img.height));
+            if (k === 1 && f.size < 1500000 && /jpeg/i.test(f.type)) { return; }
+            var c = document.createElement('canvas');
+            c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+            var ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+            c.toBlob(function (b) {
+                if (!b || b.size >= f.size && /jpeg/i.test(f.type)) { return; }
+                var dt = new DataTransfer();
+                dt.items.add(new File([b], (f.name || 'carte').replace(/\.[^.]*$/, '') + '.jpg', { type: 'image/jpeg' }));
+                champ.files = dt.files;
+            }, 'image/jpeg', 0.82);
+        }).catch(function () { /* format non lisible ici (HEIC hors Safari) : envoyé tel quel, réduit par le serveur si possible */ });
+    });
+}());
