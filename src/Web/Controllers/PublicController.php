@@ -46,7 +46,7 @@ final class PublicController
         return $this->app->renderPublic('public/formulaire', [
             'type' => $type, 's' => $saisie, 'err' => $err, 'sections' => $sections, 'canaux' => $this->el->canaux(),
             'saison' => $this->el->saisonTitre(), 'message' => $this->el->message(),
-            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => (new \Ascs\Domain\Bulletin($this->app->pdo))->aidesOuvertes(),
+            'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => (new \Ascs\Domain\Bulletin($this->app->pdo))->aidesOuvertes(), 'natures' => (new \Ascs\Domain\Bulletin($this->app->pdo))->natures(),
             'horaires' => (new \Ascs\Domain\Bulletin($this->app->pdo))->horairesBureau(),
             'apercu' => $apercu,
             'reinscription' => $type === 'inscription' ? ($_SESSION['reinscription']['prenom'] ?? null) : null,

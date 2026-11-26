@@ -3,6 +3,11 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.23.0
+
+- Aides selon la famille de l'activité : coupon sport et Pass'Sport proposés seulement avec une activité d'une famille « Sport », coupon culture avec une famille « Culture » (grisés sinon, et refusés à l'enregistrement). Nature de chaque famille dans Paramétrage > Aides (par défaut d'après le nom : Sport et Bien-être -> sport, Culture et Musique -> culture).
+- Nouvelle aide en ligne : Pass'Région Senior, 15 €, plus de 65 ans ayant la carte PASS'Région ; proposée seulement si la date de naissance donne 65 ans ou plus. Copie de la carte demandée dans les pièces.
+
 ## 0.22.1
 
 - Lien WhatsApp unique : celui de la communauté WhatsApp de l'association (même réglage que Mail > Mailing, modifiable aussi dans Paramétrage > Inscriptions en ligne). Proposé sur la page de fin et dans le mail de confirmation (« Vous ne trouvez pas le cours, une question ? »). Plus de lien WhatsApp par activité.

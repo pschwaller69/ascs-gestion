@@ -19,5 +19,19 @@
         <?php endforeach; ?>
         </tbody>
     </table></div>
+    <h3>Familles d'activités</h3>
+    <p class="aide">Le coupon sport et le Pass'Sport ne sont proposés que si la personne choisit une activité d'une famille « Sport » ; le coupon culture, une activité d'une famille « Culture ». La famille d'une section vient de sa section principale (Paramétrage &gt; Sections principales).</p>
+    <div class="table-cadre"><table class="table-reglages">
+        <thead><tr><th>Famille</th><th>Aides proposées</th></tr></thead>
+        <tbody>
+        <?php foreach ($familles as $f): ?>
+            <tr><td><?= e($f['titre']) ?></td>
+                <td><select name="nature[<?= (int) $f['id'] ?>]" aria-label="Nature de la famille <?= e($f['titre']) ?>">
+                    <?php foreach (Ascs\Domain\Bulletin::NATURES as $k => $lib): ?><option value="<?= e($k) ?>"<?= attr($f['nature'] === $k, 'selected') ?>><?= e($lib) ?><?= $k === 'sport' ? ' (coupon sport, Pass\'Sport)' : ($k === 'culture' ? ' (coupon culture)' : ' (ni coupon, ni Pass\'Sport)') ?></option><?php endforeach; ?>
+                </select></td></tr>
+        <?php endforeach; ?>
+        <?php if (!$familles): ?><tr><td colspan="2">Aucune famille : créez-les dans Paramétrage &gt; Familles.</td></tr><?php endif; ?>
+        </tbody>
+    </table></div>
     <div class="actions"><button type="submit" class="btn btn-principal"><?= icon('check') ?> Enregistrer les réglages</button></div>
 </form>

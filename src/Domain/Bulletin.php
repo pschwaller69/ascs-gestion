@@ -62,23 +62,75 @@ TXT;
                 'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Copie de la carte à fournir.'],
             ['cle' => 'pass_sport', 'libelle' => 'Pass\'Sport', 'montant' => $m['pass_sport'] ?? 50.0,
                 'condition' => 'Activités sportives uniquement. Indiquez le code Pass\'Sport reçu par mail (CAF, MSA ou Crous).'],
+            ['cle' => 'pass_senior', 'libelle' => 'Pass\'Région Senior', 'montant' => $m['pass_senior'] ?? 15.0, 'age_min' => 65,
+                'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Copie de la carte à fournir.'],
         ];
     }
 
     // ------------------------------------------------------------------ dates des aides (Paramétrage > En ligne)
 
     /** Date limite de demande (jj/mm) : après, l'aide n'est plus proposée dans le formulaire. Vide : pas de limite. */
-    public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '31/12', 'pass_region' => ''];
+    public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '31/12', 'pass_region' => '', 'pass_senior' => ''];
     /**
      * Garantie par carte (jj/mm) : quand la personne paie par carte sur HelloAsso, le montant de l'aide est programmé
      * en dernière échéance à cette date, et annulé quand l'aide est confirmée (mairie). Vide : pas de garantie.
      */
-    public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '31/12', 'pass_region' => ''];
+    public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '31/12', 'pass_region' => '', 'pass_senior' => ''];
+
+    /** Nature d'activité exigée par une aide (vide : toutes les activités). */
+    public const NATURE_AIDE = ['coupon_sport' => 'sport', 'coupon_culture' => 'culture', 'pass_sport' => 'sport'];
+    /** Âge minimum d'une aide. */
+    public const AGE_MIN = ['pass_senior' => 65];
+    public const NATURES = ['sport' => 'Sport', 'culture' => 'Culture', 'aucune' => 'Ni l\'un ni l\'autre'];
+
+    /** Nature par défaut d'une famille, d'après son nom (réglable dans Paramétrage > Aides). */
+    public static function natureParDefaut(string $titre): string
+    {
+        $t = DuplicateFinder::norm($titre);
+        if (preg_match('/sport|bien|gym|danse|martia|forme/i', $t)) {
+            return 'sport';
+        }
+        if (preg_match('/cultur|musiq|\bart|theatr|chant|photo|loisir|atelier|couture|langu/i', $t)) {
+            return 'culture';
+        }
+        return 'aucune';
+    }
+
+    /** Familles d'activités avec leur nature. @return list<array{id:int,titre:string,nature:string}> */
+    public function familles(): array
+    {
+        $out = [];
+        foreach ($this->pdo->query('SELECT f.id, f.titre, a.nature FROM famille_section f LEFT JOIN famille_aide a ON a.famille_section_id = f.id ORDER BY f.titre')->fetchAll() as $f) {
+            $out[] = ['id' => (int) $f['id'], 'titre' => (string) $f['titre'], 'nature' => $f['nature'] ?: self::natureParDefaut((string) $f['titre'])];
+        }
+        return $out;
+    }
+
+    /** Nature de chaque activité (par sa famille). @param list<int> $ids @return array<int,string> */
+    public function natures(array $ids = []): array
+    {
+        $fam = array_column($this->familles(), 'nature', 'id');
+        $sql = 'SELECT s.id, sp.famille_section_id FROM section s LEFT JOIN section_principale sp ON sp.id = s.section_principale_id'
+            . ($ids ? ' WHERE s.id IN (' . implode(',', array_map('intval', $ids)) . ')' : '');
+        $out = [];
+        foreach ($this->pdo->query($sql)->fetchAll() as $r) {
+            $out[(int) $r['id']] = $fam[(int) $r['famille_section_id']] ?? 'aucune';
+        }
+        return $out;
+    }
+
+    /** L'aide s'applique-t-elle à au moins une des activités choisies ? */
+    public function aidePossible(string $cle, array $sectionIds): bool
+    {
+        $nat = self::NATURE_AIDE[$cle] ?? null;
+        return $nat === null || in_array($nat, $this->natures(array_map('intval', $sectionIds)), true);
+    }
 
     /** Qui a droit à chaque aide (texte modifiable dans Paramétrage > Aides, à revoir chaque saison). */
     public const DROITS_DEFAUT = [
         'coupon_sport' => 'Enfants et jeunes de 6 à 16 ans habitant Rillieux-la-Pape, dont la famille perçoit l\'allocation de rentrée scolaire.',
         'coupon_culture' => 'Mêmes bénéficiaires que le coupon sport (6 à 16 ans, Rillieux-la-Pape, allocation de rentrée scolaire).',
+        'pass_senior' => 'Personnes de plus de 65 ans ayant la carte PASS\'Région (Auvergne-Rhône-Alpes).',
         'pass_region' => 'Jeunes ayant la carte PASS\'Région jeunes de la Région Auvergne-Rhône-Alpes (lycéens, apprentis, jeunes en formation).',
         'pass_sport' => 'Jeunes de 6 à 17 ans dont le quotient familial CAF ou MSA est de 699 € ou moins ; jeunes de 6 à 19 ans bénéficiaires de l\'AEEH ; 16 à 30 ans bénéficiaires de l\'AAH ; étudiants boursiers de moins de 28 ans.',
     ];
@@ -133,7 +185,7 @@ TXT;
             if ($lim !== null && $auj > $lim) {
                 continue;
             }
-            $out[] = $a + ['limite' => $lim, 'garantie' => $this->garantieAide($a['cle']), 'droit' => $this->droitAide($a['cle'])];
+            $out[] = $a + ['nature' => self::NATURE_AIDE[$a['cle']] ?? '', 'limite' => $lim, 'garantie' => $this->garantieAide($a['cle']), 'droit' => $this->droitAide($a['cle'])];
         }
         return $out;
     }
@@ -167,6 +219,12 @@ TXT;
         $c['nb_cheques'] = in_array('cheque', $c['moyens'], true) ? max(1, min(10, (int) ($in['nb_cheques'] ?? 1))) : null;
         // Aides dont la date limite est passée : refusées même si le formulaire a été ouvert avant
         $c['aides'] = array_values(array_intersect(array_column($this->aidesOuvertes(), 'cle'), (array) ($in['aides'] ?? [])));
+        // Coupon sport / Pass'Sport : activité sportive ; coupon culture : activité culturelle (famille de la section)
+        $sids = array_map('intval', json_decode((string) ($d['sections'] ?? '[]'), true) ?: []);
+        $c['aides'] = array_values(array_filter($c['aides'], fn ($k) => $this->aidePossible($k, $sids)));
+        // Pass'Région Senior : plus de 65 ans
+        $age = !empty($d['date_naissance']) ? EnLigne::age((string) $d['date_naissance']) : null;
+        $c['aides'] = array_values(array_filter($c['aides'], static fn ($k) => !isset(self::AGE_MIN[$k]) || ($age !== null && $age >= self::AGE_MIN[$k])));
         $c['code_pass_sport'] = in_array('pass_sport', $c['aides'], true) ? mb_substr(trim((string) ($in['code_pass_sport'] ?? '')), 0, 30) : null;
         if (in_array('pass_sport', $c['aides'], true) && !$c['code_pass_sport']) {
             $err['code_pass_sport'] = 'Indiquez le code Pass\'Sport (ou présentez le QR code au bureau et décochez l\'aide).';
@@ -233,7 +291,7 @@ TXT;
         if ($coupons && !$garantieCarte) {
             $p[] = 'Le coupon de la mairie et un chèque de caution du même montant';
         }
-        if (in_array('pass_region', $c['aides'] ?? [], true)) {
+        if (array_intersect(['pass_region', 'pass_senior'], $c['aides'] ?? [])) {
             $p[] = 'Une copie de la carte Pass\'Région';
         }
         if (in_array('pass_sport', $c['aides'] ?? [], true)) {

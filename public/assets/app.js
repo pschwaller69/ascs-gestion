@@ -341,6 +341,21 @@
     var maj = function () {
         montrer('bloc-nb-cheques', coche('[data-moyen="cheque"]'));
         montrer('note-ancv', coche('[data-moyen="ancv"]'));
+        // Aides réservées aux activités sportives ou culturelles (famille de la section)
+        var natures = {};
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="sections[]"]:checked'), function (c) { natures[c.getAttribute('data-nature')] = true; });
+        var dn = val('f_date_naissance'), age = null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dn)) {
+            var nai = new Date(dn + 'T00:00:00'), auj = new Date();
+            age = auj.getFullYear() - nai.getFullYear() - ((auj.getMonth() < nai.getMonth() || (auj.getMonth() === nai.getMonth() && auj.getDate() < nai.getDate())) ? 1 : 0);
+        }
+        Array.prototype.forEach.call(form.querySelectorAll('[data-nature-aide], [data-age-min]'), function (b) {
+            var nat = b.getAttribute('data-nature-aide'), min = parseInt(b.getAttribute('data-age-min') || '0', 10);
+            var ok = (!nat || !!natures[nat]) && (!min || (age !== null && age >= min));
+            var cb = b.querySelector('input[name="aides[]"]');
+            if (cb) { cb.disabled = !ok; if (!ok) { cb.checked = false; } }
+            b.classList.toggle('aide-indisponible', !ok);
+        });
         montrer('bloc-code-pass', coche('#aide-pass_sport'));
         montrer('bloc-option', coche('#ass-oui'));
         // Signature proposée : le parent pour un mineur, sinon l'adhérent (tant qu'elle n'a pas été modifiée à la main)
@@ -380,7 +395,7 @@
         recap.appendChild(note);
     };
     form.addEventListener('change', maj);
-    form.addEventListener('input', function (ev) { if (/^f_(nom|prenom|nom_parent|prenom_parent|code_postal|ville)$/.test(ev.target.id)) { maj(); } });
+    form.addEventListener('input', function (ev) { if (/^f_(nom|prenom|nom_parent|prenom_parent|code_postal|ville|date_naissance)$/.test(ev.target.id)) { maj(); } });
     maj();
 }());
 

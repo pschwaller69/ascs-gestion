@@ -113,6 +113,7 @@ final class EnLigneController
             'aidesDates' => array_map(static fn ($a) => ['cle' => $a['cle'], 'libelle' => $a['libelle'], 'limite' => $b->reglageAide($a['cle'], 'limite'),
                 'garantie' => $b->reglageAide($a['cle'], 'garantie'), 'droit' => $b->droitAide($a['cle']),
                 'droit_defaut' => \Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? ''], \Ascs\Domain\Bulletin::aides()),
+            'familles' => $b->familles(),
         ], 'Aides financières', 'parametrage');
     }
 
@@ -129,6 +130,12 @@ final class EnLigneController
             // Texte « qui y a droit » : identique au texte par défaut ou vide -> texte par défaut (suit les mises à jour)
             $droit = trim(str_replace(["\r\n", "\n"], ' ', (string) ($_POST['aide_droit'][$a['cle']] ?? '')));
             Parametres::set($pdo, 'aide_' . $a['cle'] . '_droit', $droit === (\Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? '') ? '' : mb_substr($droit, 0, 600));
+        }
+        $up = \Ascs\Db::upsertStatement($pdo, 'famille_aide', ['famille_section_id', 'nature'], ['famille_section_id']);
+        foreach ((array) ($_POST['nature'] ?? []) as $fid => $n) {
+            if (isset(\Ascs\Domain\Bulletin::NATURES[$n]) && (int) $pdo->query('SELECT COUNT(*) FROM famille_section WHERE id = ' . (int) $fid)->fetchColumn() > 0) {
+                $up->execute([(int) $fid, $n]);
+            }
         }
         $pdo->commit();
         $this->app->flash('ok', 'Aides enregistrées.');

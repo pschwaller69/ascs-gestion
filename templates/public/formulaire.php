@@ -44,7 +44,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
                 <?php if ($essai): ?>
                     <input type="radio" id="<?= $id ?>" name="section" value="<?= (int) $sec['id'] ?>"<?= attr((string) $s['section'] === (string) $sec['id'], 'checked') ?>>
                 <?php else: ?>
-                    <input type="checkbox" id="<?= $id ?>" name="sections[]" value="<?= (int) $sec['id'] ?>"<?= attr(in_array((string) $sec['id'], (array) $s['sections'], true), 'checked') ?> data-titre="<?= e($sec['titre']) ?>" data-tarif="<?= e(number_format((float) $sec['montant'], 2, '.', '')) ?>" data-tarif-rillieux="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true), 2, '.', '')) ?>">
+                    <input type="checkbox" id="<?= $id ?>" name="sections[]" value="<?= (int) $sec['id'] ?>"<?= attr(in_array((string) $sec['id'], (array) $s['sections'], true), 'checked') ?> data-titre="<?= e($sec['titre']) ?>" data-nature="<?= e($natures[(int) $sec['id']] ?? 'aucune') ?>" data-tarif="<?= e(number_format((float) $sec['montant'], 2, '.', '')) ?>" data-tarif-rillieux="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true), 2, '.', '')) ?>">
                 <?php endif; ?>
                 <span class="carte-texte">
                     <strong><?= e(preg_replace('/^Z\s+ESSAI\s+/i', '', $sec['titre'])) ?></strong>
@@ -151,7 +151,9 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
         <p class="aide" id="note-ancv"<?= $coche('moyens', 'ancv') ? '' : ' hidden' ?>>Chèques ANCV et ANCV Connect : frais de gestion de <?= e(money(Ascs\Domain\Bulletin::FRAIS_ANCV)) ?> par dossier.</p>
         <h3 class="sous-legende">Aides financières <small>(sous réserve de reconduction)</small></h3>
         <?php foreach ($aides as $a): ?>
-            <div class="aide-choix">
+            <div class="aide-choix"<?= $a['nature'] !== '' ? ' data-nature-aide="' . e($a['nature']) . '"' : '' ?><?= !empty($a['age_min']) ? ' data-age-min="' . (int) $a['age_min'] . '"' : '' ?>>
+                <?php if ($a['nature'] !== ''): ?><p class="aide aide-nature">Proposé si vous choisissez une activité <?= $a['nature'] === 'sport' ? 'sportive' : 'culturelle' ?>.</p><?php endif; ?>
+                <?php if (!empty($a['age_min'])): ?><p class="aide aide-nature">Réservé aux personnes de plus de <?= (int) $a['age_min'] ?> ans.</p><?php endif; ?>
                 <label for="aide-<?= e($a['cle']) ?>"><input type="checkbox" id="aide-<?= e($a['cle']) ?>" name="aides[]" value="<?= e($a['cle']) ?>"<?= attr($coche('aides', $a['cle']), 'checked') ?> data-aide-montant="<?= e(number_format($a['montant'], 2, '.', '')) ?>" data-aide-libelle="<?= e($a['libelle']) ?>"> <strong><?= e($a['libelle']) ?></strong> · <?= e(money($a['montant'])) ?></label>
                 <?php if (!empty($a['droit'])): ?><p class="aide-droit"><strong>Qui y a droit :</strong> <?= e($a['droit']) ?></p><?php endif; ?>
                 <p class="aide"><?= e($a['condition']) ?><?= !empty($a['limite']) ? ' Demande possible jusqu\'au ' . e(dfr($a['limite'])) . '.' : '' ?><?= !empty($a['garantie']) ? ' En paiement par carte, pas de chèque de caution : ' . e(money($a['montant'])) . ' sont programmés le ' . e(dfr($a['garantie'])) . ' en garantie, et annulés dès que l\'aide est confirmée.' : '' ?></p>

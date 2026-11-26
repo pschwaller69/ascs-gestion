@@ -625,3 +625,6 @@ input, select, textarea { max-width: 100%; }
 @media (max-width: 78rem) { .activite-reglage .ar-textes { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 40rem) { .activite-reglage .ar-textes { grid-template-columns: 1fr; } }
 .note-contribution { margin: .6rem 0; padding: .55rem .75rem; border: 1px solid #e6c98a; background: var(--amber-l); color: var(--ink); border-radius: 6px; font-size: .9rem; }
+.aide-choix .aide-nature { display: none; }
+.aide-choix.aide-indisponible .aide-nature { display: block; margin: 0 0 .1rem; font-style: italic; }
+.aide-choix.aide-indisponible > label, .aide-choix.aide-indisponible > .aide-droit, .aide-choix.aide-indisponible > .aide:not(.aide-nature) { opacity: .45; }

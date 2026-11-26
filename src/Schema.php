@@ -314,6 +314,11 @@ final class Schema
                 'cols' => ['section_id' => 'int', 'saison_id' => 'int', 'reprise' => 'date?', 'essai_des' => 'date?'],
                 'pk' => ['section_id', 'saison_id'],
             ],
+            // Nature d'une famille d'activités pour les aides (depuis 0.23.0) : sport, culture ou aucune
+            'famille_aide' => [
+                'cols' => ['famille_section_id' => 'int', 'nature' => 'str:10'],
+                'pk' => ['famille_section_id'],
+            ],
             // Lieu d'une activité (depuis 0.22.0) : adresse et lien WhatsApp affichés aux adhérents et aux personnes à l'essai
             'section_lieu' => [
                 'cols' => ['section_id' => 'int', 'adresse' => 'str:255?', 'whatsapp' => 'str:255?'],
