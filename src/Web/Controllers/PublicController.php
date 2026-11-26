@@ -137,18 +137,29 @@ final class PublicController
             }
             unset($_SESSION['reinscription']);
         }
+        // Cours d'essai : validé seul quand la fiche ne fait pas de doute (sinon il attend le bureau dans Demandes)
+        $auto = false;
+        if ($type === 'essai') {
+            try {
+                $st = $this->app->pdo->prepare('SELECT id FROM demande WHERE reference = ?');
+                $st->execute([$ref]);
+                $auto = (new \Ascs\Domain\Demandes($this->app->pdo))->validerEssaiAuto((int) $st->fetchColumn())['ok'];
+            } catch (\Throwable $e) {
+                error_log('Validation automatique du cours d\'essai ' . $ref . ' : ' . $e->getMessage());
+            }
+        }
         $pieces = $c !== null ? $bulletin->pieces($d, $c) : [];
         $bureau = $c !== null ? $bulletin->auBureau($c) : [];
         $horaires = $bulletin->horairesBureau();
-        $this->confirmer($type, $d, (string) $ref, $c, $pieces, $bureau, $horaires);
+        $this->confirmer($type, $d, (string) $ref, $c, $pieces, $bureau, $horaires, $auto);
         unset($_SESSION['form_affiche'][$type]);
         $_SESSION['demande_envoyee'] = ['ref' => $ref, 'type' => $type, 'sections' => json_decode($d['sections'], true), 'prenom' => $d['prenom'],
-            'recap' => $c['recap'] ?? null, 'pieces' => $pieces, 'bureau' => $bureau, 'horaires' => $horaires];
+            'recap' => $c['recap'] ?? null, 'essai_valide' => $auto, 'pieces' => $pieces, 'bureau' => $bureau, 'horaires' => $horaires];
         $this->app->redirect('/merci');
     }
 
     /** Mail de confirmation à la personne (sans bloquer la demande si l'envoi échoue). */
-    private function confirmer(string $type, array $d, string $ref, ?array $c = null, array $pieces = [], array $bureau = [], string $horaires = ''): void
+    private function confirmer(string $type, array $d, string $ref, ?array $c = null, array $pieces = [], array $bureau = [], string $horaires = '', bool $essaiValide = false): void
     {
         try {
             $r = (new \Ascs\Documents\Reglages($this->app->pdo))->tous();
@@ -166,7 +177,7 @@ final class PublicController
             $texte = 'Bonjour ' . trim((string) $d['prenom']) . ",\n\n"
                 . ($type === 'essai' ? 'Nous avons bien reçu votre demande de cours d\'essai' : 'Nous avons bien reçu votre demande d\'inscription')
                 . ($noms ? ' pour : ' . implode(', ', $noms) : '') . ".\nRéférence : " . $ref . "\n\n"
-                . ($type === 'essai' ? 'Le bureau vous recontacte pour vous confirmer le jour du cours.' : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
+                . ($type === 'essai' ? ($essaiValide ? 'Votre cours d\'essai est enregistré : l\'animateur a votre nom sur sa liste. Présentez-vous à l\'heure du cours.' : 'Le bureau vous recontacte pour vous confirmer le jour du cours.') : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
                 . ($c ? "\n\n" . self::texteRecap($c['recap']) : '')
                 . ($bureau ? "\n\nÀ déposer au bureau de l'association (ouvert " . $horaires . ") :\n- " . implode("\n- ", $bureau) : '')
                 . ($pieces ? "\n\nÀ apporter au premier cours :\n- " . implode("\n- ", $pieces) : '')

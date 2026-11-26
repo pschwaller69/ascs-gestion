@@ -22,7 +22,7 @@ final class EnLigneController
     {
         return $this->app->render('enligne/index', [
             'sections' => $this->el->toutesSections(), 'err' => $err,
-            'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'),
+            'inscriptionOuverte' => $this->el->ouvert('inscription'), 'essaiOuvert' => $this->el->ouvert('essai'), 'essaiAuto' => (new \Ascs\Domain\Demandes($this->app->pdo))->essaisAuto(),
             'saisonId' => $this->el->saisonId(), 'message' => (string) $this->el->message(),
             'horaires' => (string) Parametres::get($this->app->pdo, 'horaires_bureau'),
             'aidesDates' => (function (): array {
@@ -57,6 +57,7 @@ final class EnLigneController
         $pdo->beginTransaction();
         Parametres::set($pdo, 'inscription_ouverte', !empty($_POST['inscription_ouverte']) ? '1' : null);
         Parametres::set($pdo, 'essai_ouvert', !empty($_POST['essai_ouvert']) ? '1' : null);
+        Parametres::set($pdo, 'essai_auto', !empty($_POST['essai_auto']) ? '1' : '0');
         Parametres::set($pdo, 'en_ligne_saison', (string) $saison);
         Parametres::set($pdo, 'en_ligne_message', Input::text($_POST, 'message', 1000));
         Parametres::set($pdo, 'horaires_bureau', Input::text($_POST, 'horaires_bureau', 120));

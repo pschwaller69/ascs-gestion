@@ -27,6 +27,7 @@
     <div class="coches">
         <?= coche('Inscriptions en ligne ouvertes', 'inscription_ouverte', $inscriptionOuverte) ?>
         <?= coche('Demandes de cours d\'essai ouvertes', 'essai_ouvert', $essaiOuvert) ?>
+        <?= coche('Valider seuls les cours d\'essai (fiche trouvée sans doute possible, ou nouvelle fiche ; sinon la demande attend dans Demandes)', 'essai_auto', $essaiAuto) ?>
     </div>
     <div class="grille">
         <div class="champ<?= isset($err['saison_id']) ? ' en-erreur' : '' ?>">

@@ -2,7 +2,7 @@
 <p class="flash flash-ok" role="status">Merci <?= e($m['prenom']) ?>, votre demande a bien été reçue.</p>
 <p>Votre référence : <strong class="reference"><?= e($m['ref']) ?></strong>. Notez-la, elle permet au bureau de retrouver votre demande.</p>
 <p><?= $m['type'] === 'essai'
-    ? 'Le bureau vous recontacte pour confirmer la date de votre cours d\'essai.'
+    ? (!empty($m['essai_valide']) ? 'Votre cours d\'essai est enregistré : l\'animateur a votre nom sur sa liste. Présentez-vous à l\'heure du cours.' : 'Le bureau vous recontacte pour confirmer la date de votre cours d\'essai.')
     : 'Le bureau valide votre inscription. Elle sera définitive une fois le règlement reçu.' ?></p>
 <?php if (!empty($m['recap'])): $r = $m['recap']; ?>
     <section class="recap">

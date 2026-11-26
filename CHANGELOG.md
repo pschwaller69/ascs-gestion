@@ -3,6 +3,13 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.19.0
+
+- Cours d'essai validés automatiquement dès l'envoi du formulaire, sans action du bureau, quand la fiche ne fait pas de doute : une seule fiche avec même nom et même date de naissance (ou, à défaut, même nom et même mail ou téléphone), complétée si des champs sont vides ; aucune fiche approchante : nouvelle fiche. Nom proche à une lettre près ou plusieurs fiches possibles : la demande attend dans Demandes comme avant.
+- Page de fin et mail de confirmation : « l'animateur a votre nom sur sa liste » au lieu de « le bureau vous recontacte » quand l'essai est validé.
+- La tâche cron HelloAsso valide aussi les cours d'essai restés à traiter qui ne font plus de doute (demandes envoyées avant la mise à jour comprises).
+- Réglage « Valider seuls les cours d'essai » (Accueil > QR codes), coché par défaut ; demandes marquées « Validation automatique ».
+
 ## 0.18.0
 
 - Cours d'essai sur les activités elles-mêmes : les sections « Z ESSAI … » ne sont plus proposées en ligne (elles restent en base pour l'historique et WinDev).

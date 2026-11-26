@@ -24,6 +24,14 @@ foreach (array_slice($argv, 1) as $a) {
 
 $cfg = Config::load();
 $pdo = Db::connect($cfg);
+// Cours d'essai restés à traiter (fiche douteuse depuis réglée, demandes antérieures) : validation automatique
+try {
+    if (($n = (new \Ascs\Domain\Demandes($pdo))->validerEssaisEnAttente()) > 0) {
+        echo date('d/m/Y H:i') . " — $n cours d'essai validé(s) automatiquement\n";
+    }
+} catch (Throwable $e) {
+    fwrite(STDERR, date('d/m/Y H:i') . ' — cours d\'essai : ' . $e->getMessage() . "\n");
+}
 try {
     $client = Client::depuisConfig($pdo, $cfg);
     $r = (new Sync($pdo))->executer($client, 'cron', $depuis);

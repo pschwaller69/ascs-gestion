@@ -292,6 +292,60 @@ final class Demandes
         return $r;
     }
 
+    /** Validation automatique des cours d'essai (Inscriptions en ligne > Réglages, cochée par défaut). */
+    public function essaisAuto(): bool
+    {
+        return \Ascs\Parametres::get($this->pdo, 'essai_auto') !== '0';
+    }
+
+    /**
+     * Valide seul une demande de cours d'essai quand la fiche ne fait pas de doute :
+     * une seule fiche « très probable » (même nom et date de naissance), sinon une seule « probable » (même nom, même mail
+     * ou téléphone), ou aucune fiche approchante (nouvelle fiche). Noms proches ou plusieurs fiches possibles : laissée au bureau.
+     * @return array{ok:bool,raison:string}
+     */
+    public function validerEssaiAuto(int $id): array
+    {
+        $d = $this->trouver($id);
+        if (!$d || $d['type'] !== 'essai' || $d['statut'] !== 'a_traiter') {
+            return ['ok' => false, 'raison' => 'pas un cours d\'essai à traiter'];
+        }
+        if (!$this->essaisAuto()) {
+            return ['ok' => false, 'raison' => 'validation automatique désactivée'];
+        }
+        $cands = $this->candidats($d);
+        $par = static fn (string $n): array => array_values(array_filter($cands, static fn ($c) => $c['niveau'] === $n));
+        [$a, $b, $c] = [$par('A'), $par('B'), $par('C')];
+        if (count($a) === 1) {
+            $choix = (string) $a[0]['id'];
+        } elseif (!$a && count($b) === 1) {
+            $choix = (string) $b[0]['id'];
+        } elseif (!$a && !$b && !$c) {
+            $choix = 'nouveau';
+        } else {
+            return ['ok' => false, 'raison' => 'fiche approchante ou plusieurs fiches possibles : à vérifier'];
+        }
+        $sections = array_map(static fn ($s) => (string) $s['id'], $d['liste_sections']);
+        $in = self::ficheDepuis($d) + ['adherent' => $choix, 'completer' => '1', 'saison_id' => (string) $d['saison_id'],
+            'creer' => $sections, 'montant' => array_fill_keys($sections, '0')];
+        $in['adherent'] = $choix;
+        $r = $this->valider($id, $in, 'Validation automatique');
+        return ['ok' => $r['ok'], 'raison' => $r['ok'] ? ($choix === 'nouveau' ? 'nouvelle fiche' : 'fiche existante') : implode(' ', $r['erreurs'])];
+    }
+
+    /** Cours d'essai encore à traiter (envoyés avant l'activation, ou fiche douteuse depuis corrigée) : @return int validés */
+    public function validerEssaisEnAttente(): int
+    {
+        if (!$this->essaisAuto()) {
+            return 0;
+        }
+        $n = 0;
+        foreach ($this->pdo->query("SELECT id FROM demande WHERE type = 'essai' AND statut = 'a_traiter' ORDER BY cree_le")->fetchAll(PDO::FETCH_COLUMN) as $id) {
+            $n += $this->validerEssaiAuto((int) $id)['ok'] ? 1 : 0;
+        }
+        return $n;
+    }
+
     /** Condition « champ vide » : une date ne se compare pas à '' (MariaDB strict refuse : erreur 1292). */
     private static function vide(string $col): string
     {
