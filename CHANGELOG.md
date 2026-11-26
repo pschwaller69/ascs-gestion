@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.21.0
+
+- Aides : « Qui y a droit » affiché en évidence sous chaque aide du formulaire d'inscription, séparé du fonctionnement de l'aide. Texte modifiable par aide dans Accueil > QR codes (à revoir à chaque rentrée ; vide : texte par défaut).
+- Textes par défaut : coupons de la mairie (6-16 ans, Rillieux-la-Pape, allocation de rentrée scolaire), PASS'Région jeunes, Pass'Sport selon les règles 2026-2027 (6-17 ans avec quotient familial CAF/MSA ≤ 699 €, AEEH 6-19 ans, AAH 16-30 ans, étudiants boursiers de moins de 28 ans ; activités sportives uniquement).
+- Pass'Sport : date limite par défaut au 31/12 (validité des codes).
+
 ## 0.20.1
 
 - Accueil > QR codes : le tableau des activités devient une liste de cartes (nom et tarif, pastilles « Inscription en ligne » et « Cours d'essai » à cliquer, dates côte à côte, texte et lien empilés). Liseré coloré sur les activités en ligne, nom grisé sinon ; nombre d'activités en ligne affiché. S'adapte aux écrans étroits.

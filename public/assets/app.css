@@ -606,3 +606,9 @@ input, select, textarea { max-width: 100%; }
 @media (max-width: 78rem) { .activite-reglage { grid-template-columns: 1fr auto; } .ar-dates, .ar-textes { grid-column: 1 / -1; } .ar-textes { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 40rem) { .activite-reglage { grid-template-columns: 1fr; } .ar-bascules { flex-direction: row; flex-wrap: wrap; } .ar-textes { grid-template-columns: 1fr; } }
 .activite-reglage input[type=url] { font: inherit; border: 1px solid #aebdbc; border-radius: 4px; background: #fff; color: var(--ink); }
+.aide-droit { margin: .2rem 0 .1rem; font-size: .85rem; color: var(--ink); background: var(--teal-l); border-left: 3px solid var(--teal); padding: .3rem .55rem; border-radius: 0 4px 4px 0; }
+.aide-droit-saisie { min-width: 22rem; font-size: .85rem; }
+.aide-choix .aide-droit { margin-left: 1.75rem; }
+.table-reglages td:has(.aide-droit-saisie) { width: 60%; }
+.aide-droit-saisie { width: 100%; }
+.table-reglages input[name^="aide_limite"], .table-reglages input[name^="aide_garantie"] { width: 6.5rem; }

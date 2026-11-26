@@ -27,7 +27,7 @@ final class EnLigneController
             'horaires' => (string) Parametres::get($this->app->pdo, 'horaires_bureau'),
             'aidesDates' => (function (): array {
                 $b = new \Ascs\Domain\Bulletin($this->app->pdo);
-                return array_map(static fn ($a) => ['cle' => $a['cle'], 'libelle' => $a['libelle'], 'limite' => $b->reglageAide($a['cle'], 'limite'), 'garantie' => $b->reglageAide($a['cle'], 'garantie')], \Ascs\Domain\Bulletin::aides());
+                return array_map(static fn ($a) => ['cle' => $a['cle'], 'libelle' => $a['libelle'], 'limite' => $b->reglageAide($a['cle'], 'limite'), 'garantie' => $b->reglageAide($a['cle'], 'garantie'), 'droit' => $b->droitAide($a['cle']), 'droit_defaut' => \Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? ''], \Ascs\Domain\Bulletin::aides());
             })(),
             'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(),
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
@@ -72,6 +72,9 @@ final class EnLigneController
                 // jj/mm valide, ou vide (pas de limite / pas de garantie)
                 Parametres::set($pdo, 'aide_' . $a['cle'] . '_' . $t, $v === '' || \Ascs\Domain\Bulletin::dateDansSaison($v, 2026) !== null ? $v : '');
             }
+            // Texte « qui y a droit » : identique au texte par défaut ou vide -> texte par défaut (suit les mises à jour)
+            $droit = trim(str_replace(["\r\n", "\n"], ' ', (string) ($_POST['aide_droit'][$a['cle']] ?? '')));
+            Parametres::set($pdo, 'aide_' . $a['cle'] . '_droit', $droit === (\Ascs\Domain\Bulletin::DROITS_DEFAUT[$a['cle']] ?? '') ? '' : mb_substr($droit, 0, 600));
         }
         $ri = trim(str_replace("\r\n", "\n", (string) ($_POST['reglement_interieur'] ?? '')));
         Parametres::set($pdo, 'reglement_interieur', $ri === trim(\Ascs\Domain\Bulletin::REGLEMENT_DEFAUT) ? '' : mb_substr($ri, 0, 8000));

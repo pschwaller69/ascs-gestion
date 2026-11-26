@@ -55,25 +55,39 @@ TXT;
         }
         return [
             ['cle' => 'coupon_sport', 'libelle' => 'Coupon sport (mairie)', 'montant' => $m['coupon_sport'] ?? 48.0,
-                'condition' => 'Rilliards de 6 à 16 ans bénéficiant de l\'allocation de rentrée scolaire. Aide déduite à l\'inscription, contre un chèque de caution du même montant, rendu au versement de l\'aide par la mairie.'],
+                'condition' => 'Aide de la mairie déduite à l\'inscription, contre un chèque de caution du même montant, rendu au versement de l\'aide par la mairie. Devis à faire valider en mairie.'],
             ['cle' => 'coupon_culture', 'libelle' => 'Coupon culture (mairie)', 'montant' => $m['coupon_culture'] ?? 90.0,
-                'condition' => 'Mêmes conditions que le coupon sport, pour une activité culturelle.'],
+                'condition' => 'Comme le coupon sport, pour une activité culturelle.'],
             ['cle' => 'pass_region', 'libelle' => 'Carte Pass\'Région', 'montant' => $m['pass_region'] ?? 30.0,
                 'condition' => 'Aide de la Région sur la cotisation annuelle, versée une fois l\'inscription entièrement réglée. Copie de la carte à fournir.'],
             ['cle' => 'pass_sport', 'libelle' => 'Pass\'Sport', 'montant' => $m['pass_sport'] ?? 50.0,
-                'condition' => '6-17 ans avec allocation de rentrée scolaire, 6-20 ans avec AEEH, 16-30 ans avec AAH, étudiants boursiers jusqu\'à 28 ans. Indiquez le code Pass\'Sport.'],
+                'condition' => 'Activités sportives uniquement. Indiquez le code Pass\'Sport reçu par mail (CAF, MSA ou Crous).'],
         ];
     }
 
     // ------------------------------------------------------------------ dates des aides (Inscriptions en ligne > Réglages)
 
     /** Date limite de demande (jj/mm) : après, l'aide n'est plus proposée dans le formulaire. Vide : pas de limite. */
-    public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '', 'pass_region' => ''];
+    public const LIMITES_DEFAUT = ['coupon_sport' => '08/11', 'coupon_culture' => '08/11', 'pass_sport' => '31/12', 'pass_region' => ''];
     /**
      * Garantie par carte (jj/mm) : quand la personne paie par carte sur HelloAsso, le montant de l'aide est programmé
      * en dernière échéance à cette date, et annulé quand l'aide est confirmée (mairie). Vide : pas de garantie.
      */
-    public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '', 'pass_region' => ''];
+    public const GARANTIES_DEFAUT = ['coupon_sport' => '15/01', 'coupon_culture' => '15/01', 'pass_sport' => '31/12', 'pass_region' => ''];
+
+    /** Qui a droit à chaque aide (texte modifiable dans Inscriptions en ligne > Réglages, à revoir chaque saison). */
+    public const DROITS_DEFAUT = [
+        'coupon_sport' => 'Enfants et jeunes de 6 à 16 ans habitant Rillieux-la-Pape, dont la famille perçoit l\'allocation de rentrée scolaire.',
+        'coupon_culture' => 'Mêmes bénéficiaires que le coupon sport (6 à 16 ans, Rillieux-la-Pape, allocation de rentrée scolaire).',
+        'pass_region' => 'Jeunes ayant la carte PASS\'Région jeunes de la Région Auvergne-Rhône-Alpes (lycéens, apprentis, jeunes en formation).',
+        'pass_sport' => 'Jeunes de 6 à 17 ans dont le quotient familial CAF ou MSA est de 699 € ou moins ; jeunes de 6 à 19 ans bénéficiaires de l\'AEEH ; 16 à 30 ans bénéficiaires de l\'AAH ; étudiants boursiers de moins de 28 ans.',
+    ];
+
+    public function droitAide(string $cle): string
+    {
+        $v = Parametres::get($this->pdo, 'aide_' . $cle . '_droit');
+        return $v === null || trim($v) === '' ? (self::DROITS_DEFAUT[$cle] ?? '') : trim($v);
+    }
 
     public function reglageAide(string $cle, string $type): string
     {
@@ -119,7 +133,7 @@ TXT;
             if ($lim !== null && $auj > $lim) {
                 continue;
             }
-            $out[] = $a + ['limite' => $lim, 'garantie' => $this->garantieAide($a['cle'])];
+            $out[] = $a + ['limite' => $lim, 'garantie' => $this->garantieAide($a['cle']), 'droit' => $this->droitAide($a['cle'])];
         }
         return $out;
     }
