@@ -125,6 +125,7 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
                     <?php if ($essai): ?><input type="hidden" name="montant[<?= $sid ?>]" value="0"><?= $d['date_essai'] ? '<span class="aide">essai souhaité le ' . e(dfr($d['date_essai'])) . '</span>' : '' ?><?php else: ?>
                     <label class="visuellement-cache" for="m-<?= $sid ?>">Montant pour <?= e($s['titre']) ?></label>
                     <input type="text" id="m-<?= $sid ?>" name="montant[<?= $sid ?>]" value="<?= e($m) ?>" inputmode="decimal" class="montant-court"> €<?php endif; ?>
+                    <?php if (!$essai && isset($places[$sid])): $pe = $places[$sid]; ?><span class="aide<?= $pe['inscrits'] >= $pe['places'] ? ' places-depassees' : '' ?>"><?= (int) $pe['inscrits'] ?> inscrits / <?= (int) $pe['places'] ?> places<?= $pe['inscrits'] >= $pe['places'] ? ' : complet, l\'inscription dépassera la capacité de la salle' : '' ?></span><?php endif; ?>
                     <?php if (isset($err['montant_' . $sid])): ?><p class="msg-erreur"><?= e($err['montant_' . $sid]) ?></p><?php endif; ?>
                 </div>
             <?php endforeach; ?>

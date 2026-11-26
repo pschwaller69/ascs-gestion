@@ -633,3 +633,9 @@ input, select, textarea { max-width: 100%; }
 .bloc-carte { margin: .3rem 0 .4rem 1.75rem; }
 .bloc-carte input[type=file] { font: inherit; padding: .3rem 0; }
 .bloc-carte .aide-droit { margin-left: 0; }
+.carte-texte .complet, .ar-tarif .complet { color: var(--red); font-weight: 600; }
+.carte-texte .places-restantes { color: var(--amber); font-weight: 600; }
+.carte-activite:has(input:disabled) { opacity: .65; cursor: not-allowed; }
+.activite-reglage .ar-textes { grid-template-columns: 8rem 1fr 1fr; }
+@media (max-width: 40rem) { .activite-reglage .ar-textes { grid-template-columns: 1fr; } }
+.places-depassees { color: var(--red); font-weight: 600; }

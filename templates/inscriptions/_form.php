@@ -1,4 +1,6 @@
-<?php /** @var array $d @var array $err @var array $sections @var array $saisons @var string $action @var int $adherentId @var bool $edition */ ?>
+<?php /** @var array $d @var array $err @var array $sections @var array $saisons @var string $action @var int $adherentId @var bool $edition */
+// Places des activités limitées (capacité de la salle) : affichées dans la liste, jamais bloquantes ici
+$places = $places ?? (new Ascs\Domain\Places(Ascs\Db::connect()))->etat((int) ($d['saison_id'] ?: 0)); ?>
 <form class="fiche" method="post" action="<?= e($action) ?>">
     <?= csrf_field() ?>
     <input type="hidden" name="adherent_id" value="<?= (int) $adherentId ?>">
@@ -9,7 +11,7 @@
             <select id="f_section_id" name="section_id" required data-prix-section<?= isset($err['section_id']) ? ' aria-invalid="true" aria-describedby="f_section_id-err"' : '' ?>>
                 <option value="">Choisir…</option>
                 <?php foreach ($sections as $s): ?>
-                    <option value="<?= (int) $s['id'] ?>" data-montant="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $s['montant'], (string) $s['titre'], $rillieux), 2, ',', '')) ?>"<?= attr((string) $d['section_id'] === (string) $s['id'], 'selected') ?>><?= e($s['titre']) ?></option>
+                    <option value="<?= (int) $s['id'] ?>" data-montant="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $s['montant'], (string) $s['titre'], $rillieux), 2, ',', '')) ?>"<?= attr((string) $d['section_id'] === (string) $s['id'], 'selected') ?>><?= e($s['titre']) ?><?php if (isset($places[(int) $s['id']])): $pe = $places[(int) $s['id']]; ?> (<?= (int) $pe['inscrits'] ?>/<?= (int) $pe['places'] ?><?= $pe['inscrits'] >= $pe['places'] ? ', complet' : '' ?>)<?php endif; ?></option>
                 <?php endforeach; ?>
             </select>
             <?php if (isset($err['section_id'])): ?><p class="msg-erreur" id="f_section_id-err"><?= e($err['section_id']) ?></p><?php endif; ?>

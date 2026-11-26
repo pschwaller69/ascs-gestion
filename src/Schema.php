@@ -314,6 +314,11 @@ final class Schema
                 'cols' => ['section_id' => 'int', 'saison_id' => 'int', 'reprise' => 'date?', 'essai_des' => 'date?'],
                 'pk' => ['section_id', 'saison_id'],
             ],
+            // Nombre de places d'une activité (depuis 0.25.0) : limite les inscriptions en ligne ; vide = pas de limite
+            'section_capacite' => [
+                'cols' => ['section_id' => 'int', 'places' => 'int?'],
+                'pk' => ['section_id'],
+            ],
             // Carte PASS'Région jointe à une inscription en ligne (depuis 0.24.0) : photo dans storage/cartes, code chiffré
             'demande_carte' => [
                 'cols' => ['demande_id' => 'int', 'fichier' => 'str:120?', 'mime' => 'str:40?', 'code_chiffre' => 'str:255?', 'cree_le' => 'datetime'],

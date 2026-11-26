@@ -14,7 +14,7 @@
         <li class="activite-reglage">
             <div class="ar-tete">
                 <span class="ar-titre"><?= e($s['titre']) ?></span>
-                <span class="ar-tarif"><?= e(money($s['montant'])) ?></span>
+                <span class="ar-tarif"><?= e(money($s['montant'])) ?><?php if ($s['places'] !== null): ?> · <?= (int) $s['inscrits'] ?> inscrit<?= $s['inscrits'] > 1 ? 's' : '' ?><?= $s['attente'] ? ' + ' . (int) $s['attente'] . ' demande' . ($s['attente'] > 1 ? 's' : '') . ' en ligne' : '' ?> / <?= (int) $s['places'] ?> places<?= $s['complet'] ? ' · <strong class="complet">complet</strong>' : '' ?><?php endif; ?></span>
             </div>
             <div class="ar-bascules">
                 <label class="bascule"><input type="checkbox" name="s[<?= $sid ?>][ouvert]" value="1"<?= attr((bool) $s['ouvert'], 'checked') ?>><span><?= icon('check') ?> Inscription en ligne</span></label>
@@ -25,6 +25,7 @@
                 <label>Essais à partir du<input type="date" name="s[<?= $sid ?>][essai_des]" value="<?= e($s['essai_des']) ?>" title="Vide : la date de reprise"<?= isset($err['essai_des_' . $sid]) ? ' aria-invalid="true"' : '' ?>></label>
             </div>
             <div class="ar-textes">
+                <label>Places par cours (vide : pas de limite)<input type="text" inputmode="numeric" name="s[<?= $sid ?>][places]" value="<?= e((string) ($s['places'] ?? '')) ?>" maxlength="3"<?= isset($err['places_' . $sid]) ? ' aria-invalid="true"' : '' ?>></label>
                 <label>Texte affiché (horaires, public…)<input type="text" name="s[<?= $sid ?>][description]" value="<?= e($s['description']) ?>" maxlength="500" placeholder="Ex. : lundi 18 h 30 – 20 h, dès 8 ans"></label>
                 <label>Adresse du cours<input type="text" name="s[<?= $sid ?>][adresse]" value="<?= e($s['adresse']) ?>" maxlength="255" placeholder="Salle, rue, ville"></label>
             </div>

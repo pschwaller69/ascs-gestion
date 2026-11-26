@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.25.0
+
+- Nombre de places par activité (capacité de la salle), sur la fiche de la section ou dans Paramétrage > Activités en ligne ; vide : pas de limite.
+- Inscriptions en ligne : places occupées = inscriptions de la saison + demandes en ligne encore à traiter. « Plus que N places » à partir de 3 places libres ; activité complète grisée avec « Complet : contactez le bureau pour la liste d'attente », et refusée à l'envoi.
+- Bureau (gestion) : jamais bloqué. Message à la création d'une inscription ou à la validation d'une demande : « activité maintenant complète », ou en rouge « capacité de la salle dépassée de N ». Places affichées dans la liste des sections de « Nouvelle inscription » (ex. 18/20, complet), sur les demandes et sur les cartes des activités.
+
 ## 0.24.1
 
 - Photo de la carte PASS'Région réduite automatiquement : dans le téléphone avant l'envoi (1600 px, JPEG ; une photo de 12 Mo part en moins de 1 Mo), puis par le serveur si besoin (même taille, sens de la photo corrigé). HEIC et PDF lus ailleurs que sur iPhone : gardés tels quels. Taille acceptée portée à 20 Mo.

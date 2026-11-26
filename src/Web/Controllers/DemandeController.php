@@ -62,6 +62,7 @@ final class DemandeController
             'saisons' => $this->app->pdo->query('SELECT id, titre FROM saison ORDER BY date_debut DESC, id DESC')->fetchAll(),
             'niveaux' => DuplicateFinder::NIVEAUX, 'inscriptions' => $inscriptions, 'lien' => $lien, 'changements' => $changements,
             'carte' => (new \Ascs\Domain\CartesPass($this->app->pdo))->lire((int) $d['id']),
+            'places' => (new \Ascs\Domain\Places($this->app->pdo))->etat((int) ($d['saison_id'] ?: $this->app->saisonId()), (int) $d['id']),
         ], 'Demande ' . $d['reference'], 'accueil', $err ? 422 : 200);
     }
 
@@ -92,6 +93,7 @@ final class DemandeController
                 $devis = $e ? ' Devis coupon NON envoyé : ' . $e : ' Devis coupon et procédure envoyés à ' . $dm['mail'] . '.';
             }
         }
+        $this->alertesPlaces(array_map('intval', $r['inscriptions']));
         $this->app->flash($devis !== '' && str_contains($devis, 'NON') ? 'erreur' : 'ok', (!empty($r['essais']) ? 'Cours d\'essai enregistré : il apparaît sur la liste de présence de l\'animateur.' : ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.')) . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : '') . $devis);
         $suivante = $this->app->pdo->query("SELECT id FROM demande WHERE statut = 'a_traiter' ORDER BY cree_le LIMIT 1")->fetchColumn();
         if (($_POST['suite'] ?? '') === 'suivante' && $suivante !== false) {
@@ -99,6 +101,19 @@ final class DemandeController
         }
         $adh = $this->app->pdo->query('SELECT adherent_id FROM demande WHERE id = ' . $id)->fetchColumn();
         $this->app->redirect('/adherents/' . $adh, ['onglet' => 'inscriptions']);
+    }
+
+    /** Capacité de la salle atteinte ou dépassée par ces inscriptions : message (rien n'est bloqué depuis le bureau). @param list<int> $ids */
+    private function alertesPlaces(array $ids): void
+    {
+        $pl = new \Ascs\Domain\Places($this->app->pdo);
+        $st = $this->app->pdo->prepare('SELECT section_id, saison_id FROM inscription WHERE id = ?');
+        foreach ($ids as $iid) {
+            $st->execute([$iid]);
+            if (($i = $st->fetch()) && ($m = $pl->alerte((int) $i['section_id'], (int) $i['saison_id']))) {
+                $this->app->flash(str_contains($m, 'dépassée') ? 'erreur' : 'info', $m);
+            }
+        }
     }
 
     /** Photo de la carte PASS'Région jointe à la demande (bureau connecté seulement). */

@@ -114,7 +114,10 @@ final class EnLigne
     {
         $d = $this->dates();
         $lieux = $this->lieux();
+        $etat = (new Places($this->pdo))->etat($this->saisonId());
         foreach ($l as &$s) {
+            $e = $etat[(int) $s['id']] ?? null;
+            $s += ['places' => $e['places'] ?? null, 'inscrits' => $e['inscrits'] ?? null, 'attente' => $e['attente'] ?? null, 'libres' => $e['libres'] ?? null, 'complet' => $e !== null && $e['libres'] <= 0];
             $s += $d[(int) $s['id']] ?? ['reprise' => null, 'essai_des' => null, 'essai_debut' => null];
             $s += ['adresse' => $lieux[(int) $s['id']]['adresse'] ?? null];
         }
@@ -197,13 +200,13 @@ final class EnLigne
             if ((int) $s['id'] === $sectionId) {
                 return ['ouvert' => (bool) $s['ouvert'], 'essai' => (bool) $s['essai_ouvert'], 'reprise' => $s['reprise'], 'essai_des' => $s['essai_des'],
                     'description' => (string) $s['description'],
-                    'adresse' => (string) $s['adresse']];
+                    'adresse' => (string) $s['adresse'], 'places' => $s['places']];
             }
         }
         return self::REGLAGE_VIDE;
     }
 
-    public const REGLAGE_VIDE = ['ouvert' => false, 'essai' => false, 'reprise' => null, 'essai_des' => null, 'description' => '', 'adresse' => ''];
+    public const REGLAGE_VIDE = ['ouvert' => false, 'essai' => false, 'reprise' => null, 'essai_des' => null, 'description' => '', 'adresse' => '', 'places' => null];
 
     /** Contrôle des réglages en ligne d'une activité. @return array<string,string> erreurs, clés « reprise », « essai_des » */
     public static function erreursSection(array $r): array
@@ -213,6 +216,10 @@ final class EnLigne
             if (trim((string) ($r[$k] ?? '')) !== '' && Input::date($r, $k) === null) {
                 $err[$k] = $lib . ' invalide.';
             }
+        }
+        $pl = trim((string) ($r['places'] ?? ''));
+        if ($pl !== '' && (!ctype_digit($pl) || (int) $pl > 999)) {
+            $err['places'] = 'Nombre de places invalide (nombre entier, vide pour ne pas limiter).';
         }
         return $err;
     }
@@ -227,6 +234,10 @@ final class EnLigne
             ->execute([$sectionId, $this->saisonId(), Input::date($r, 'reprise'), Input::date($r, 'essai_des')]);
         \Ascs\Db::upsertStatement($this->pdo, 'section_lieu', ['section_id', 'adresse'], ['section_id'])
             ->execute([$sectionId, Input::text($r, 'adresse', 255)]);
+        if (array_key_exists('places', $r)) {
+            $pl = trim((string) $r['places']);
+            (new Places($this->pdo))->enregistrer($sectionId, ctype_digit($pl) ? (int) $pl : null);
+        }
     }
 
     /** Cours d'essai ouvert pour une activité : réglage enregistré, sinon comme l'inscription en ligne (sauf couture). */
@@ -289,12 +300,18 @@ final class EnLigne
                 $err['sections'] = 'Choisissez l\'activité à essayer.';
             }
         } else {
+            // Activité complète (nombre de places atteint) : plus d'inscription en ligne
+            $completes = array_map('intval', array_column(array_filter($this->sectionsOuvertes(false), static fn ($s) => $s['complet']), 'id'));
             foreach ((array) ($in['sections'] ?? []) as $v) {
                 if (is_string($v) && ctype_digit($v) && in_array((int) $v, $ouvertes, true)) {
+                    if (in_array((int) $v, $completes, true)) {
+                        $err['sections'] = 'Une activité choisie est complète : décochez-la, ou contactez le bureau pour la liste d\'attente.';
+                        continue;
+                    }
                     $choisies[] = (int) $v;
                 }
             }
-            if (!$choisies) {
+            if (!$choisies && !isset($err['sections'])) {
                 $err['sections'] = 'Cochez au moins une activité.';
             }
         }

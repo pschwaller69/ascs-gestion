@@ -76,6 +76,7 @@ final class InscriptionController
         }
         $id = $this->insc->creer($d);
         $this->app->flash('ok', 'Inscription créée.');
+        $this->alertePlaces((int) $d['section_id'], (int) $d['saison_id']);
         if (($_POST['suite'] ?? '') === 'reglement') {
             $this->app->redirect('/reglements/nouveau', ['inscription' => $id]);
         }
@@ -106,6 +107,9 @@ final class InscriptionController
         }
         $this->insc->modifier($id, $d);
         $this->app->flash('ok', 'Inscription enregistrée.');
+        if ((int) $d['section_id'] !== (int) $i['section_id'] || (int) $d['saison_id'] !== (int) $i['saison_id']) {
+            $this->alertePlaces((int) $d['section_id'], (int) $d['saison_id']);
+        }
         if (($_POST['suite'] ?? '') === 'reglement') {
             $this->app->redirect('/reglements/nouveau', ['inscription' => $id]);
         }
@@ -169,5 +173,14 @@ final class InscriptionController
             'messageFacture' => \Ascs\Web\Controllers\FactureController::message($i, $reg = (new \Ascs\Documents\Reglages($this->app->pdo))->tous()),
             'expediteur' => $reg['expediteur'],
         ], 'Inscription ' . trim($i['nom'] . ' ' . $i['prenom']), 'accueil', $status);
+    }
+
+    /** Capacité de la salle atteinte ou dépassée : message seulement, le bureau peut toujours inscrire. */
+    private function alertePlaces(int $sectionId, int $saisonId): void
+    {
+        $m = (new \Ascs\Domain\Places($this->app->pdo))->alerte($sectionId, $saisonId);
+        if ($m !== null) {
+            $this->app->flash(str_contains($m, 'dépassée') ? 'erreur' : 'info', $m);
+        }
     }
 }

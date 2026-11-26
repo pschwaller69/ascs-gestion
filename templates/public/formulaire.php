@@ -44,10 +44,12 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
                 <?php if ($essai): ?>
                     <input type="radio" id="<?= $id ?>" name="section" value="<?= (int) $sec['id'] ?>"<?= attr((string) $s['section'] === (string) $sec['id'], 'checked') ?>>
                 <?php else: ?>
-                    <input type="checkbox" id="<?= $id ?>" name="sections[]" value="<?= (int) $sec['id'] ?>"<?= attr(in_array((string) $sec['id'], (array) $s['sections'], true), 'checked') ?> data-titre="<?= e($sec['titre']) ?>" data-nature="<?= e($natures[(int) $sec['id']] ?? 'aucune') ?>" data-tarif="<?= e(number_format((float) $sec['montant'], 2, '.', '')) ?>" data-tarif-rillieux="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true), 2, '.', '')) ?>">
+                    <input type="checkbox" id="<?= $id ?>" name="sections[]" value="<?= (int) $sec['id'] ?>"<?= attr(!$sec['complet'] && in_array((string) $sec['id'], (array) $s['sections'], true), 'checked') ?><?= attr((bool) $sec['complet'], 'disabled') ?> data-titre="<?= e($sec['titre']) ?>" data-nature="<?= e($natures[(int) $sec['id']] ?? 'aucune') ?>" data-tarif="<?= e(number_format((float) $sec['montant'], 2, '.', '')) ?>" data-tarif-rillieux="<?= e(number_format(Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true), 2, '.', '')) ?>">
                 <?php endif; ?>
                 <span class="carte-texte">
                     <strong><?= e(preg_replace('/^Z\s+ESSAI\s+/i', '', $sec['titre'])) ?></strong>
+                    <?php if (!$essai && $sec['complet']): ?><span class="complet">Complet : contactez le bureau pour la liste d'attente</span>
+                    <?php elseif (!$essai && $sec['libres'] !== null && $sec['libres'] <= 3): ?><span class="places-restantes">Plus que <?= (int) $sec['libres'] ?> place<?= $sec['libres'] > 1 ? 's' : '' ?></span><?php endif; ?>
                     <?php if (!$essai && (float) $sec['montant'] > 0): $rill = Ascs\Domain\Tarifs::montant((float) $sec['montant'], (string) $sec['titre'], true); ?><span class="prix"><?= e(money($sec['montant'])) ?><?= $rill < (float) $sec['montant'] ? ' · ' . e(money($rill)) . ' pour les habitants de Rillieux' : '' ?></span><?php endif; ?>
                     <?php if ($essai && ($sec['essai_debut'] ?? null) && $sec['essai_debut'] > date('Y-m-d')): ?><span class="reprise">Essai possible à partir du <?= e(dfr($sec['essai_debut'])) ?></span>
                     <?php elseif (!$essai && ($sec['reprise'] ?? null)): ?><span class="reprise">Reprise des cours le <?= e(dfr($sec['reprise'])) ?></span><?php endif; ?>

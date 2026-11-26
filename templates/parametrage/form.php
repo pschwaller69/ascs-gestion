@@ -60,6 +60,7 @@ $val = static fn (string $c) => $v[$c] ?? '';
             <?= champ('Reprise des cours', 'en_ligne[reprise]', (string) $el['reprise'], ['type' => 'date', 'id' => 'f_el_reprise', 'error' => $err['en_ligne_reprise'] ?? null, 'hint' => 'Affichée aux adhérents.']) ?>
             <?= champ('Cours d\'essai à partir du', 'en_ligne[essai_des]', (string) $el['essai_des'], ['type' => 'date', 'id' => 'f_el_essai_des', 'error' => $err['en_ligne_essai_des'] ?? null, 'hint' => 'Vide : la date de reprise.']) ?>
             <?= champ('Texte affiché (horaires, public…)', 'en_ligne[description]', (string) $el['description'], ['id' => 'f_el_description', 'maxlength' => 500]) ?>
+            <?= champ('Nombre de places par cours', 'en_ligne[places]', (string) ($el['places'] ?? ''), ['inputmode' => 'numeric', 'maxlength' => 3, 'error' => $err['en_ligne_places'] ?? null, 'hint' => 'Capacité de la salle. Atteinte : plus d\'inscription en ligne (« Complet »). Le bureau peut toujours inscrire, avec un message d\'alerte. Vide : pas de limite.']) ?>
             <?= champ('Adresse du cours', 'en_ligne[adresse]', (string) $el['adresse'], ['maxlength' => 255, 'hint' => 'Lieu précis : salle, rue, ville. Affichée avec un lien vers le plan.']) ?>
         </div>
     <?php endif; ?>
