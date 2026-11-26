@@ -47,6 +47,7 @@ final class PublicController
             'type' => $type, 's' => $saisie, 'err' => $err, 'sections' => $sections, 'canaux' => $this->el->canaux(),
             'saison' => $this->el->saisonTitre(), 'message' => $this->el->message(),
             'reglement' => (new \Ascs\Domain\Bulletin($this->app->pdo))->reglementInterieur(), 'aides' => \Ascs\Domain\Bulletin::aides(),
+            'horaires' => (new \Ascs\Domain\Bulletin($this->app->pdo))->horairesBureau(),
             'apercu' => $apercu,
             'reinscription' => $type === 'inscription' ? ($_SESSION['reinscription']['prenom'] ?? null) : null,
         ], $type === 'essai' ? 'Cours d\'essai' : 'Inscription', $status);
@@ -137,15 +138,17 @@ final class PublicController
             unset($_SESSION['reinscription']);
         }
         $pieces = $c !== null ? $bulletin->pieces($d, $c) : [];
-        $this->confirmer($type, $d, (string) $ref, $c, $pieces);
+        $bureau = $c !== null ? $bulletin->auBureau($c) : [];
+        $horaires = $bulletin->horairesBureau();
+        $this->confirmer($type, $d, (string) $ref, $c, $pieces, $bureau, $horaires);
         unset($_SESSION['form_affiche'][$type]);
         $_SESSION['demande_envoyee'] = ['ref' => $ref, 'type' => $type, 'sections' => json_decode($d['sections'], true), 'prenom' => $d['prenom'],
-            'recap' => $c['recap'] ?? null, 'pieces' => $pieces];
+            'recap' => $c['recap'] ?? null, 'pieces' => $pieces, 'bureau' => $bureau, 'horaires' => $horaires];
         $this->app->redirect('/merci');
     }
 
     /** Mail de confirmation à la personne (sans bloquer la demande si l'envoi échoue). */
-    private function confirmer(string $type, array $d, string $ref, ?array $c = null, array $pieces = []): void
+    private function confirmer(string $type, array $d, string $ref, ?array $c = null, array $pieces = [], array $bureau = [], string $horaires = ''): void
     {
         try {
             $r = (new \Ascs\Documents\Reglages($this->app->pdo))->tous();
@@ -165,6 +168,7 @@ final class PublicController
                 . ($noms ? ' pour : ' . implode(', ', $noms) : '') . ".\nRéférence : " . $ref . "\n\n"
                 . ($type === 'essai' ? 'Le bureau vous recontacte pour vous confirmer le jour du cours.' : 'Le bureau la vérifie et vous recontacte si besoin. L\'inscription est définitive à réception du règlement.')
                 . ($c ? "\n\n" . self::texteRecap($c['recap']) : '')
+                . ($bureau ? "\n\nÀ déposer au bureau de l'association (ouvert " . $horaires . ") :\n- " . implode("\n- ", $bureau) : '')
                 . ($pieces ? "\n\nÀ apporter au premier cours :\n- " . implode("\n- ", $pieces) : '')
                 . (($pl = $type === 'inscription' ? $this->paiementEnLigne($ref) : null)
                     ? "\n\nPayer en ligne par carte bancaire (HelloAsso) : " . \Ascs\Web\App::urlAbsolue('/paiement/' . $pl['jeton']) : '')

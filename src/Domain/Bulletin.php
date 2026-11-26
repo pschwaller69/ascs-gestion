@@ -163,6 +163,22 @@ TXT;
         if (in_array('pass_sport', $c['aides'] ?? [], true)) {
             $p[] = 'Le QR code ou le courrier Pass\'Sport';
         }
+        return $p;
+    }
+
+    /** Horaires du bureau pour déposer les chèques (Inscriptions en ligne > Réglages). */
+    public const HORAIRES_DEFAUT = 'du lundi au jeudi de 14 h à 18 h';
+
+    public function horairesBureau(): string
+    {
+        $h = trim((string) \Ascs\Parametres::get($this->pdo, 'horaires_bureau'));
+        return $h !== '' ? $h : self::HORAIRES_DEFAUT;
+    }
+
+    /** À déposer au bureau de l'association (pas au cours) : les chèques. @return list<string> */
+    public function auBureau(array $c): array
+    {
+        $p = [];
         if (in_array('cheque', $c['moyens'] ?? [], true)) {
             $n = (int) ($c['nb_cheques'] ?? 1);
             $p[] = $n > 1 ? $n . ' chèques à l\'ordre de l\'ASCS, encaissés le 1er ou le 15 de chaque mois' : 'Le chèque à l\'ordre de l\'ASCS';

@@ -142,7 +142,7 @@ $coche = static fn (string $k, string $v) => in_array($v, (array) ($s[$k] ?? [])
         </div>
         <div class="champ" id="bloc-nb-cheques"<?= $coche('moyens', 'cheque') ? '' : ' hidden' ?>>
             <label for="f_nb_cheques">Nombre de chèques</label>
-            <p class="aide">En plusieurs fois, les chèques sont encaissés le 1er ou le 15 de chaque mois.</p>
+            <p class="aide">Les chèques sont à déposer au bureau de l'association, ouvert <?= e($horaires ?? Ascs\Domain\Bulletin::HORAIRES_DEFAUT) ?>. En plusieurs fois, ils sont encaissés le 1er ou le 15 de chaque mois.</p>
             <select id="f_nb_cheques" name="nb_cheques"><?php for ($n = 1; $n <= 3; $n++): ?><option value="<?= $n ?>"<?= attr((string) $s['nb_cheques'] === (string) $n, 'selected') ?>><?= $n === 1 ? '1 chèque' : $n . ' chèques' ?></option><?php endfor; ?></select>
         </div>
         <p class="aide" id="note-ancv"<?= $coche('moyens', 'ancv') ? '' : ' hidden' ?>>Chèques ANCV et ANCV Connect : frais de gestion de <?= e(money(Ascs\Domain\Bulletin::FRAIS_ANCV)) ?> par dossier.</p>

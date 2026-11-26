@@ -3,6 +3,14 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.15.4
+
+- Règlement par chèque : les chèques sont à déposer au bureau de l'association (plus « au premier cours »), ouvert du lundi au jeudi de 14 h à 18 h. Indiqué sur le formulaire (choix du chèque), la page de fin (« À déposer au bureau ») et le mail de confirmation. Horaires modifiables dans Inscriptions en ligne > Réglages.
+
+## 0.15.3
+
+- Tarif conseil d'administration : 10 € pour tous, sans la réduction Rillieux.
+
 ## 0.15.2
 
 - Tarifs bénévole et conseil d'administration : 10 € pour tous, sans la réduction Rillieux (comme le jogging et la marche).

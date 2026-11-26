@@ -16,6 +16,11 @@
         <p class="aide">Montant indicatif, confirmé par le bureau.</p>
     </section>
 <?php endif; ?>
+<?php if (!empty($m['bureau'])): ?>
+    <h2>À déposer au bureau</h2>
+    <p>Le bureau de l'association est ouvert <strong><?= e($m['horaires'] ?? Ascs\Domain\Bulletin::HORAIRES_DEFAUT) ?></strong>.</p>
+    <ul class="pieces"><?php foreach ($m['bureau'] as $pc): ?><li><?= e($pc) ?></li><?php endforeach; ?></ul>
+<?php endif; ?>
 <?php if (!empty($m['pieces'])): ?>
     <h2>À apporter au premier cours</h2>
     <ul class="pieces"><?php foreach ($m['pieces'] as $pc): ?><li><?= e($pc) ?></li><?php endforeach; ?></ul>
@@ -38,6 +43,6 @@
         <li><a class="btn btn-principal" href="<?= e($s['lien_paiement']) ?>" rel="noopener"><?= e($s['titre']) ?></a></li>
     <?php endforeach; ?>
     </ul>
-    <p class="aide">Vous pouvez aussi régler par chèque, espèces, chèques vacances ou Pass Sport auprès du bureau.</p>
+    <p class="aide">Vous pouvez aussi régler par chèque, espèces, chèques vacances ou Pass Sport auprès du bureau, ouvert <?= e($m['horaires'] ?? Ascs\Domain\Bulletin::HORAIRES_DEFAUT) ?>.</p>
 <?php endif; ?>
 <?php if ($message): ?><p class="flash flash-info"><?= nl2br(e($message)) ?></p><?php endif; ?>
