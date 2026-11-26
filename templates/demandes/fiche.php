@@ -120,6 +120,10 @@ $rillieuxDemande = Ascs\Domain\Tarifs::habitantRillieux($d['ville'] ?? null, $d[
             <?php endforeach; ?>
             <p class="aide"><?= $essai ? 'Le cours d\'essai est enregistré comme une inscription gratuite dans la section « essai ».' : 'Montant = tarif complet de la section' . ($rillieuxDemande ? ', avec la réduction Rillieux de 10 € (sauf jogging, marche, bénévole et conseil d\'administration)' : ', tarif extérieur (adresse hors Rillieux)') . '. Les règlements se saisissent ensuite sur chaque inscription (ou arrivent par HelloAsso).' ?></p>
         </fieldset>
+        <?php $couponDemande = array_intersect(['coupon_sport', 'coupon_culture'], (array) ($d['complement']['aides'] ?? [])); ?>
+        <?php if (!$essai && $couponDemande): ?>
+            <?= coche('Envoyer à ' . ($d['mail'] ?: '(pas de mail)') . ' le devis coupon mairie pré-rempli et la procédure de la ville', 'envoyer_devis', $post ? !empty($post['envoyer_devis']) : (bool) $d['mail']) ?>
+        <?php endif; ?>
         <div class="actions">
             <button type="submit" class="btn btn-principal" name="suite" value="suivante"><?= icon('check') ?> Valider et passer à la suivante</button>
             <button type="submit" class="btn">Valider et voir la fiche</button>

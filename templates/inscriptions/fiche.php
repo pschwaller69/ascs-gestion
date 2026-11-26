@@ -36,6 +36,19 @@
         <ul class="liste-envois"><?php foreach ($envois as $en): ?><li><?= e(dfr($en['date_envoi'])) ?> <?= e(substr((string) $en['date_envoi'], 11, 5)) ?> — <?= e($en['destinataire']) ?> — <?= $en['ok'] ? 'envoyée' : '<span class="texte-erreur">échec : ' . e($en['erreur']) . '</span>' ?><?= $en['par'] ? ' (' . e($en['par']) . ')' : '' ?></li><?php endforeach; ?></ul>
     <?php endif; ?>
 </details>
+<?php if ((float) $i['montant'] > 0): ?>
+<details class="fiche" id="envoi-devis-coupon">
+    <summary>Devis coupon sport / culture (mairie)</summary>
+    <p><a class="btn" href="<?= e(url('/inscriptions/' . $i['id'] . '/devis-coupon')) ?>" target="_blank" rel="noopener"><?= icon('file') ?> Voir le devis pré-rempli</a></p>
+    <form method="post" action="<?= e(url('/inscriptions/' . $i['id'] . '/devis-coupon/envoyer')) ?>">
+        <?= csrf_field() ?>
+        <?= champ('Destinataire', 'destinataire', $mailFacture, ['type' => 'email', 'required' => true]) ?>
+        <?= champ('Message', 'message', $messageCoupon, ['type' => 'textarea', 'rows' => 10]) ?>
+        <p class="aide">Le devis (PDF) et la procédure de la ville sont joints. Réglages : Paramétrage &gt; Coupons mairie.</p>
+        <button type="submit" class="btn btn-principal"><?= icon('mail') ?> Envoyer le devis et la procédure</button>
+    </form>
+</details>
+<?php endif; ?>
 <form method="post" action="<?= e(url('/inscriptions/' . $i['id'] . '/supprimer')) ?>" class="zone-danger">
     <?= csrf_field() ?>
     <button type="submit" class="btn btn-danger">Supprimer l'inscription…</button>

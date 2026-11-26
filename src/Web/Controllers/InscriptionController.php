@@ -165,6 +165,7 @@ final class InscriptionController
             'rillieux' => self::rillieux($this->adh->trouver((int) $i['adherent_id']) ?? []),
             'envois' => (new \Ascs\Mail\Envoi($this->app->pdo))->historique((int) $i['id']),
             'mailFacture' => (string) ($this->adh->trouver((int) $i['adherent_id'])['mail'] ?? ''),
+            'messageCoupon' => (new \Ascs\Documents\DevisCoupon($this->app->pdo))->texteMail([(int) $i['id']]),
             'messageFacture' => \Ascs\Web\Controllers\FactureController::message($i, $reg = (new \Ascs\Documents\Reglages($this->app->pdo))->tous()),
             'expediteur' => $reg['expediteur'],
         ], 'Inscription ' . trim($i['nom'] . ' ' . $i['prenom']), 'accueil', $status);

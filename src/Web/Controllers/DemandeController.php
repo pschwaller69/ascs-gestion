@@ -77,7 +77,21 @@ final class DemandeController
         }
         $n = count($r['inscriptions']);
         $nr = (int) ($r['reglements'] ?? 0);
-        $this->app->flash('ok', ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.') . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : ''));
+        // Coupon sport / culture demandé : devis pré-rempli et procédure envoyés à la personne
+        $devis = '';
+        if (!empty($_POST['envoyer_devis']) && $r['inscriptions']) {
+            $dm = $this->dem->trouver($id);
+            $payantes = array_values(array_filter(array_map('intval', $r['inscriptions']), function (int $iid): bool {
+                $st = $this->app->pdo->prepare('SELECT montant FROM inscription WHERE id = ?');
+                $st->execute([$iid]);
+                return (float) $st->fetchColumn() > 0;
+            }));
+            if ($payantes && $dm && $dm['mail']) {
+                $e = (new \Ascs\Documents\DevisCoupon($this->app->pdo))->envoyer($payantes, (string) $dm['mail'], $this->par());
+                $devis = $e ? ' Devis coupon NON envoyé : ' . $e : ' Devis coupon et procédure envoyés à ' . $dm['mail'] . '.';
+            }
+        }
+        $this->app->flash($devis !== '' && str_contains($devis, 'NON') ? 'erreur' : 'ok', ($n > 1 ? "$n inscriptions créées." : 'Inscription créée.') . ($nr ? " $nr règlement(s) HelloAsso (paiement en ligne) enregistré(s)." : '') . $devis);
         $suivante = $this->app->pdo->query("SELECT id FROM demande WHERE statut = 'a_traiter' ORDER BY cree_le LIMIT 1")->fetchColumn();
         if (($_POST['suite'] ?? '') === 'suivante' && $suivante !== false) {
             $this->app->redirect('/demandes/' . $suivante);

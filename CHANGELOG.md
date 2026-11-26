@@ -3,6 +3,12 @@
 Chaque livraison porte un numéro (fichier `VERSION`, nom du zip `ascs-X.Y.Z.zip`, rappel dans le rapport d'import).
 `X` = bascule majeure, `Y` = nouvelle fonctionnalité, `Z` = correction ou ajustement.
 
+## 0.16.0
+
+- Devis « coupon sport et/ou coupon culture » de la ville de Rillieux-la-Pape, en PDF pré-rempli (modèle 2026-2027) : partie famille (nom, prénom, date de naissance, sexe, représentant légal, adresse, mail, téléphone ; date et signature laissées à la famille) et partie association (enfant, nom de l'association, activité, cotisation, date, signature et tampon de Paramétrage > Facture). Une page par inscription.
+- Envoi par mail du devis et de la procédure de la ville (PDF joint) : case cochée d'office à la validation d'une demande en ligne avec coupon sport ou culture, et bouton sur la fiche de chaque inscription (texte modifiable).
+- Paramétrage > Coupons mairie : procédure PDF à déposer chaque saison, nom de l'association, texte du bas du devis (dates limites), objet et texte du mail.
+
 ## 0.15.4
 
 - Règlement par chèque : les chèques sont à déposer au bureau de l'association (plus « au premier cours »), ouvert du lundi au jeudi de 14 h à 18 h. Indiqué sur le formulaire (choix du chèque), la page de fin (« À déposer au bureau ») et le mail de confirmation. Horaires modifiables dans Inscriptions en ligne > Réglages.

@@ -79,6 +79,7 @@ final class Ribbon
                 'Famille' => [['Familles', 'layers', '/parametrage/familles', null]],
                 'Documents' => [
                     ['Facture', 'file', '/parametres/facture', null],
+                    ['Coupons mairie', 'file', '/parametres/coupons', null],
                 ],
                 'Données' => [
                     ['Import WinDev', 'upload', '/import', null],
